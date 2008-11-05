@@ -119,7 +119,7 @@ rm -rf ${RPM_BUILD_ROOT}
 
 %changelog
 * Sun Sep 21 2008 Ville Skyttä <ville.skytta at iki.fi> - 2.3.0-7
-- Fix Patch0:/%%patch mismatch.
+- Fix Patch0:/%%patch mismatch (#463065).
 
 * Tue Feb 19 2008 Fedora Release Engineering <rel-eng@fedoraproject.org> - 2.3.0-6
 - Autorebuild for GCC 4.3
