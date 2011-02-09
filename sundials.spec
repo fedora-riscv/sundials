@@ -1,7 +1,7 @@
 Summary:    Suite of nonlinear solvers
 Name:       sundials
 Version:    2.3.0
-Release:    9%{?dist}
+Release:    10%{?dist}
 
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
@@ -118,6 +118,9 @@ rm -rf ${RPM_BUILD_ROOT}
 %{_libdir}/*.a
 
 %changelog
+* Wed Feb 09 2011 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 2.3.0-10
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_15_Mass_Rebuild
+
 * Sun Jul 26 2009 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 2.3.0-9
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_12_Mass_Rebuild
 
