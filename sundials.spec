@@ -1,7 +1,7 @@
 Summary:    Suite of nonlinear solvers
 Name:       sundials
 Version:    2.5.0
-Release:    1%{?dist}
+Release:    2%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -9,7 +9,9 @@ Group:      Development/Libraries
 URL:        http://www.llnl.gov/casc/sundials/
 Source0:    http://www.llnl.gov/casc/sundials/download/code/%{name}-%{version}.tar.gz
 
+%ifnarch s390 s390x
 BuildRequires: openmpi-devel
+%endif
 BuildRequires: gcc-gfortran
 
 %description
@@ -98,6 +100,9 @@ rm ${RPM_BUILD_ROOT}%{_libdir}/*.la
 %{_libdir}/*.a
 
 %changelog
+* Mon Feb 18 2013 Dan Horák <dan[at]danny.cz> - 2.5.0-2
+- openmpi not available s390(x)
+
 * Sun Jan 26 2013 Rahul Sundaram <sundaram@fedoraproject.org> - 2.5.0-1
 - upstream release 2.5.0
 - enable parallel build
