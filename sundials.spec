@@ -1,7 +1,7 @@
 Summary:    Suite of nonlinear solvers
 Name:       sundials
 Version:    2.5.0
-Release:    2%{?dist}
+Release:    3%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -100,6 +100,9 @@ rm ${RPM_BUILD_ROOT}%{_libdir}/*.la
 %{_libdir}/*.a
 
 %changelog
+* Sun Aug 04 2013 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 2.5.0-3
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_20_Mass_Rebuild
+
 * Mon Feb 18 2013 Dan Horák <dan[at]danny.cz> - 2.5.0-2
 - openmpi not available s390(x)
 
