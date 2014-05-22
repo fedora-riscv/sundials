@@ -1,0 +1,11 @@
+--- src/ida/ida.c	2012-04-11 19:32:13.000000000 -0500
++++ src/ida/ida.c.fix	2014-05-21 21:24:07.269720688 -0500
+@@ -3378,7 +3378,7 @@
+ 
+ #ifndef NO_FPRINTF_OUTPUT
+     fprintf(stderr, "\n[%s ERROR]  %s\n  ", module, fname);
+-    fprintf(stderr, msgfmt);
++    fprintf("%s", msgfmt);
+     fprintf(stderr, "\n\n");
+ #endif
+ 
