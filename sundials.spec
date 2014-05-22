@@ -1,7 +1,7 @@
 Summary:    Suite of nonlinear solvers
 Name:       sundials
 Version:    2.5.0
-Release:    3%{?dist}
+Release:    4%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -9,10 +9,21 @@ Group:      Development/Libraries
 URL:        http://www.llnl.gov/casc/sundials/
 Source0:    http://www.llnl.gov/casc/sundials/download/code/%{name}-%{version}.tar.gz
 
+# downstream patches
+# patch0 fixes bug #926583 (ARM 64-bit building)
+Patch0:     http://ausil.fedorapeople.org/aarch64/sundials/sundials-aarch64.patch
+
+# patches1-4 fix 1037342; fix for -Werror=format-security
+Patch1:     %{name}-cvode.patch
+Patch2:     %{name}-cvodes.patch
+Patch3:     %{name}-ida.patch
+Patch4:     %{name}-idas.patch
+
 %ifnarch s390 s390x
 BuildRequires: openmpi-devel
 %endif
 BuildRequires: gcc-gfortran
+BuildRequires: autoconf
 
 %description
 SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
@@ -57,6 +68,11 @@ This package contains the documentation files
 
 %prep
 %setup -q 
+%patch0 -p1
+%patch1
+%patch2
+%patch3
+%patch4
 
 %build
 %configure \
@@ -100,13 +116,16 @@ rm ${RPM_BUILD_ROOT}%{_libdir}/*.la
 %{_libdir}/*.a
 
 %changelog
+* Wed May 21 2014 Mukundan Ragavan <nonamedotc@fedoraproject.org> - 2.5.0-4
+- added patches to fix bugs #926583 and #1037342
+
 * Sun Aug 04 2013 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 2.5.0-3
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_20_Mass_Rebuild
 
 * Mon Feb 18 2013 Dan Horák <dan[at]danny.cz> - 2.5.0-2
 - openmpi not available s390(x)
 
-* Sun Jan 26 2013 Rahul Sundaram <sundaram@fedoraproject.org> - 2.5.0-1
+* Sat Jan 26 2013 Rahul Sundaram <sundaram@fedoraproject.org> - 2.5.0-1
 - upstream release 2.5.0
 - enable parallel build
 - drop obsolete patch
