@@ -1,0 +1,11 @@
+--- src/cvodes/cvodes.c	2012-04-11 19:31:36.000000000 -0500
++++ src/cvodes/cvodes.c.fix	2014-05-21 21:23:10.359954662 -0500
+@@ -8958,7 +8958,7 @@
+ 
+ #ifndef NO_FPRINTF_OUTPUT
+     fprintf(stderr, "\n[%s ERROR]  %s\n  ", module, fname);
+-    fprintf(stderr, msg);
++    fprintf(stderr, "%s", msg);
+     fprintf(stderr, "\n\n");
+ #endif
+ 
