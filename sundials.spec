@@ -1,7 +1,7 @@
 Summary:    Suite of nonlinear solvers
 Name:       sundials
 Version:    2.5.0
-Release:    4%{?dist}
+Release:    5%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -18,6 +18,7 @@ Patch1:     %{name}-cvode.patch
 Patch2:     %{name}-cvodes.patch
 Patch3:     %{name}-ida.patch
 Patch4:     %{name}-idas.patch
+Patch5:     %{name}-kinsol.patch
 
 %ifnarch s390 s390x
 BuildRequires: openmpi-devel
@@ -73,6 +74,7 @@ This package contains the documentation files
 %patch2
 %patch3
 %patch4
+%patch5
 
 %build
 %configure \
@@ -116,6 +118,10 @@ rm ${RPM_BUILD_ROOT}%{_libdir}/*.la
 %{_libdir}/*.a
 
 %changelog
+* Sat Jun 07 2014 Mukundan Ragavan <nonamedotc@fedoraproject.org> - 2.5.0-5
+- Fixed patches used in the previous build
+- Fixes bug #1105767
+
 * Wed May 21 2014 Mukundan Ragavan <nonamedotc@fedoraproject.org> - 2.5.0-4
 - added patches to fix bugs #926583 and #1037342
 
@@ -125,7 +131,7 @@ rm ${RPM_BUILD_ROOT}%{_libdir}/*.la
 * Mon Feb 18 2013 Dan Horák <dan[at]danny.cz> - 2.5.0-2
 - openmpi not available s390(x)
 
-* Sat Jan 26 2013 Rahul Sundaram <sundaram@fedoraproject.org> - 2.5.0-1
+* Sun Jan 26 2013 Rahul Sundaram <sundaram@fedoraproject.org> - 2.5.0-1
 - upstream release 2.5.0
 - enable parallel build
 - drop obsolete patch
