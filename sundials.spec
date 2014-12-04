@@ -1,7 +1,7 @@
 Summary:    Suite of nonlinear solvers
 Name:       sundials
 Version:    2.5.0
-Release:    6%{?dist}
+Release:    7%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -118,6 +118,9 @@ rm ${RPM_BUILD_ROOT}%{_libdir}/*.la
 %{_libdir}/*.a
 
 %changelog
+* Wed Dec 03 2014 Mukundan Ragavan <nonamedotc@fedoraproject.org> - 2.5.0-7
+- Initial build for EPEL-7
+
 * Mon Aug 18 2014 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 2.5.0-6
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_21_22_Mass_Rebuild
 
