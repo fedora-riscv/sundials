@@ -1,7 +1,7 @@
 Summary:    Suite of nonlinear solvers
 Name:       sundials
-Version:    2.5.0
-Release:    6%{?dist}
+Version:    2.6.0
+Release:    1%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -11,20 +11,22 @@ Source0:    http://www.llnl.gov/casc/sundials/download/code/%{name}-%{version}.t
 
 # downstream patches
 # patch0 fixes bug #926583 (ARM 64-bit building)
-Patch0:     http://ausil.fedorapeople.org/aarch64/sundials/sundials-aarch64.patch
+#Patch0:     http://ausil.fedorapeople.org/aarch64/sundials/sundials-aarch64.patch
 
 # patches1-4 fix 1037342; fix for -Werror=format-security
-Patch1:     %{name}-cvode.patch
-Patch2:     %{name}-cvodes.patch
-Patch3:     %{name}-ida.patch
-Patch4:     %{name}-idas.patch
-Patch5:     %{name}-kinsol.patch
+#Patch1:     %{name}-cvode.patch
+#Patch2:     %{name}-cvodes.patch
+#Patch3:     %{name}-ida.patch
+#Patch4:     %{name}-idas.patch
+#Patch5:     %{name}-kinsol.patch
 
 %ifnarch s390 s390x
 BuildRequires: openmpi-devel
 %endif
 BuildRequires: gcc-gfortran
 BuildRequires: autoconf
+BuildRequires: cmake
+BuildRequires: lapack-devel
 
 %description
 SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
@@ -69,35 +71,49 @@ This package contains the documentation files
 
 %prep
 %setup -q 
-%patch0 -p1
-%patch1
-%patch2
-%patch3
-%patch4
-%patch5
+
+%ifarch x86_64
+# fix lib installation destination
+# this seems like a hack but I cannot think of a better way to do this
+sed -i 's/DESTINATION lib/DESTINATION lib64/g' src/arkode/CMakeLists.txt
+sed -i 's/DESTINATION lib/DESTINATION lib64/g' src/cvode/CMakeLists.txt
+sed -i 's/DESTINATION lib/DESTINATION lib64/g' src/cvodes/CMakeLists.txt
+sed -i 's/DESTINATION lib/DESTINATION lib64/g' src/ida/CMakeLists.txt
+sed -i 's/DESTINATION lib/DESTINATION lib64/g' src/idas/CMakeLists.txt
+sed -i 's/DESTINATION lib/DESTINATION lib64/g' src/kinsol/CMakeLists.txt
+sed -i 's/DESTINATION lib/DESTINATION lib64/g' src/nvec_ser/CMakeLists.txt
+%endif
 
 %build
-%configure \
-  F77=gfortran \
-  --enable-static=no \
-  --enable-shared=yes \
+mkdir build_dir && cd build_dir
 
-make %{?_smp_mflags}
+cmake \
+ -DCMAKE_C_FLAGS=%{optflags} \
+ -DCMAKE_Fortran_FLAGS=%{optflags} \
+ -DCMAKE_INSTALL_PREFIX=%{buildroot}%{_prefix} \
+ -DMPI_ENABLE=ON \
+ -DEXAMPLES_ENABLE=OFF -DEXAMPLES_INSTALL=OFF \
+ -DBUILD_SHARED_LIBS=ON \
+ -DLAPACK_ENABLE=ON ..
+
+make V=1 %{?_smp_mflags}
 
 %install
 # SUNDIALS does not support the 'DESTDIR' method, hence:
+cd build_dir
 %makeinstall
 
 # spot says better no .la files in RPMs
-rm ${RPM_BUILD_ROOT}%{_libdir}/*.la
+# This is not needed in 2.6.0
+# rm ${RPM_BUILD_ROOT}%{_libdir}/*.la
 
 %post -p /sbin/ldconfig
 %postun -p /sbin/ldconfig
 
 %files
-%doc LICENSE README
-%{_libdir}/*.so.[0-9].*
-%{_libdir}/*.so.[0-9]
+%license LICENSE
+%doc README
+%{_libdir}/*so*
 
 %files doc
 %doc doc/cvode/cv_examples.pdf
@@ -108,16 +124,22 @@ rm ${RPM_BUILD_ROOT}%{_libdir}/*.la
 %doc doc/cvodes/cvs_guide.pdf
 %doc doc/ida/ida_examples.pdf
 %doc doc/ida/ida_guide.pdf
+%doc doc/arkode/*
+%doc examples/*
 
 %files devel
 %{_libdir}/*.so
 %{_includedir}/*
-%{_bindir}/sundials-config
+## %{_bindir}/sundials-config
 
 %files static
 %{_libdir}/*.a
 
 %changelog
+* Sun Mar 22 2015 Mukundan Ragavan <nonamedotc@fedoraproject.org> - 2.6.0-1
+- Update to 2.6.0
+- Drop patches that are not needed anymore
+
 * Mon Aug 18 2014 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 2.5.0-6
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_21_22_Mass_Rebuild
 
