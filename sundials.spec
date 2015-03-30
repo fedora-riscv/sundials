@@ -1,7 +1,7 @@
 Summary:    Suite of nonlinear solvers
 Name:       sundials
 Version:    2.6.0
-Release:    1%{?dist}
+Release:    2%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -90,6 +90,7 @@ mkdir build_dir && cd build_dir
 cmake \
  -DCMAKE_C_FLAGS=%{optflags} \
  -DCMAKE_Fortran_FLAGS=%{optflags} \
+ -DCMAKE_SHARED_LINKER_FLAGS="%{optflags} -lblas -llapack" \
  -DCMAKE_INSTALL_PREFIX=%{buildroot}%{_prefix} \
  -DMPI_ENABLE=ON \
  -DEXAMPLES_ENABLE=OFF -DEXAMPLES_INSTALL=OFF \
@@ -136,7 +137,10 @@ cd build_dir
 %{_libdir}/*.a
 
 %changelog
-* Sun Mar 22 2015 Mukundan Ragavan <nonamedotc@fedoraproject.org> - 2.6.0-1
+* Sun Mar 29 2015 Mukundan Ragavan <nonamedotc@fedoraproject.org> - 2.6.0-2
+- Ensure the shared libraries are linked correctly
+
+* Sun Mar 29 2015 Mukundan Ragavan <nonamedotc@fedoraproject.org> - 2.6.0-1
 - Update to 2.6.0
 - Drop patches that are not needed anymore
 
