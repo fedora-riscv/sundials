@@ -1,7 +1,7 @@
 Summary:    Suite of nonlinear solvers
 Name:       sundials
-Version:    2.6.0
-Release:    2%{?dist}
+Version:    2.6.1
+Release:    1%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -137,6 +137,10 @@ cd build_dir
 %{_libdir}/*.a
 
 %changelog
+* Mon Mar 30 2015 Mukundan Ragavan <nonamedotc@fedoraproject.org> - 2.6.1-1
+- Update to version 2.6.1
+- Minor bugfixes
+
 * Sun Mar 29 2015 Mukundan Ragavan <nonamedotc@fedoraproject.org> - 2.6.0-2
 - Ensure the shared libraries are linked correctly
 
