@@ -1,7 +1,14 @@
+## Define if use openmpi or not
+%ifarch s390 s390x
+%global with_openmpi 0
+%else
+%global with_openmpi 1
+%endif
+
 Summary:    Suite of nonlinear solvers
 Name:       sundials
 Version:    2.6.1
-Release:    1%{?dist}
+Release:    4%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -9,24 +16,12 @@ Group:      Development/Libraries
 URL:        http://www.llnl.gov/casc/sundials/
 Source0:    http://www.llnl.gov/casc/sundials/download/code/%{name}-%{version}.tar.gz
 
-# downstream patches
-# patch0 fixes bug #926583 (ARM 64-bit building)
-#Patch0:     http://ausil.fedorapeople.org/aarch64/sundials/sundials-aarch64.patch
+##This package provides pkg-config files of Sundials
+Source1:    %{name}-pkgconfig_files.tar.gz
 
-# patches1-4 fix 1037342; fix for -Werror=format-security
-#Patch1:     %{name}-cvode.patch
-#Patch2:     %{name}-cvodes.patch
-#Patch3:     %{name}-ida.patch
-#Patch4:     %{name}-idas.patch
-#Patch5:     %{name}-kinsol.patch
-
-%ifnarch s390 s390x
-BuildRequires: openmpi-devel
-%endif
 BuildRequires: gcc-gfortran
-BuildRequires: autoconf
 BuildRequires: cmake
-BuildRequires: lapack-devel
+BuildRequires: lapack-devel, blas-devel
 
 %description
 SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
@@ -42,27 +37,109 @@ preconditioners.
 %package devel
 Summary:    Suite of nonlinear solvers (developer files)
 Group:      Development/Libraries
-Requires:   %{name} = %{version}-%{release}
+Requires:   %{name}%{?_isa} = %{version}-%{release}
+Provides:   %{name}-static = %{version}-%{release}
 %description devel
 SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
 for use in writing mathematical software.
 
 This package contains the developer files (.so file, header files)
 
-%package static
-Summary:    Suite of nonlinear solvers (static libraries)
+%if 0%{?with_openmpi}
+%package openmpi
+Summary:    Suite of nonlinear solvers
 Group:      Development/Libraries
-Requires:   %{name}-devel = %{version}-%{release}
-%description static
+BuildRequires: openmpi-devel
+%description openmpi
 SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
 for use in writing mathematical software.
 
-This package contains the static library files (.a files). These libraries
-provide support for using SUNDIALS from Fortran.
+This package contains the Sundials Fortran parallel OpenMPI libraries.
+
+%package openmpi-devel
+Summary:    Suite of nonlinear solvers (static libraries)
+Group:      Development/Libraries
+Requires:   %{name}-openmpi%{?_isa} = %{version}-%{release}
+%description openmpi-devel
+SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
+for use in writing mathematical software.
+
+This package contains the Sundials parallel OpenMPI devel libraries and
+header files.
+
+%package fortran-openmpi
+Summary:    Suite of nonlinear solvers
+Group:      Development/Libraries
+Requires:   gcc-gfortran%{?_isa}
+%description fortran-openmpi
+SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
+for use in writing mathematical software.
+
+This package contains the Sundials Fortran parallel OpenMPI libraries.
+
+%package fortran-openmpi-devel
+Summary:    Suite of nonlinear solvers
+Group:      Development/Libraries
+Requires:   %{name}-fortran-openmpi%{?_isa} = %{version}-%{release}
+%description fortran-openmpi-devel
+SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
+for use in writing mathematical software.
+
+This package contains the Sundials Fortran parallel OpenMPI devel libraries and
+header files.
+%endif
+
+%package fortran
+Summary:    Suite of nonlinear solvers (static libraries)
+Group:      Development/Libraries
+Requires:   gcc-gfortran%{?_isa}
+%description fortran
+SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
+for use in writing mathematical software.
+
+This package contains the Sundials Fortran libraries.
+
+## Cannot build shared libraries for the FCMIX (Fortran) interfaces 
+## due to unresolved symbol errors 
+## coming from inexistent user-provided functions.
+## This package provides some static libraries
+%package fortran-devel
+Summary:    Suite of nonlinear solvers
+Group:      Development/Libraries
+Requires:   %{name}-fortran%{?_isa} = %{version}-%{release}
+Provides:   %{name}-fortran-static = %{version}-%{release}
+%description fortran-devel
+SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
+for use in writing mathematical software.
+
+This package contains the Sundials Fortran devel libraries and
+header files.
+
+%package threads
+Summary:    Suite of nonlinear solvers
+Group:      Development/Libraries
+%description threads
+SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
+for use in writing mathematical software.
+
+This package contains the Sundials libraries (included the Fortran ones)
+compiled with threading support.
+
+%package threads-devel
+Summary:    Suite of nonlinear solvers
+Group:      Development/Libraries
+Requires:   %{name}-threads%{?_isa} = %{version}-%{release}
+%description threads-devel
+SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
+for use in writing mathematical software.
+
+This package contains the Sundials devel library compiled with threading support
+and relative header files.
 
 %package doc
 Summary:    Suite of nonlinear solvers (documentation)
 Group:      Documentation
+BuildArch: noarch
 %description doc
 SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
 for use in writing mathematical software.
@@ -71,52 +148,147 @@ This package contains the documentation files
 
 %prep
 %setup -q 
+%setup -T -D -a 1
 
-%ifarch x86_64
-# fix lib installation destination
-# this seems like a hack but I cannot think of a better way to do this
-sed -i 's/DESTINATION lib/DESTINATION lib64/g' src/arkode/CMakeLists.txt
-sed -i 's/DESTINATION lib/DESTINATION lib64/g' src/cvode/CMakeLists.txt
-sed -i 's/DESTINATION lib/DESTINATION lib64/g' src/cvodes/CMakeLists.txt
-sed -i 's/DESTINATION lib/DESTINATION lib64/g' src/ida/CMakeLists.txt
-sed -i 's/DESTINATION lib/DESTINATION lib64/g' src/idas/CMakeLists.txt
-sed -i 's/DESTINATION lib/DESTINATION lib64/g' src/kinsol/CMakeLists.txt
-sed -i 's/DESTINATION lib/DESTINATION lib64/g' src/nvec_ser/CMakeLists.txt
+##Define library dirs in the pkg-config files
+sed -i 's|@@libdir@@|%{_libdir}|g' *.pc
+sed -i 's|@@fmoddir@@|%{_fmoddir}|g' *.pc
+sed -i 's|@@includedir@@|%{_includedir}|g' *.pc
+
+##Set destination library's paths
+sed -i 's/DESTINATION lib/DESTINATION %{_lib}/g' src/arkode/CMakeLists.txt
+sed -i 's|DESTINATION lib|DESTINATION %{_fmoddir}|g' src/arkode/fcmix/CMakeLists.txt
+sed -i 's/DESTINATION lib/DESTINATION %{_lib}/g' src/cvode/CMakeLists.txt
+sed -i 's|DESTINATION lib|DESTINATION %{_fmoddir}|g' src/cvode/fcmix/CMakeLists.txt
+sed -i 's/DESTINATION lib/DESTINATION %{_lib}/g' src/cvodes/CMakeLists.txt
+sed -i 's/DESTINATION lib/DESTINATION %{_lib}/g' src/ida/CMakeLists.txt
+sed -i 's|DESTINATION lib|DESTINATION %{_fmoddir}|g' src/ida/fcmix/CMakeLists.txt
+sed -i 's/DESTINATION lib/DESTINATION %{_lib}/g' src/idas/CMakeLists.txt
+sed -i 's/DESTINATION lib/DESTINATION %{_lib}/g' src/kinsol/CMakeLists.txt
+sed -i 's|DESTINATION lib|DESTINATION %{_fmoddir}|g' src/kinsol/fcmix/CMakeLists.txt
+
+##Set pthread library's paths
+sed -i \
+ 's|INSTALL(TARGETS sundials_nvecpthreads_shared DESTINATION lib)|INSTALL(TARGETS sundials_nvecpthreads_shared DESTINATION %{_libdir})|g' \
+  src/nvec_pthreads/CMakeLists.txt
+sed -i \
+ 's|INSTALL(TARGETS sundials_fnvecpthreads_shared DESTINATION lib)|INSTALL(TARGETS sundials_fnvecpthreads_shared DESTINATION %{_fmoddir})|g' \
+  src/nvec_pthreads/CMakeLists.txt
+
+##Set serial library's paths
+sed -i \
+ 's|TARGETS sundials_nvecserial_shared DESTINATION lib|TARGETS sundials_nvecserial_shared DESTINATION %{_libdir}|g' \
+  src/nvec_ser/CMakeLists.txt
+sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/nvector|g' src/nvec_ser/CMakeLists.txt
+sed -i \
+ 's|TARGETS sundials_fnvecserial_shared DESTINATION lib|TARGETS sundials_fnvecserial_shared DESTINATION %{_fmoddir}|g' \
+  src/nvec_ser/CMakeLists.txt
+
+##Set parallel library's paths
+sed -i \
+ 's|TARGETS sundials_nvecparallel_shared DESTINATION lib|TARGETS sundials_nvecparallel_shared DESTINATION %{_libdir}/openmpi/lib|g' \
+  src/nvec_par/CMakeLists.txt
+sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/openmpi-%{_arch}/nvector|g' src/nvec_par/CMakeLists.txt
+sed -i \
+ 's|TARGETS sundials_fnvecparallel_shared DESTINATION lib|TARGETS sundials_fnvecparallel_shared DESTINATION %{_fmoddir}/openmpi-%{_arch}|g' \
+  src/nvec_par/CMakeLists.txt
+
+## mpif77 test fails with GNU Fortran (GCC) 5.0.0 20150319 (64bit) Fedora 23
+%if 0%{?fedora} > 22
+sed -i 's|set(MPIF_PERFORM_TEST TRUE)|set(MPIF_PERFORM_TEST FALSE)|g' config/SundialsMPIF.cmake
+sed -i 's|set(MPIF_FOUND FALSE)|set(MPIF_FOUND TRUE)|g' config/SundialsMPIF.cmake
 %endif
 
+mv src/arkode/README src/README-arkode
+mv src/cvode/README src//README-cvode
+mv src/cvodes/README src/README-cvodes
+mv src/ida/README src/README-ida
+mv src/idas/README src/README.idas
+mv src/kinsol/README src/README-kinsol
+mv src/nvec_ser/README src/README-nvec_ser
+mv src/nvec_par/README src/README-nvec_par
+mv src/nvec_pthreads/README src/README-nvec_pthreads
+
 %build
-mkdir build_dir && cd build_dir
-
-cmake \
- -DCMAKE_C_FLAGS=%{optflags} \
- -DCMAKE_Fortran_FLAGS=%{optflags} \
- -DCMAKE_SHARED_LINKER_FLAGS="%{optflags} -lblas -llapack" \
- -DCMAKE_INSTALL_PREFIX=%{buildroot}%{_prefix} \
- -DMPI_ENABLE=ON \
+mkdir buildserial_dir && pushd buildserial_dir
+%cmake \
+ -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
+ -DCMAKE_BUILD_TYPE:STRING=Release \
+ -DCMAKE_C_FLAGS_RELEASE:STRING="%{optflags}" \
+ -DCMAKE_INSTALL_PREFIX=%{_prefix} \
  -DEXAMPLES_ENABLE=OFF -DEXAMPLES_INSTALL=OFF \
- -DBUILD_SHARED_LIBS=ON \
- -DLAPACK_ENABLE=ON ..
-
+ -DEXAMPLES_INSTALL_PATH:STRING=share/sundials \
+ -DBUILD_SHARED_LIBS:BOOL=ON -DBUILD_STATIC_LIBS:BOOL=OFF \
+ -DMPI_ENABLE:BOLL=OFF \
+ -DFCMIX_ENABLE:STRINS=ON \
+ -DCMAKE_Fortran_COMPILER:STRING=%{_bindir}/gfortran \
+ -DCMAKE_Fortran_FLAGS_RELEASE:STRING="%{optflags}" \
+ -DPTHREAD_ENABLE:BOOL=ON \
+ -DLAPACK_ENABLE=ON -Wno-dev ..
 make V=1 %{?_smp_mflags}
+popd
+
+%if 0%{?with_openmpi}
+mkdir buildparallel_dir && pushd buildparallel_dir
+%{_openmpi_load}
+%cmake \
+ -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
+ -DCMAKE_BUILD_TYPE:STRING=Release \
+ -DCMAKE_C_FLAGS_RELEASE:STRING="%{optflags}" \
+ -DCMAKE_INSTALL_PREFIX=%{_prefix} \
+ -DEXAMPLES_ENABLE=OFF -DEXAMPLES_INSTALL=OFF \
+ -DEXAMPLES_INSTALL_PATH:STRING=share/sundials \
+ -DBUILD_SHARED_LIBS:BOOL=ON -DBUILD_STATIC_LIBS:BOOL=OFF \
+ -DMPI_ENABLE:BOLL=ON \
+ -DMPI_MPICC:STRING=%{_libdir}/openmpi/bin/mpicc \
+ -DMPI_RUN_COMMAND=mpirun \
+ -DMPI_MPIF77:STRING=%{_libdir}/openmpi/bin/mpif77 \
+ -DFCMIX_ENABLE:STRINS=ON \
+ -DCMAKE_Fortran_COMPILER:STRING=%{_bindir}/gfortran \
+ -DCMAKE_Fortran_FLAGS_RELEASE:STRING="%{optflags}" \
+ -DPTHREAD_ENABLE:BOOL=ON \
+ -DLAPACK_ENABLE=ON -Wno-dev ..
+make V=1 %{?_smp_mflags}
+%{_openmpi_unload}
+popd
+%endif
 
 %install
-# SUNDIALS does not support the 'DESTDIR' method, hence:
-cd build_dir
-%makeinstall
+make install DESTDIR=%{buildroot} -C buildserial_dir
 
-# spot says better no .la files in RPMs
-# This is not needed in 2.6.0
-# rm ${RPM_BUILD_ROOT}%{_libdir}/*.la
+%if 0%{?with_openmpi}
+%{_openmpi_load}
+make install DESTDIR=%{buildroot} -C buildparallel_dir
+%{_openmpi_unload}
+%endif
+
+mkdir -p %{buildroot}%{_libdir}/pkgconfig
+install -pm 644 *.pc %{buildroot}%{_libdir}/pkgconfig
 
 %post -p /sbin/ldconfig
 %postun -p /sbin/ldconfig
 
+%post fortran -p /sbin/ldconfig
+%postun fortran -p /sbin/ldconfig
+
+%post threads -p /sbin/ldconfig
+%postun threads -p /sbin/ldconfig
+
 %files
 %license LICENSE
-%doc README
-%{_libdir}/*so*
+%doc README src/README-*
+%{_libdir}/libsundials_nvecserial.so.*
+%{_libdir}/libsundials_cvode.so.*
+%{_libdir}/libsundials_cvodes.so.*
+%{_libdir}/libsundials_arkode.so.* 
+%{_libdir}/libsundials_ida.so.* 
+%{_libdir}/libsundials_idas.so.* 
+%{_libdir}/libsundials_kinsol.so.*
+%exclude %{_datadir}/sundials
 
 %files doc
+%license LICENSE
+%doc README
 %doc doc/cvode/cv_examples.pdf
 %doc doc/cvode/cv_guide.pdf
 %doc doc/kinsol/kin_examples.pdf
@@ -126,25 +298,97 @@ cd build_dir
 %doc doc/ida/ida_examples.pdf
 %doc doc/ida/ida_guide.pdf
 %doc doc/arkode/*
-%doc examples/*
 
 %files devel
-%{_libdir}/*.so
-%{_includedir}/*
-## %{_bindir}/sundials-config
+%{_libdir}/libsundials_nvecserial.so
+%{_libdir}/libsundials_cvode.so
+%{_libdir}/libsundials_cvodes.so
+%{_libdir}/libsundials_arkode.so 
+%{_libdir}/libsundials_ida.so 
+%{_libdir}/libsundials_idas.so 
+%{_libdir}/libsundials_kinsol.so
+%{_includedir}/sundials/
+%{_includedir}/cvode/
+%{_includedir}/cvodes/
+%{_includedir}/arkode/
+%{_includedir}/ida/
+%{_includedir}/idas/
+%{_includedir}/kinsol/
+%{_includedir}/nvector/
+%{_libdir}/pkgconfig/arkode.pc
+%{_libdir}/pkgconfig/cvodes.pc
+%{_libdir}/pkgconfig/idas.pc
+%{_libdir}/pkgconfig/cvode.pc
+%{_libdir}/pkgconfig/ida.pc
+%{_libdir}/pkgconfig/kinsol.pc
+%{_libdir}/pkgconfig/nvec_serial.pc
 
-%files static
-%{_libdir}/*.a
+%if 0%{?with_openmpi}
+%files openmpi
+%license LICENSE
+%doc README src/README-nvec_par
+%{_libdir}/openmpi/lib/libsundials_nvecparallel.so.*
+
+%files openmpi-devel
+%{_includedir}/openmpi-%{_arch}/nvector/nvector_parallel.h
+%{_libdir}/openmpi/lib/libsundials_nvecparallel.so
+
+%files fortran-openmpi
+%license LICENSE
+%doc README src/README-nvec_par
+%{_fmoddir}/openmpi-%{_arch}/libsundials_fnvecparallel.so.*
+
+%files fortran-openmpi-devel
+%{_includedir}/openmpi-%{_arch}/nvector/nvector_parallel.h
+%{_fmoddir}/openmpi-%{_arch}/libsundials_fnvecparallel.so
+%endif
+
+%files fortran
+%license LICENSE
+%doc README
+%{_fmoddir}/libsundials_fnvecserial.so.*
+
+%files fortran-devel
+%{_includedir}/sundials/sundials_fnvector.h
+%{_fmoddir}/libsundials_fnvecserial.so
+%{_fmoddir}/libsundials_*.a
+%{_libdir}/pkgconfig/fcvode_serial.pc
+%{_libdir}/pkgconfig/fkinsol_serial.pc
+%{_libdir}/pkgconfig/fnvec_serial.pc
+%{_libdir}/pkgconfig/farkode_serial.pc
+%{_libdir}/pkgconfig/fida_serial.pc
+
+%files threads
+%license LICENSE
+%doc README src/README-nvec_pthreads
+%{_libdir}/libsundials_nvecpthreads.so.*
+%{_fmoddir}/libsundials_fnvecpthreads.so.*
+
+%files threads-devel
+%{_fmoddir}/libsundials_fnvecpthreads.so
+%{_libdir}/libsundials_nvecpthreads.so
+%{_includedir}/nvector/nvector_pthreads.h
+%{_libdir}/pkgconfig/nvec_pthreads.pc
+%{_libdir}/pkgconfig/fnvec_pthreads.pc
 
 %changelog
-* Mon Mar 30 2015 Mukundan Ragavan <nonamedotc@fedoraproject.org> - 2.6.1-1
-- Update to version 2.6.1
-- Minor bugfixes
+* Sat Apr 04 2015 Antonio Trande <sagitterATfedoraproject.org> - 2.6.1-4
+- Packaged static Fortran libraries
 
-* Sun Mar 29 2015 Mukundan Ragavan <nonamedotc@fedoraproject.org> - 2.6.0-2
+* Fri Apr 03 2015 Antonio Trande <sagitterATfedoraproject.org> - 2.6.1-3
+- Packaged pkg-config files of Serial libraries
+
+* Wed Apr 01 2015 Antonio Trande <sagitterATfedoraproject.org> - 2.6.1-2
+- Built OpenMPI, libraries with threading support, Fortran libraries
+
+* Mon Mar 30 2015 Mukundan Ragavan <nonamedotc@fedoraproject.org> - 2.6.1-1 
+- Update to version 2.6.1 
+- Minor bugfixes 
+
+* Sun Mar 29 2015 Mukundan Ragavan <nonamedotc@fedoraproject.org> - 2.6.0-2 
 - Ensure the shared libraries are linked correctly
 
-* Sun Mar 29 2015 Mukundan Ragavan <nonamedotc@fedoraproject.org> - 2.6.0-1
+* Sun Mar 22 2015 Mukundan Ragavan <nonamedotc@fedoraproject.org> - 2.6.0-1
 - Update to 2.6.0
 - Drop patches that are not needed anymore
 
@@ -164,7 +408,7 @@ cd build_dir
 * Mon Feb 18 2013 Dan Horák <dan[at]danny.cz> - 2.5.0-2
 - openmpi not available s390(x)
 
-* Sun Jan 26 2013 Rahul Sundaram <sundaram@fedoraproject.org> - 2.5.0-1
+* Sat Jan 26 2013 Rahul Sundaram <sundaram@fedoraproject.org> - 2.5.0-1
 - upstream release 2.5.0
 - enable parallel build
 - drop obsolete patch
