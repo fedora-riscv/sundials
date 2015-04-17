@@ -8,7 +8,7 @@
 Summary:    Suite of nonlinear solvers
 Name:       sundials
 Version:    2.6.1
-Release:    5%{?dist}
+Release:    6%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -275,12 +275,138 @@ install -pm 644 sundials-pkgconfig_files/*.pc %{buildroot}%{_libdir}/pkgconfig
 %post threads -p /sbin/ldconfig
 %postun threads -p /sbin/ldconfig
 
-%if 0%{?with_openmpi}
 %check
 ##
+%if 0%{?with_openmpi}
 pushd buildparallel_dir/examples
-arkode/C_serial/ark_analytic
+%{_openmpi_load}
+##arkode
+mpirun -np 4 -wdir arkode/C_parallel ark_diurnal_kry_bbd_p
+mpirun -np 4 -wdir arkode/F77_parallel fark_diag_kry_bbd_p
+##cvode
+mpirun -np 4 -wdir cvode/fcmix_parallel fcvDiag_kry_bbd_p
+mpirun -np 4 -wdir cvode/parallel cvAdvDiff_diag_p
+##cvodes
+mpirun -np 4 -wdir cvodes/parallel cvsAdvDiff_ASAp_non_p
+##ida
+mpirun -np 4 -wdir ida/fcmix_parallel fidaHeat2D_kry_bbd_p
+mpirun -np 4 -wdir ida/parallel idaFoodWeb_kry_bbd_p
+##idas
+mpirun -np 4 -wdir idas/parallel idasBruss_ASAp_kry_bbd_p
+##kinsol
+mpirun -np 4 -wdir kinsol/fcmix_parallel fkinDiagon_kry_p
+mpirun -np 4 -wdir kinsol/parallel kinFoodWeb_kry_bbd_p
+##nvector
+mpirun -np 4 -wdir nvector/parallel test_nvector_mpi 5000 4 1
+%{_openmpi_unload}
+popd
 %endif
+
+pushd buildserial_dir/examples
+##arkode
+cd arkode/C_serial
+./ark_analytic
+./ark_analytic_nonlin
+./ark_brusselator
+./ark_brusselator1D
+./ark_brusselator_fp
+./ark_heat1D
+./ark_heat1D_adapt
+./ark_KrylovDemo_prec
+./ark_robertson
+./ark_robertson_root
+
+cd ../F77_serial
+./fark_diurnal_kry_bp
+./fark_roberts_dnsL
+cd ../..
+##cvode
+cd cvode/fcmix_serial
+./fcvAdvDiff_bnd
+./fcvDiurnal_kry
+./fcvDiurnal_kry_bp
+./fcvRoberts_dns
+./fcvRoberts_dnsL
+
+cd ../serial
+./cvAdvDiff_bnd
+./cvAdvDiff_bndL
+./cvDirectDemo_ls
+./cvDiurnal_kry
+./cvDiurnal_kry_bp
+./cvKrylovDemo_ls
+./cvKrylovDemo_prec
+./cvRoberts_dns
+./cvRoberts_dnsL
+./cvRoberts_dns_uw
+cd ../..
+##cvodes
+cd cvodes/serial
+./cvsAdvDiff_ASAi_bnd
+./cvsAdvDiff_bnd
+./cvsAdvDiff_bndL
+./cvsAdvDiff_FSA_non
+./cvsDirectDemo_ls
+./cvsDiurnal_FSA_kry
+./cvsDiurnal_kry
+./cvsDiurnal_kry_bp
+./cvsFoodWeb_ASAi_kry
+./cvsFoodWeb_ASAp_kry
+./cvsHessian_ASA_FSA
+./cvsKrylovDemo_ls
+./cvsKrylovDemo_prec
+./cvsRoberts_ASAi_dns
+./cvsRoberts_dns
+./cvsRoberts_dnsL
+./cvsRoberts_dns_uw
+./cvsRoberts_FSA_dns
+cd ../..
+##ida
+cd ida/fcmix_pthreads
+./fidaRoberts_dns_pthreads
+cd ../fcmix_serial
+./fidaRoberts_dns
+cd ../serial
+./idaFoodWeb_bnd
+./idaHeat2D_bnd
+./idaHeat2D_kry
+./idaKrylovDemo_ls
+./idaRoberts_dns
+./idaSlCrank_dns
+cd ../..
+##idas
+cd idas/serial
+./idasAkzoNob_ASAi_dns
+./idasAkzoNob_dns
+./idasFoodWeb_bnd
+./idasHeat2D_bnd
+./idasHeat2D_kry
+./idasHessian_ASA_FSA
+./idasKrylovDemo_ls
+./idasRoberts_ASAi_dns
+./idasRoberts_dns
+./idasRoberts_FSA_dns
+./idasSlCrank_dns
+./idasSlCrank_FSA_dns
+cd ../..
+##kinsol
+cd kinsol/fcmix_serial
+./fkinDiagon_kry
+cd ../serial
+./kinFerTron_dns
+./kinFoodWeb_kry
+./kinKrylovDemo_ls
+./kinLaplace_bnd
+./kinLaplace_picard_bnd
+./kinRoberts_fp
+./kinRoboKin_dns
+cd ../..
+##nvector
+cd nvector/pthreads
+./test_nvector_pthreads 5000 4 1
+cd ../serial
+./test_nvector_serial 5000 4 1
+popd
 
 %files
 %license LICENSE
@@ -380,6 +506,9 @@ arkode/C_serial/ark_analytic
 %{_libdir}/pkgconfig/fnvec_pthreads.pc
 
 %changelog
+* Fri Apr 17 2015 Antonio Trande <sagitterATfedoraproject.org> - 2.6.1-6
+- Performed parallel/serial tests
+
 * Thu Apr 16 2015 Antonio Trande <sagitterATfedoraproject.org> - 2.6.1-5
 - Fixed ldconfig scriptlets
 
