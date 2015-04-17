@@ -8,7 +8,7 @@
 Summary:    Suite of nonlinear solvers
 Name:       sundials
 Version:    2.6.1
-Release:    4%{?dist}
+Release:    5%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -151,9 +151,9 @@ This package contains the documentation files
 %setup -T -D -a 1
 
 ##Define library dirs in the pkg-config files
-sed -i 's|@@libdir@@|%{_libdir}|g' *.pc
-sed -i 's|@@fmoddir@@|%{_fmoddir}|g' *.pc
-sed -i 's|@@includedir@@|%{_includedir}|g' *.pc
+sed -i 's|@@libdir@@|%{_libdir}|g' sundials-pkgconfig_files/*.pc
+sed -i 's|@@fmoddir@@|%{_fmoddir}|g' sundials-pkgconfig_files/*.pc
+sed -i 's|@@includedir@@|%{_includedir}|g' sundials-pkgconfig_files/*.pc
 
 ##Set destination library's paths
 sed -i 's/DESTINATION lib/DESTINATION %{_lib}/g' src/arkode/CMakeLists.txt
@@ -210,69 +210,77 @@ mv src/nvec_par/README src/README-nvec_par
 mv src/nvec_pthreads/README src/README-nvec_pthreads
 
 %build
-mkdir buildserial_dir && pushd buildserial_dir
-%cmake \
- -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
- -DCMAKE_BUILD_TYPE:STRING=Release \
- -DCMAKE_C_FLAGS_RELEASE:STRING="%{optflags}" \
- -DCMAKE_INSTALL_PREFIX=%{_prefix} \
- -DEXAMPLES_ENABLE=OFF -DEXAMPLES_INSTALL=OFF \
- -DEXAMPLES_INSTALL_PATH:STRING=share/sundials \
- -DBUILD_SHARED_LIBS:BOOL=ON -DBUILD_STATIC_LIBS:BOOL=OFF \
- -DMPI_ENABLE:BOLL=OFF \
- -DFCMIX_ENABLE:STRINS=ON \
- -DCMAKE_Fortran_COMPILER:STRING=%{_bindir}/gfortran \
- -DCMAKE_Fortran_FLAGS_RELEASE:STRING="%{optflags}" \
- -DPTHREAD_ENABLE:BOOL=ON \
- -DLAPACK_ENABLE=ON -Wno-dev ..
-make V=1 %{?_smp_mflags}
-popd
-
 %if 0%{?with_openmpi}
 mkdir buildparallel_dir && pushd buildparallel_dir
 %{_openmpi_load}
+export LDFLAGS=" -Wl,--as-needed -lpthread"
 %cmake \
  -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
  -DCMAKE_BUILD_TYPE:STRING=Release \
  -DCMAKE_C_FLAGS_RELEASE:STRING="%{optflags}" \
  -DCMAKE_INSTALL_PREFIX=%{_prefix} \
- -DEXAMPLES_ENABLE=OFF -DEXAMPLES_INSTALL=OFF \
+ -DEXAMPLES_ENABLE=ON -DEXAMPLES_INSTALL=OFF \
  -DEXAMPLES_INSTALL_PATH:STRING=share/sundials \
  -DBUILD_SHARED_LIBS:BOOL=ON -DBUILD_STATIC_LIBS:BOOL=OFF \
  -DMPI_ENABLE:BOLL=ON \
  -DMPI_MPICC:STRING=%{_libdir}/openmpi/bin/mpicc \
  -DMPI_RUN_COMMAND=mpirun \
  -DMPI_MPIF77:STRING=%{_libdir}/openmpi/bin/mpif77 \
- -DFCMIX_ENABLE:STRINS=ON \
+ -DFCMIX_ENABLE:BOOL=ON \
  -DCMAKE_Fortran_COMPILER:STRING=%{_bindir}/gfortran \
  -DCMAKE_Fortran_FLAGS_RELEASE:STRING="%{optflags}" \
- -DPTHREAD_ENABLE:BOOL=ON \
- -DLAPACK_ENABLE=ON -Wno-dev ..
+ -DPTHREAD_ENABLE:BOOL=OFF \
+ -DLAPACK_ENABLE:BOOL=ON -DSUPERLUMT_ENABLE:BOOL=OFF \
+ -DKLU_ENABLE:BOOL=OFF -Wno-dev ..
 make V=1 %{?_smp_mflags}
 %{_openmpi_unload}
 popd
 %endif
 
-%install
-make install DESTDIR=%{buildroot} -C buildserial_dir
+mkdir buildserial_dir && pushd buildserial_dir
+export LDFLAGS=" -lm "
+%cmake \
+ -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
+ -DCMAKE_BUILD_TYPE:STRING=Release \
+ -DCMAKE_C_FLAGS_RELEASE:STRING="%{optflags}" \
+ -DCMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING=" -llapack -lblas -Wl,--as-needed -lpthread " \
+ -DCMAKE_INSTALL_PREFIX=%{_prefix} \
+ -DEXAMPLES_ENABLE=ON -DEXAMPLES_INSTALL=OFF \
+ -DEXAMPLES_INSTALL_PATH:STRING=share/sundials \
+ -DBUILD_SHARED_LIBS:BOOL=ON -DBUILD_STATIC_LIBS:BOOL=OFF \
+ -DMPI_ENABLE:BOLL=OFF \
+ -DFCMIX_ENABLE:BOOL=ON \
+ -DCMAKE_Fortran_COMPILER:STRING=%{_bindir}/gfortran \
+ -DCMAKE_Fortran_FLAGS_RELEASE:STRING="%{optflags}" \
+ -DPTHREAD_ENABLE:BOOL=ON \
+ -DLAPACK_ENABLE:BOOL=ON -DSUPERLUMT_ENABLE:BOOL=OFF \
+ -DKLU_ENABLE:BOOL=OFF -Wno-dev ..
+make V=1 %{?_smp_mflags}
+popd
 
+%install
 %if 0%{?with_openmpi}
 %{_openmpi_load}
 make install DESTDIR=%{buildroot} -C buildparallel_dir
 %{_openmpi_unload}
 %endif
+make install DESTDIR=%{buildroot} -C buildserial_dir
 
 mkdir -p %{buildroot}%{_libdir}/pkgconfig
-install -pm 644 *.pc %{buildroot}%{_libdir}/pkgconfig
+install -pm 644 sundials-pkgconfig_files/*.pc %{buildroot}%{_libdir}/pkgconfig
 
 %post -p /sbin/ldconfig
 %postun -p /sbin/ldconfig
 
-%post fortran -p /sbin/ldconfig
-%postun fortran -p /sbin/ldconfig
-
 %post threads -p /sbin/ldconfig
 %postun threads -p /sbin/ldconfig
+
+%if 0%{?with_openmpi}
+%check
+##
+pushd buildparallel_dir/examples
+arkode/C_serial/ark_analytic
+%endif
 
 %files
 %license LICENSE
@@ -284,7 +292,7 @@ install -pm 644 *.pc %{buildroot}%{_libdir}/pkgconfig
 %{_libdir}/libsundials_ida.so.* 
 %{_libdir}/libsundials_idas.so.* 
 %{_libdir}/libsundials_kinsol.so.*
-%exclude %{_datadir}/sundials
+%exclude %{_datadir}/sundials/
 
 %files doc
 %license LICENSE
@@ -372,6 +380,9 @@ install -pm 644 *.pc %{buildroot}%{_libdir}/pkgconfig
 %{_libdir}/pkgconfig/fnvec_pthreads.pc
 
 %changelog
+* Thu Apr 16 2015 Antonio Trande <sagitterATfedoraproject.org> - 2.6.1-5
+- Fixed ldconfig scriptlets
+
 * Sat Apr 04 2015 Antonio Trande <sagitterATfedoraproject.org> - 2.6.1-4
 - Packaged static Fortran libraries
 
@@ -381,11 +392,11 @@ install -pm 644 *.pc %{buildroot}%{_libdir}/pkgconfig
 * Wed Apr 01 2015 Antonio Trande <sagitterATfedoraproject.org> - 2.6.1-2
 - Built OpenMPI, libraries with threading support, Fortran libraries
 
-* Mon Mar 30 2015 Mukundan Ragavan <nonamedotc@fedoraproject.org> - 2.6.1-1 
+* Mon Mar 30 2015 Mukundan Ragavan <nonamedotc@fedoraproject.org> - 2.6.1-1
 - Update to version 2.6.1 
-- Minor bugfixes 
+- Minor bugfixes
 
-* Sun Mar 29 2015 Mukundan Ragavan <nonamedotc@fedoraproject.org> - 2.6.0-2 
+* Sun Mar 29 2015 Mukundan Ragavan <nonamedotc@fedoraproject.org> - 2.6.0-2
 - Ensure the shared libraries are linked correctly
 
 * Sun Mar 22 2015 Mukundan Ragavan <nonamedotc@fedoraproject.org> - 2.6.0-1
