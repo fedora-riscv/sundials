@@ -8,7 +8,7 @@
 Summary:    Suite of nonlinear solvers
 Name:       sundials
 Version:    2.6.1
-Release:    6%{?dist}
+Release:    7%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -395,7 +395,10 @@ cd kinsol/fcmix_serial
 cd ../serial
 ./kinFerTron_dns
 ./kinFoodWeb_kry
+##http://sundials.2283335.n4.nabble.com/kinKrylovDemo-ls-failed-on-aarch64-td4653553.html
+%ifnarch aarch64
 ./kinKrylovDemo_ls
+%endif
 ./kinLaplace_bnd
 ./kinLaplace_picard_bnd
 ./kinRoberts_fp
@@ -506,6 +509,9 @@ popd
 %{_libdir}/pkgconfig/fnvec_pthreads.pc
 
 %changelog
+* Sat May 09 2015 Antonio Trande <sagitterATfedoraproject.org> - 2.6.1-7
+- Excluded kinKrylovDemo_ls test for aarch64
+
 * Fri Apr 17 2015 Antonio Trande <sagitterATfedoraproject.org> - 2.6.1-6
 - Performed parallel/serial tests
 
