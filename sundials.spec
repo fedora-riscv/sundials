@@ -8,7 +8,7 @@
 Summary:    Suite of nonlinear solvers
 Name:       sundials
 Version:    2.6.1
-Release:    7%{?dist}
+Release:    8%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -277,6 +277,8 @@ install -pm 644 sundials-pkgconfig_files/*.pc %{buildroot}%{_libdir}/pkgconfig
 
 %check
 ##
+## openmpi tests crash/hang on i686 (bz#1201901)
+%ifnarch %ix86 %{arm}
 %if 0%{?with_openmpi}
 pushd buildparallel_dir/examples
 %{_openmpi_load}
@@ -301,6 +303,7 @@ mpirun -np 4 -wdir nvector/parallel test_nvector_mpi 5000 4 1
 %{_openmpi_unload}
 popd
 %endif
+%endif
 
 pushd buildserial_dir/examples
 ##arkode
@@ -318,15 +321,19 @@ cd arkode/C_serial
 
 cd ../F77_serial
 ./fark_diurnal_kry_bp
+%ifnarch s390 s390x ppc64 ppc64le
 ./fark_roberts_dnsL
+%endif
 cd ../..
 ##cvode
 cd cvode/fcmix_serial
+%ifnarch s390 s390x ppc64 ppc64le
 ./fcvAdvDiff_bnd
 ./fcvDiurnal_kry
 ./fcvDiurnal_kry_bp
 ./fcvRoberts_dns
 ./fcvRoberts_dnsL
+%endif
 
 cd ../serial
 ./cvAdvDiff_bnd
@@ -363,9 +370,11 @@ cd cvodes/serial
 cd ../..
 ##ida
 cd ida/fcmix_pthreads
+%ifnarch s390 s390x ppc64 ppc64le
 ./fidaRoberts_dns_pthreads
 cd ../fcmix_serial
 ./fidaRoberts_dns
+%endif
 cd ../serial
 ./idaFoodWeb_bnd
 ./idaHeat2D_bnd
@@ -391,12 +400,14 @@ cd idas/serial
 cd ../..
 ##kinsol
 cd kinsol/fcmix_serial
+%ifnarch s390 s390x ppc64 ppc64le
 ./fkinDiagon_kry
+%endif
 cd ../serial
 ./kinFerTron_dns
 ./kinFoodWeb_kry
 ##http://sundials.2283335.n4.nabble.com/kinKrylovDemo-ls-failed-on-aarch64-td4653553.html
-%ifnarch aarch64
+%ifnarch aarch64 s390 s390x ppc64 ppc64le
 ./kinKrylovDemo_ls
 %endif
 ./kinLaplace_bnd
@@ -509,6 +520,10 @@ popd
 %{_libdir}/pkgconfig/fnvec_pthreads.pc
 
 %changelog
+* Wed Jun 03 2015 Antonio Trande <sagitterATfedoraproject.org> - 2.6.1-8
+- Excluded some tests for s390 s390x
+- openmpi tests disabled on ix86 %%{arm} (BZ#1201901)
+
 * Sat May 09 2015 Antonio Trande <sagitterATfedoraproject.org> - 2.6.1-7
 - Excluded kinKrylovDemo_ls test for aarch64
 
