@@ -8,7 +8,7 @@
 Summary:    Suite of nonlinear solvers
 Name:       sundials
 Version:    2.6.2
-Release:    2%{?dist}
+Release:    3%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -523,6 +523,9 @@ popd
 %{_libdir}/pkgconfig/fnvec_pthreads.pc
 
 %changelog
+* Mon Aug 10 2015 Sandro Mani <manisandro@gmail.com> - 2.6.2-3
+- Rebuild for RPM MPI Requires Provides Change
+
 * Tue Aug 04 2015 Antonio Trande <sagitterATfedoraproject.org> - 2.6.2-2
 - Added rsh as BR for EPEL7
 
