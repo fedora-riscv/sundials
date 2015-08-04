@@ -8,7 +8,7 @@
 Summary:    Suite of nonlinear solvers
 Name:       sundials
 Version:    2.6.2
-Release:    1%{?dist}
+Release:    2%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -22,6 +22,9 @@ Source1:    %{name}-pkgconfig_files.tar.gz
 BuildRequires: gcc-gfortran
 BuildRequires: cmake
 BuildRequires: lapack-devel, blas-devel
+%if 0%{?rhel}
+BuildRequires: rsh
+%endif
 
 %description
 SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
@@ -520,6 +523,9 @@ popd
 %{_libdir}/pkgconfig/fnvec_pthreads.pc
 
 %changelog
+* Tue Aug 04 2015 Antonio Trande <sagitterATfedoraproject.org> - 2.6.2-2
+- Added rsh as BR for EPEL7
+
 * Tue Aug 04 2015 Antonio Trande <sagitterATfedoraproject.org> - 2.6.2-1
 - Update to 2.6.2
 
