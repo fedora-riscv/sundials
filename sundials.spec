@@ -8,7 +8,7 @@
 Summary:    Suite of nonlinear solvers
 Name:       sundials
 Version:    2.6.2
-Release:    3%{?dist}
+Release:    4%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -523,6 +523,9 @@ popd
 %{_libdir}/pkgconfig/fnvec_pthreads.pc
 
 %changelog
+* Sat Aug 15 2015 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 2.6.2-4
+- Rebuild for MPI provides
+
 * Mon Aug 10 2015 Sandro Mani <manisandro@gmail.com> - 2.6.2-3
 - Rebuild for RPM MPI Requires Provides Change
 
