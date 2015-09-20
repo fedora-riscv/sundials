@@ -8,7 +8,7 @@
 Summary:    Suite of nonlinear solvers
 Name:       sundials
 Version:    2.6.2
-Release:    6%{?dist}
+Release:    7%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -151,7 +151,7 @@ This package contains the documentation files
 
 %prep
 %setup -q 
-%setup -T -D -a 1
+%setup -q -T -D -a 1
 
 ##Define library dirs in the pkg-config files
 sed -i 's|@@libdir@@|%{_libdir}|g' sundials-pkgconfig_files/*.pc
@@ -279,9 +279,6 @@ install -pm 644 sundials-pkgconfig_files/*.pc %{buildroot}%{_libdir}/pkgconfig
 %postun threads -p /sbin/ldconfig
 
 %check
-##
-## openmpi tests crash/hang on i686 (bz#1201901)
-%ifnarch %ix86 %{arm}
 %if 0%{?with_openmpi}
 pushd buildparallel_dir/examples
 %{_openmpi_load}
@@ -305,8 +302,7 @@ mpirun -np 4 -wdir kinsol/parallel kinFoodWeb_kry_bbd_p
 mpirun -np 4 -wdir nvector/parallel test_nvector_mpi 5000 4 1
 %{_openmpi_unload}
 popd
-%endif
-%endif
+%endif  ##if with openmpi
 
 pushd buildserial_dir/examples
 ##arkode
@@ -523,6 +519,9 @@ popd
 %{_libdir}/pkgconfig/fnvec_pthreads.pc
 
 %changelog
+* Sun Sep 20 2015 Antonio Trande <sagitterATfedoraproject.org> - 2.6.2-7
+- Performed even tests of the parallel-libraries on ix86 arches
+
 * Tue Sep 15 2015 Orion Poplawski <orion@cora.nwra.com> - 2.6.2-6
 - Rebuild for openmpi 1.10.0
 
@@ -576,6 +575,9 @@ popd
 * Sun Mar 22 2015 Mukundan Ragavan <nonamedotc@fedoraproject.org> - 2.6.0-1
 - Update to 2.6.0
 - Drop patches that are not needed anymore
+
+* Wed Dec 03 2014 Mukundan Ragavan <nonamedotc@fedoraproject.org> - 2.5.0-7
+- Initial build for EPEL-7
 
 * Mon Aug 18 2014 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 2.5.0-6
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_21_22_Mass_Rebuild
