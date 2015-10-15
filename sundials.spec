@@ -8,7 +8,7 @@
 Summary:    Suite of nonlinear solvers
 Name:       sundials
 Version:    2.6.2
-Release:    7%{?dist}
+Release:    8%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -519,6 +519,9 @@ popd
 %{_libdir}/pkgconfig/fnvec_pthreads.pc
 
 %changelog
+* Thu Oct 15 2015 Antonio Trande <sagitterATfedoraproject.org> - 2.6.2-8
+- Rebuilt for cmake 3.4.0
+
 * Sun Sep 20 2015 Antonio Trande <sagitterATfedoraproject.org> - 2.6.2-7
 - Performed even tests of the parallel-libraries on ix86 arches
 
