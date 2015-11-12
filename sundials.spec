@@ -1,3 +1,7 @@
+%if 0%{?fedora} <= 22
+%global _hardened_build 1
+%endif
+
 ## Define if use openmpi or not
 %ifarch s390 s390x
 %global with_openmpi 0
@@ -5,10 +9,26 @@
 %global with_openmpi 1
 %endif
 
+## openmpi tests still crash/hang on i686 with openmpi-1.18 (F21)
+%if 0%{?fedora} == 21
+%ifnarch %ix86 %{arm}
+%global with_parcheck 1
+%global with_sercheck 1
+%else
+%global with_parcheck 0
+%global with_sercheck 1
+%endif
+%endif
+
+%if 0%{?fedora} > 21
+%global with_parcheck 1
+%global with_sercheck 1
+%endif
+
 Summary:    Suite of nonlinear solvers
 Name:       sundials
 Version:    2.6.2
-Release:    8%{?dist}
+Release:    9%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -70,6 +90,8 @@ for use in writing mathematical software.
 This package contains the Sundials parallel OpenMPI devel libraries and
 header files.
 
+%if 0%{?fedora} == 21
+%ifarch %ix86
 %package fortran-openmpi
 Summary:    Suite of nonlinear solvers
 Group:      Development/Libraries
@@ -90,6 +112,31 @@ for use in writing mathematical software.
 
 This package contains the Sundials Fortran parallel OpenMPI devel libraries and
 header files.
+%endif
+%endif
+
+%if 0%{?fedora} > 21
+%package fortran-openmpi
+Summary:    Suite of nonlinear solvers
+Group:      Development/Libraries
+Requires:   gcc-gfortran%{?_isa}
+%description fortran-openmpi
+SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
+for use in writing mathematical software.
+
+This package contains the Sundials Fortran parallel OpenMPI libraries.
+
+%package fortran-openmpi-devel
+Summary:    Suite of nonlinear solvers
+Group:      Development/Libraries
+Requires:   %{name}-fortran-openmpi%{?_isa} = %{version}-%{release}
+%description fortran-openmpi-devel
+SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
+for use in writing mathematical software.
+
+This package contains the Sundials Fortran parallel OpenMPI devel libraries and
+header files.
+%endif
 %endif
 
 %package fortran
@@ -216,22 +263,23 @@ mv src/nvec_pthreads/README src/README-nvec_pthreads
 %if 0%{?with_openmpi}
 mkdir buildparallel_dir && pushd buildparallel_dir
 %{_openmpi_load}
-export LDFLAGS=" -Wl,--as-needed -lpthread"
+export LDFLAGS="%{__global_ldflags} -Wl,-z,now -Wl,--as-needed -lpthread"
 %cmake \
  -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
  -DCMAKE_BUILD_TYPE:STRING=Release \
- -DCMAKE_C_FLAGS_RELEASE:STRING="%{optflags}" \
+ -DCMAKE_C_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now" \
+ -DCMAKE_MODULE_LINKER_FLAGS:STRING="%{__global_ldflags} -Wl,-z,now" \
  -DCMAKE_INSTALL_PREFIX=%{_prefix} \
  -DEXAMPLES_ENABLE=ON -DEXAMPLES_INSTALL=OFF \
- -DEXAMPLES_INSTALL_PATH:STRING=share/sundials \
  -DBUILD_SHARED_LIBS:BOOL=ON -DBUILD_STATIC_LIBS:BOOL=OFF \
+ -DCMAKE_SKIP_RPATH:BOOL=YES -DCMAKE_SKIP_INSTALL_RPATH:BOOL=YES \
  -DMPI_ENABLE:BOLL=ON \
  -DMPI_MPICC:STRING=%{_libdir}/openmpi/bin/mpicc \
  -DMPI_RUN_COMMAND=mpirun \
  -DMPI_MPIF77:STRING=%{_libdir}/openmpi/bin/mpif77 \
  -DFCMIX_ENABLE:BOOL=ON \
  -DCMAKE_Fortran_COMPILER:STRING=%{_bindir}/gfortran \
- -DCMAKE_Fortran_FLAGS_RELEASE:STRING="%{optflags}" \
+ -DCMAKE_Fortran_FLAGS_RELEASE:STRING="%{optflags} %{__global_ldflags} -Wl,-z,now" \
  -DPTHREAD_ENABLE:BOOL=OFF \
  -DLAPACK_ENABLE:BOOL=ON -DSUPERLUMT_ENABLE:BOOL=OFF \
  -DKLU_ENABLE:BOOL=OFF -Wno-dev ..
@@ -241,20 +289,21 @@ popd
 %endif
 
 mkdir buildserial_dir && pushd buildserial_dir
-export LDFLAGS=" -lm "
+export LDFLAGS="%{__global_ldflags} -Wl,-z,now -lm"
 %cmake \
  -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
  -DCMAKE_BUILD_TYPE:STRING=Release \
- -DCMAKE_C_FLAGS_RELEASE:STRING="%{optflags}" \
- -DCMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING=" -llapack -lblas -Wl,--as-needed -lpthread " \
+ -DCMAKE_C_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now" \
+ -DCMAKE_MODULE_LINKER_FLAGS:STRING="%{__global_ldflags} -Wl,-z,now" \
+ -DCMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING="%{__global_ldflags} -Wl,-z,now -llapack -lblas -Wl,--as-needed -lpthread " \
  -DCMAKE_INSTALL_PREFIX=%{_prefix} \
  -DEXAMPLES_ENABLE=ON -DEXAMPLES_INSTALL=OFF \
- -DEXAMPLES_INSTALL_PATH:STRING=share/sundials \
+ -DCMAKE_SKIP_RPATH:BOOL=YES -DCMAKE_SKIP_INSTALL_RPATH:BOOL=YES \
  -DBUILD_SHARED_LIBS:BOOL=ON -DBUILD_STATIC_LIBS:BOOL=OFF \
  -DMPI_ENABLE:BOLL=OFF \
  -DFCMIX_ENABLE:BOOL=ON \
  -DCMAKE_Fortran_COMPILER:STRING=%{_bindir}/gfortran \
- -DCMAKE_Fortran_FLAGS_RELEASE:STRING="%{optflags}" \
+ -DCMAKE_Fortran_FLAGS_RELEASE:STRING="%{optflags} %{__global_ldflags} -Wl,-z,now" \
  -DPTHREAD_ENABLE:BOOL=ON \
  -DLAPACK_ENABLE:BOOL=ON -DSUPERLUMT_ENABLE:BOOL=OFF \
  -DKLU_ENABLE:BOOL=OFF -Wno-dev ..
@@ -279,32 +328,48 @@ install -pm 644 sundials-pkgconfig_files/*.pc %{buildroot}%{_libdir}/pkgconfig
 %postun threads -p /sbin/ldconfig
 
 %check
+%if 0%{?with_parcheck}
 %if 0%{?with_openmpi}
-pushd buildparallel_dir/examples
 %{_openmpi_load}
 ##arkode
-mpirun -np 4 -wdir arkode/C_parallel ark_diurnal_kry_bbd_p
-mpirun -np 4 -wdir arkode/F77_parallel fark_diag_kry_bbd_p
-##cvode
-mpirun -np 4 -wdir cvode/fcmix_parallel fcvDiag_kry_bbd_p
-mpirun -np 4 -wdir cvode/parallel cvAdvDiff_diag_p
-##cvodes
-mpirun -np 4 -wdir cvodes/parallel cvsAdvDiff_ASAp_non_p
-##ida
-mpirun -np 4 -wdir ida/fcmix_parallel fidaHeat2D_kry_bbd_p
-mpirun -np 4 -wdir ida/parallel idaFoodWeb_kry_bbd_p
-##idas
-mpirun -np 4 -wdir idas/parallel idasBruss_ASAp_kry_bbd_p
-##kinsol
-mpirun -np 4 -wdir kinsol/fcmix_parallel fkinDiagon_kry_p
-mpirun -np 4 -wdir kinsol/parallel kinFoodWeb_kry_bbd_p
-##nvector
-mpirun -np 4 -wdir nvector/parallel test_nvector_mpi 5000 4 1
-%{_openmpi_unload}
-popd
-%endif  ##if with openmpi
+mpirun -wdir buildparallel_dir/examples/arkode/C_parallel -x LD_LIBRARY_PATH=%{buildroot}%{_libdir}/openmpi/lib:%{buildroot}%{_libdir} -np 4 ark_diurnal_kry_bbd_p
+%if 0%{?fedora} > 21
+mpirun -wdir buildparallel_dir/examples/arkode/F77_parallel -x LD_LIBRARY_PATH=%{buildroot}%{_libdir}/openmpi/lib:%{buildroot}%{_fmoddir}/openmpi-%{_arch}:%{buildroot}%{_libdir} -np 4 fark_diag_kry_bbd_p
+%endif
 
+##cvode
+%if 0%{?fedora} > 21
+mpirun -wdir buildparallel_dir/examples/cvode/fcmix_parallel -x LD_LIBRARY_PATH=%{buildroot}%{_fmoddir}/openmpi-%{_arch}:%{buildroot}%{_libdir}/openmpi/lib:%{buildroot}%{_libdir} fcvDiag_kry_bbd_p -np 4
+%endif
+mpirun -wdir buildparallel_dir/examples/cvode/parallel -x LD_LIBRARY_PATH=%{buildroot}%{_libdir}/openmpi/lib:%{buildroot}%{_libdir}:%{buildroot}%{_libdir} -np 4 cvAdvDiff_diag_p
+
+##cvodes
+mpirun -wdir buildparallel_dir/examples/cvodes/parallel -x LD_LIBRARY_PATH=%{buildroot}%{_libdir}/openmpi/lib:%{buildroot}%{_libdir} -np 4 cvsAdvDiff_ASAp_non_p
+
+##ida
+%if 0%{?fedora} > 21
+mpirun -wdir buildparallel_dir/examples/ida/fcmix_parallel -x LD_LIBRARY_PATH=%{buildroot}%{_fmoddir}/openmpi-%{_arch}:%{buildroot}%{_libdir}/openmpi/lib:%{buildroot}%{_libdir} -np 4 fidaHeat2D_kry_bbd_p
+%endif
+mpirun -wdir buildparallel_dir/examples/ida/parallel -x LD_LIBRARY_PATH=%{buildroot}%{_libdir}/openmpi/lib:%{buildroot}%{_libdir} -np 4 idaFoodWeb_kry_bbd_p
+
+##idas
+mpirun -wdir buildparallel_dir/examples/idas/parallel -x LD_LIBRARY_PATH=%{buildroot}%{_libdir}/openmpi/lib:%{buildroot}%{_libdir} -np 4 idasBruss_ASAp_kry_bbd_p
+
+##kinsol
+%if 0%{?fedora} > 21
+mpirun -wdir buildparallel_dir/examples/kinsol/fcmix_parallel -x LD_LIBRARY_PATH=%{buildroot}%{_fmoddir}/openmpi-%{_arch}:%{buildroot}%{_libdir}/openmpi/lib:%{buildroot}%{_libdir} -np 4 fkinDiagon_kry_p
+%endif
+mpirun -wdir buildparallel_dir/examples/kinsol/parallel -x LD_LIBRARY_PATH=%{buildroot}%{_libdir}/openmpi/lib:%{buildroot}%{_libdir} -np 4 kinFoodWeb_kry_bbd_p
+
+##nvector
+mpirun -wdir buildparallel_dir/examples/nvector/parallel -x LD_LIBRARY_PATH=%{buildroot}%{_libdir}/openmpi/lib:%{buildroot}%{_libdir} -np 4 test_nvector_mpi 5000 4 1
+%{_openmpi_unload}
+%endif ##if openmpi
+%endif ## if with_parcheck
+
+%if 0%{?with_sercheck}
 pushd buildserial_dir/examples
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:%{buildroot}%{_libdir}:%{buildroot}%{_fmoddir}
 ##arkode
 cd arkode/C_serial
 ./ark_analytic
@@ -420,6 +485,7 @@ cd nvector/pthreads
 cd ../serial
 ./test_nvector_serial 5000 4 1
 popd
+%endif ##if with_sercheck
 
 %files
 %license LICENSE
@@ -431,7 +497,6 @@ popd
 %{_libdir}/libsundials_ida.so.* 
 %{_libdir}/libsundials_idas.so.* 
 %{_libdir}/libsundials_kinsol.so.*
-%exclude %{_datadir}/sundials/
 
 %files doc
 %license LICENSE
@@ -480,6 +545,8 @@ popd
 %{_includedir}/openmpi-%{_arch}/nvector/nvector_parallel.h
 %{_libdir}/openmpi/lib/libsundials_nvecparallel.so
 
+%if 0%{?fedora} == 21
+%ifarch %ix86
 %files fortran-openmpi
 %license LICENSE
 %doc README src/README-nvec_par
@@ -488,6 +555,18 @@ popd
 %files fortran-openmpi-devel
 %{_includedir}/openmpi-%{_arch}/nvector/nvector_parallel.h
 %{_fmoddir}/openmpi-%{_arch}/libsundials_fnvecparallel.so
+%endif
+%endif
+%if 0%{?fedora} > 21
+%files fortran-openmpi
+%license LICENSE
+%doc README src/README-nvec_par
+%{_fmoddir}/openmpi-%{_arch}/libsundials_fnvecparallel.so.*
+
+%files fortran-openmpi-devel
+%{_includedir}/openmpi-%{_arch}/nvector/nvector_parallel.h
+%{_fmoddir}/openmpi-%{_arch}/libsundials_fnvecparallel.so
+%endif
 %endif
 
 %files fortran
@@ -519,6 +598,11 @@ popd
 %{_libdir}/pkgconfig/fnvec_pthreads.pc
 
 %changelog
+* Wed Nov 11 2015 Antonio Trande <sagitterATfedoraproject.org> - 2.6.2-9
+- Hardened builds on <F23
+- openmpi tests still crash/hang on i686 (Fedora 21)
+- Rebuilt on Fedora 21
+
 * Thu Oct 15 2015 Antonio Trande <sagitterATfedoraproject.org> - 2.6.2-8
 - Rebuilt for cmake 3.4.0
 
