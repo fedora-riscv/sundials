@@ -28,7 +28,7 @@
 Summary:    Suite of nonlinear solvers
 Name:       sundials
 Version:    2.6.2
-Release:    9%{?dist}
+Release:    10%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -90,7 +90,7 @@ for use in writing mathematical software.
 This package contains the Sundials parallel OpenMPI devel libraries and
 header files.
 
-%if 0%{?fedora} == 21
+%if 0%{?fedora} <= 22
 %ifarch %ix86
 %package fortran-openmpi
 Summary:    Suite of nonlinear solvers
@@ -115,7 +115,7 @@ header files.
 %endif
 %endif
 
-%if 0%{?fedora} > 21
+%if 0%{?fedora} > 22
 %package fortran-openmpi
 Summary:    Suite of nonlinear solvers
 Group:      Development/Libraries
@@ -333,12 +333,12 @@ install -pm 644 sundials-pkgconfig_files/*.pc %{buildroot}%{_libdir}/pkgconfig
 %{_openmpi_load}
 ##arkode
 mpirun -wdir buildparallel_dir/examples/arkode/C_parallel -x LD_LIBRARY_PATH=%{buildroot}%{_libdir}/openmpi/lib:%{buildroot}%{_libdir} -np 4 ark_diurnal_kry_bbd_p
-%if 0%{?fedora} > 21
+%if 0%{?fedora} > 22
 mpirun -wdir buildparallel_dir/examples/arkode/F77_parallel -x LD_LIBRARY_PATH=%{buildroot}%{_libdir}/openmpi/lib:%{buildroot}%{_fmoddir}/openmpi-%{_arch}:%{buildroot}%{_libdir} -np 4 fark_diag_kry_bbd_p
 %endif
 
 ##cvode
-%if 0%{?fedora} > 21
+%if 0%{?fedora} > 22
 mpirun -wdir buildparallel_dir/examples/cvode/fcmix_parallel -x LD_LIBRARY_PATH=%{buildroot}%{_fmoddir}/openmpi-%{_arch}:%{buildroot}%{_libdir}/openmpi/lib:%{buildroot}%{_libdir} fcvDiag_kry_bbd_p -np 4
 %endif
 mpirun -wdir buildparallel_dir/examples/cvode/parallel -x LD_LIBRARY_PATH=%{buildroot}%{_libdir}/openmpi/lib:%{buildroot}%{_libdir}:%{buildroot}%{_libdir} -np 4 cvAdvDiff_diag_p
@@ -347,7 +347,7 @@ mpirun -wdir buildparallel_dir/examples/cvode/parallel -x LD_LIBRARY_PATH=%{buil
 mpirun -wdir buildparallel_dir/examples/cvodes/parallel -x LD_LIBRARY_PATH=%{buildroot}%{_libdir}/openmpi/lib:%{buildroot}%{_libdir} -np 4 cvsAdvDiff_ASAp_non_p
 
 ##ida
-%if 0%{?fedora} > 21
+%if 0%{?fedora} > 22
 mpirun -wdir buildparallel_dir/examples/ida/fcmix_parallel -x LD_LIBRARY_PATH=%{buildroot}%{_fmoddir}/openmpi-%{_arch}:%{buildroot}%{_libdir}/openmpi/lib:%{buildroot}%{_libdir} -np 4 fidaHeat2D_kry_bbd_p
 %endif
 mpirun -wdir buildparallel_dir/examples/ida/parallel -x LD_LIBRARY_PATH=%{buildroot}%{_libdir}/openmpi/lib:%{buildroot}%{_libdir} -np 4 idaFoodWeb_kry_bbd_p
@@ -356,7 +356,7 @@ mpirun -wdir buildparallel_dir/examples/ida/parallel -x LD_LIBRARY_PATH=%{buildr
 mpirun -wdir buildparallel_dir/examples/idas/parallel -x LD_LIBRARY_PATH=%{buildroot}%{_libdir}/openmpi/lib:%{buildroot}%{_libdir} -np 4 idasBruss_ASAp_kry_bbd_p
 
 ##kinsol
-%if 0%{?fedora} > 21
+%if 0%{?fedora} > 22
 mpirun -wdir buildparallel_dir/examples/kinsol/fcmix_parallel -x LD_LIBRARY_PATH=%{buildroot}%{_fmoddir}/openmpi-%{_arch}:%{buildroot}%{_libdir}/openmpi/lib:%{buildroot}%{_libdir} -np 4 fkinDiagon_kry_p
 %endif
 mpirun -wdir buildparallel_dir/examples/kinsol/parallel -x LD_LIBRARY_PATH=%{buildroot}%{_libdir}/openmpi/lib:%{buildroot}%{_libdir} -np 4 kinFoodWeb_kry_bbd_p
@@ -545,7 +545,7 @@ popd
 %{_includedir}/openmpi-%{_arch}/nvector/nvector_parallel.h
 %{_libdir}/openmpi/lib/libsundials_nvecparallel.so
 
-%if 0%{?fedora} == 21
+%if 0%{?fedora} <= 22
 %ifarch %ix86
 %files fortran-openmpi
 %license LICENSE
@@ -557,7 +557,7 @@ popd
 %{_fmoddir}/openmpi-%{_arch}/libsundials_fnvecparallel.so
 %endif
 %endif
-%if 0%{?fedora} > 21
+%if 0%{?fedora} > 22
 %files fortran-openmpi
 %license LICENSE
 %doc README src/README-nvec_par
@@ -598,6 +598,9 @@ popd
 %{_libdir}/pkgconfig/fnvec_pthreads.pc
 
 %changelog
+* Wed Nov 11 2015 Antonio Trande <sagitterATfedoraproject.org> - 2.6.2-10
+- OpenMPI Fortran lib tests not compiled on F<23 
+
 * Wed Nov 11 2015 Antonio Trande <sagitterATfedoraproject.org> - 2.6.2-9
 - Hardened builds on <F23
 - openmpi tests still crash/hang on i686 (Fedora 21)
