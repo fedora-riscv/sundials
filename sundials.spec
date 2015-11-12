@@ -20,7 +20,7 @@
 %endif
 %endif
 
-%if 0%{?fedora} > 21
+%if ( 0%{?fedora} && 0%{?fedora} > 21 ) || ( 0%{?epel} && 0%{?epel} > 6 )
 %global with_parcheck 1
 %global with_sercheck 1
 %endif
@@ -28,7 +28,7 @@
 Summary:    Suite of nonlinear solvers
 Name:       sundials
 Version:    2.6.2
-Release:    10%{?dist}
+Release:    11%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -90,8 +90,6 @@ for use in writing mathematical software.
 This package contains the Sundials parallel OpenMPI devel libraries and
 header files.
 
-%if 0%{?fedora} <= 22
-%ifarch %ix86
 %package fortran-openmpi
 Summary:    Suite of nonlinear solvers
 Group:      Development/Libraries
@@ -112,31 +110,6 @@ for use in writing mathematical software.
 
 This package contains the Sundials Fortran parallel OpenMPI devel libraries and
 header files.
-%endif
-%endif
-
-%if 0%{?fedora} > 22
-%package fortran-openmpi
-Summary:    Suite of nonlinear solvers
-Group:      Development/Libraries
-Requires:   gcc-gfortran%{?_isa}
-%description fortran-openmpi
-SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
-for use in writing mathematical software.
-
-This package contains the Sundials Fortran parallel OpenMPI libraries.
-
-%package fortran-openmpi-devel
-Summary:    Suite of nonlinear solvers
-Group:      Development/Libraries
-Requires:   %{name}-fortran-openmpi%{?_isa} = %{version}-%{release}
-%description fortran-openmpi-devel
-SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
-for use in writing mathematical software.
-
-This package contains the Sundials Fortran parallel OpenMPI devel libraries and
-header files.
-%endif
 %endif
 
 %package fortran
@@ -263,12 +236,12 @@ mv src/nvec_pthreads/README src/README-nvec_pthreads
 %if 0%{?with_openmpi}
 mkdir buildparallel_dir && pushd buildparallel_dir
 %{_openmpi_load}
-export LDFLAGS="%{__global_ldflags} -Wl,-z,now -Wl,--as-needed -lpthread"
+export LDFLAGS=" -Wl,--as-needed -lpthread"
 %cmake \
  -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
  -DCMAKE_BUILD_TYPE:STRING=Release \
  -DCMAKE_C_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now" \
- -DCMAKE_MODULE_LINKER_FLAGS:STRING="%{__global_ldflags} -Wl,-z,now" \
+ -DCMAKE_MODULE_LINKER_FLAGS:STRING=" " \
  -DCMAKE_INSTALL_PREFIX=%{_prefix} \
  -DEXAMPLES_ENABLE=ON -DEXAMPLES_INSTALL=OFF \
  -DBUILD_SHARED_LIBS:BOOL=ON -DBUILD_STATIC_LIBS:BOOL=OFF \
@@ -276,10 +249,14 @@ export LDFLAGS="%{__global_ldflags} -Wl,-z,now -Wl,--as-needed -lpthread"
  -DMPI_ENABLE:BOLL=ON \
  -DMPI_MPICC:STRING=%{_libdir}/openmpi/bin/mpicc \
  -DMPI_RUN_COMMAND=mpirun \
+%if 0%{?fedora}
+ -DMPI_MPIF77:STRING=%{_libdir}/openmpi/bin/mpifort \
+%else
  -DMPI_MPIF77:STRING=%{_libdir}/openmpi/bin/mpif77 \
+%endif
  -DFCMIX_ENABLE:BOOL=ON \
  -DCMAKE_Fortran_COMPILER:STRING=%{_bindir}/gfortran \
- -DCMAKE_Fortran_FLAGS_RELEASE:STRING="%{optflags} %{__global_ldflags} -Wl,-z,now" \
+ -DCMAKE_Fortran_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now" \
  -DPTHREAD_ENABLE:BOOL=OFF \
  -DLAPACK_ENABLE:BOOL=ON -DSUPERLUMT_ENABLE:BOOL=OFF \
  -DKLU_ENABLE:BOOL=OFF -Wno-dev ..
@@ -303,7 +280,7 @@ export LDFLAGS="%{__global_ldflags} -Wl,-z,now -lm"
  -DMPI_ENABLE:BOLL=OFF \
  -DFCMIX_ENABLE:BOOL=ON \
  -DCMAKE_Fortran_COMPILER:STRING=%{_bindir}/gfortran \
- -DCMAKE_Fortran_FLAGS_RELEASE:STRING="%{optflags} %{__global_ldflags} -Wl,-z,now" \
+ -DCMAKE_Fortran_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now" \
  -DPTHREAD_ENABLE:BOOL=ON \
  -DLAPACK_ENABLE:BOOL=ON -DSUPERLUMT_ENABLE:BOOL=OFF \
  -DKLU_ENABLE:BOOL=OFF -Wno-dev ..
@@ -332,37 +309,29 @@ install -pm 644 sundials-pkgconfig_files/*.pc %{buildroot}%{_libdir}/pkgconfig
 %if 0%{?with_openmpi}
 %{_openmpi_load}
 ##arkode
-mpirun -wdir buildparallel_dir/examples/arkode/C_parallel -x LD_LIBRARY_PATH=%{buildroot}%{_libdir}/openmpi/lib:%{buildroot}%{_libdir} -np 4 ark_diurnal_kry_bbd_p
-%if 0%{?fedora} > 22
-mpirun -wdir buildparallel_dir/examples/arkode/F77_parallel -x LD_LIBRARY_PATH=%{buildroot}%{_libdir}/openmpi/lib:%{buildroot}%{_fmoddir}/openmpi-%{_arch}:%{buildroot}%{_libdir} -np 4 fark_diag_kry_bbd_p
-%endif
+mpirun -wdir buildparallel_dir/examples/arkode/C_parallel -x LD_LIBRARY_PATH=%{buildroot}%{_libdir}/openmpi/lib:%{buildroot}%{_libdir}:%{_libdir}/openmpi/lib -np 4 ark_diurnal_kry_bbd_p
+mpirun -wdir buildparallel_dir/examples/arkode/F77_parallel -x LD_LIBRARY_PATH=%{buildroot}%{_libdir}/openmpi/lib:%{buildroot}%{_fmoddir}/openmpi-%{_arch}:%{buildroot}%{_libdir}:%{_libdir}/openmpi/lib -np 4 fark_diag_kry_bbd_p
 
 ##cvode
-%if 0%{?fedora} > 22
-mpirun -wdir buildparallel_dir/examples/cvode/fcmix_parallel -x LD_LIBRARY_PATH=%{buildroot}%{_fmoddir}/openmpi-%{_arch}:%{buildroot}%{_libdir}/openmpi/lib:%{buildroot}%{_libdir} fcvDiag_kry_bbd_p -np 4
-%endif
-mpirun -wdir buildparallel_dir/examples/cvode/parallel -x LD_LIBRARY_PATH=%{buildroot}%{_libdir}/openmpi/lib:%{buildroot}%{_libdir}:%{buildroot}%{_libdir} -np 4 cvAdvDiff_diag_p
+mpirun -wdir buildparallel_dir/examples/cvode/fcmix_parallel -x LD_LIBRARY_PATH=%{buildroot}%{_fmoddir}/openmpi-%{_arch}:%{buildroot}%{_libdir}/openmpi/lib:%{buildroot}%{_libdir}:%{_libdir}/openmpi/lib fcvDiag_kry_bbd_p -np 4
+mpirun -wdir buildparallel_dir/examples/cvode/parallel -x LD_LIBRARY_PATH=%{buildroot}%{_libdir}/openmpi/lib:%{buildroot}%{_libdir}:%{buildroot}%{_libdir}:%{_libdir}/openmpi/lib -np 4 cvAdvDiff_diag_p
 
 ##cvodes
-mpirun -wdir buildparallel_dir/examples/cvodes/parallel -x LD_LIBRARY_PATH=%{buildroot}%{_libdir}/openmpi/lib:%{buildroot}%{_libdir} -np 4 cvsAdvDiff_ASAp_non_p
+mpirun -wdir buildparallel_dir/examples/cvodes/parallel -x LD_LIBRARY_PATH=%{buildroot}%{_libdir}/openmpi/lib:%{buildroot}%{_libdir}:%{_libdir}/openmpi/lib -np 4 cvsAdvDiff_ASAp_non_p
 
 ##ida
-%if 0%{?fedora} > 22
-mpirun -wdir buildparallel_dir/examples/ida/fcmix_parallel -x LD_LIBRARY_PATH=%{buildroot}%{_fmoddir}/openmpi-%{_arch}:%{buildroot}%{_libdir}/openmpi/lib:%{buildroot}%{_libdir} -np 4 fidaHeat2D_kry_bbd_p
-%endif
-mpirun -wdir buildparallel_dir/examples/ida/parallel -x LD_LIBRARY_PATH=%{buildroot}%{_libdir}/openmpi/lib:%{buildroot}%{_libdir} -np 4 idaFoodWeb_kry_bbd_p
+mpirun -wdir buildparallel_dir/examples/ida/fcmix_parallel -x LD_LIBRARY_PATH=%{buildroot}%{_fmoddir}/openmpi-%{_arch}:%{buildroot}%{_libdir}/openmpi/lib:%{buildroot}%{_libdir}:%{_libdir}/openmpi/lib -np 4 fidaHeat2D_kry_bbd_p
+mpirun -wdir buildparallel_dir/examples/ida/parallel -x LD_LIBRARY_PATH=%{buildroot}%{_libdir}/openmpi/lib:%{buildroot}%{_libdir}:%{_libdir}/openmpi/lib -np 4 idaFoodWeb_kry_bbd_p
 
 ##idas
-mpirun -wdir buildparallel_dir/examples/idas/parallel -x LD_LIBRARY_PATH=%{buildroot}%{_libdir}/openmpi/lib:%{buildroot}%{_libdir} -np 4 idasBruss_ASAp_kry_bbd_p
+mpirun -wdir buildparallel_dir/examples/idas/parallel -x LD_LIBRARY_PATH=%{buildroot}%{_libdir}/openmpi/lib:%{buildroot}%{_libdir}:%{_libdir}/openmpi/lib -np 4 idasBruss_ASAp_kry_bbd_p
 
 ##kinsol
-%if 0%{?fedora} > 22
-mpirun -wdir buildparallel_dir/examples/kinsol/fcmix_parallel -x LD_LIBRARY_PATH=%{buildroot}%{_fmoddir}/openmpi-%{_arch}:%{buildroot}%{_libdir}/openmpi/lib:%{buildroot}%{_libdir} -np 4 fkinDiagon_kry_p
-%endif
-mpirun -wdir buildparallel_dir/examples/kinsol/parallel -x LD_LIBRARY_PATH=%{buildroot}%{_libdir}/openmpi/lib:%{buildroot}%{_libdir} -np 4 kinFoodWeb_kry_bbd_p
+mpirun -wdir buildparallel_dir/examples/kinsol/fcmix_parallel -x LD_LIBRARY_PATH=%{buildroot}%{_fmoddir}/openmpi-%{_arch}:%{buildroot}%{_libdir}/openmpi/lib:%{buildroot}%{_libdir}:%{_libdir}/openmpi/lib -np 4 fkinDiagon_kry_p
+mpirun -wdir buildparallel_dir/examples/kinsol/parallel -x LD_LIBRARY_PATH=%{buildroot}%{_libdir}/openmpi/lib:%{buildroot}%{_libdir}:%{_libdir}/openmpi/lib -np 4 kinFoodWeb_kry_bbd_p
 
 ##nvector
-mpirun -wdir buildparallel_dir/examples/nvector/parallel -x LD_LIBRARY_PATH=%{buildroot}%{_libdir}/openmpi/lib:%{buildroot}%{_libdir} -np 4 test_nvector_mpi 5000 4 1
+mpirun -wdir buildparallel_dir/examples/nvector/parallel -x LD_LIBRARY_PATH=%{buildroot}%{_libdir}/openmpi/lib:%{buildroot}%{_libdir}:%{_libdir}/openmpi/lib -np 4 test_nvector_mpi 5000 4 1
 %{_openmpi_unload}
 %endif ##if openmpi
 %endif ## if with_parcheck
@@ -545,8 +514,6 @@ popd
 %{_includedir}/openmpi-%{_arch}/nvector/nvector_parallel.h
 %{_libdir}/openmpi/lib/libsundials_nvecparallel.so
 
-%if 0%{?fedora} <= 22
-%ifarch %ix86
 %files fortran-openmpi
 %license LICENSE
 %doc README src/README-nvec_par
@@ -555,18 +522,6 @@ popd
 %files fortran-openmpi-devel
 %{_includedir}/openmpi-%{_arch}/nvector/nvector_parallel.h
 %{_fmoddir}/openmpi-%{_arch}/libsundials_fnvecparallel.so
-%endif
-%endif
-%if 0%{?fedora} > 22
-%files fortran-openmpi
-%license LICENSE
-%doc README src/README-nvec_par
-%{_fmoddir}/openmpi-%{_arch}/libsundials_fnvecparallel.so.*
-
-%files fortran-openmpi-devel
-%{_includedir}/openmpi-%{_arch}/nvector/nvector_parallel.h
-%{_fmoddir}/openmpi-%{_arch}/libsundials_fnvecparallel.so
-%endif
 %endif
 
 %files fortran
@@ -598,8 +553,14 @@ popd
 %{_libdir}/pkgconfig/fnvec_pthreads.pc
 
 %changelog
+* Thu Nov 12 2015 Antonio Trande <sagitterATfedoraproject.org> - 2.6.2-11
+- Fixes for EPEL7
+- Set mpif77 only for OpenMPI < 1.17 (EPEL7)
+- Set mpifort for OpenMPI > 1.17 (Fedora)
+- Set LDFLAGS for EPEL7
+
 * Wed Nov 11 2015 Antonio Trande <sagitterATfedoraproject.org> - 2.6.2-10
-- OpenMPI Fortran lib tests not compiled on F<23 
+- OpenMPI Fortran lib tests not compiled on F<23
 
 * Wed Nov 11 2015 Antonio Trande <sagitterATfedoraproject.org> - 2.6.2-9
 - Hardened builds on <F23
