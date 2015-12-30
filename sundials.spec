@@ -28,7 +28,7 @@
 Summary:    Suite of nonlinear solvers
 Name:       sundials
 Version:    2.6.2
-Release:    11%{?dist}
+Release:    12%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -173,29 +173,24 @@ This package contains the documentation files
 %setup -q 
 %setup -q -T -D -a 1
 
-##Define library dirs in the pkg-config files
-sed -i 's|@@libdir@@|%{_libdir}|g' sundials-pkgconfig_files/*.pc
-sed -i 's|@@fmoddir@@|%{_fmoddir}|g' sundials-pkgconfig_files/*.pc
-sed -i 's|@@includedir@@|%{_includedir}|g' sundials-pkgconfig_files/*.pc
-
 ##Set destination library's paths
 sed -i 's/DESTINATION lib/DESTINATION %{_lib}/g' src/arkode/CMakeLists.txt
-sed -i 's|DESTINATION lib|DESTINATION %{_fmoddir}|g' src/arkode/fcmix/CMakeLists.txt
+sed -i 's|DESTINATION lib|DESTINATION %{_lib}|g' src/arkode/fcmix/CMakeLists.txt
 sed -i 's/DESTINATION lib/DESTINATION %{_lib}/g' src/cvode/CMakeLists.txt
-sed -i 's|DESTINATION lib|DESTINATION %{_fmoddir}|g' src/cvode/fcmix/CMakeLists.txt
+sed -i 's|DESTINATION lib|DESTINATION %{_lib}|g' src/cvode/fcmix/CMakeLists.txt
 sed -i 's/DESTINATION lib/DESTINATION %{_lib}/g' src/cvodes/CMakeLists.txt
 sed -i 's/DESTINATION lib/DESTINATION %{_lib}/g' src/ida/CMakeLists.txt
-sed -i 's|DESTINATION lib|DESTINATION %{_fmoddir}|g' src/ida/fcmix/CMakeLists.txt
+sed -i 's|DESTINATION lib|DESTINATION %{_lib}|g' src/ida/fcmix/CMakeLists.txt
 sed -i 's/DESTINATION lib/DESTINATION %{_lib}/g' src/idas/CMakeLists.txt
 sed -i 's/DESTINATION lib/DESTINATION %{_lib}/g' src/kinsol/CMakeLists.txt
-sed -i 's|DESTINATION lib|DESTINATION %{_fmoddir}|g' src/kinsol/fcmix/CMakeLists.txt
+sed -i 's|DESTINATION lib|DESTINATION %{_lib}|g' src/kinsol/fcmix/CMakeLists.txt
 
 ##Set pthread library's paths
 sed -i \
  's|INSTALL(TARGETS sundials_nvecpthreads_shared DESTINATION lib)|INSTALL(TARGETS sundials_nvecpthreads_shared DESTINATION %{_libdir})|g' \
   src/nvec_pthreads/CMakeLists.txt
 sed -i \
- 's|INSTALL(TARGETS sundials_fnvecpthreads_shared DESTINATION lib)|INSTALL(TARGETS sundials_fnvecpthreads_shared DESTINATION %{_fmoddir})|g' \
+ 's|INSTALL(TARGETS sundials_fnvecpthreads_shared DESTINATION lib)|INSTALL(TARGETS sundials_fnvecpthreads_shared DESTINATION %{_libdir})|g' \
   src/nvec_pthreads/CMakeLists.txt
 
 ##Set serial library's paths
@@ -204,7 +199,7 @@ sed -i \
   src/nvec_ser/CMakeLists.txt
 sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/nvector|g' src/nvec_ser/CMakeLists.txt
 sed -i \
- 's|TARGETS sundials_fnvecserial_shared DESTINATION lib|TARGETS sundials_fnvecserial_shared DESTINATION %{_fmoddir}|g' \
+ 's|TARGETS sundials_fnvecserial_shared DESTINATION lib|TARGETS sundials_fnvecserial_shared DESTINATION %{_libdir}|g' \
   src/nvec_ser/CMakeLists.txt
 
 ##Set parallel library's paths
@@ -213,7 +208,7 @@ sed -i \
   src/nvec_par/CMakeLists.txt
 sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/openmpi-%{_arch}/nvector|g' src/nvec_par/CMakeLists.txt
 sed -i \
- 's|TARGETS sundials_fnvecparallel_shared DESTINATION lib|TARGETS sundials_fnvecparallel_shared DESTINATION %{_fmoddir}/openmpi-%{_arch}|g' \
+ 's|TARGETS sundials_fnvecparallel_shared DESTINATION lib|TARGETS sundials_fnvecparallel_shared DESTINATION %{_libdir}/openmpi/lib|g' \
   src/nvec_par/CMakeLists.txt
 
 ## mpif77 test fails with GNU Fortran (GCC) 5.0.0 20150319 (64bit) Fedora 23
@@ -295,8 +290,19 @@ make install DESTDIR=%{buildroot} -C buildparallel_dir
 %endif
 make install DESTDIR=%{buildroot} -C buildserial_dir
 
+##Install all .pc files
+mkdir -p %{buildroot}%{_libdir}/openmpi/lib/pkgconfig
 mkdir -p %{buildroot}%{_libdir}/pkgconfig
-install -pm 644 sundials-pkgconfig_files/*.pc %{buildroot}%{_libdir}/pkgconfig
+mv PKGC_files/*nvec_parallel.pc %{buildroot}%{_libdir}/openmpi/lib/pkgconfig
+mv PKGC_files/*.pc %{buildroot}%{_libdir}/pkgconfig
+
+##Define library dirs in the pkg-config files
+sed -i 's|${libdir}|%{_libdir}|g' %{buildroot}%{_libdir}/pkgconfig/*.pc
+sed -i 's|${libdir}|%{_libdir}|g' %{buildroot}%{_libdir}/pkgconfig/*.pc
+sed -i 's|${includedir}|%{_includedir}|g' %{buildroot}%{_libdir}/pkgconfig/*.pc
+sed -i 's|${lib}|%{_lib}|g' %{buildroot}%{_libdir}/openmpi/lib/pkgconfig/*.pc
+sed -i 's|${arch}|%{_arch}|g' %{buildroot}%{_libdir}/openmpi/lib/pkgconfig/*.pc
+sed -i 's|includedir=${includedir}|includedir=%{_includedir}|g' %{buildroot}%{_libdir}/openmpi/lib/pkgconfig/*.pc
 
 %post -p /sbin/ldconfig
 %postun -p /sbin/ldconfig
@@ -304,41 +310,44 @@ install -pm 644 sundials-pkgconfig_files/*.pc %{buildroot}%{_libdir}/pkgconfig
 %post threads -p /sbin/ldconfig
 %postun threads -p /sbin/ldconfig
 
+%post fortran -p /sbin/ldconfig
+%postun fortran -p /sbin/ldconfig
+
 %check
 %if 0%{?with_parcheck}
 %if 0%{?with_openmpi}
 %{_openmpi_load}
 ##arkode
-mpirun -wdir buildparallel_dir/examples/arkode/C_parallel -x LD_LIBRARY_PATH=%{buildroot}%{_libdir}/openmpi/lib:%{buildroot}%{_libdir}:%{_libdir}/openmpi/lib -np 4 ark_diurnal_kry_bbd_p
-mpirun -wdir buildparallel_dir/examples/arkode/F77_parallel -x LD_LIBRARY_PATH=%{buildroot}%{_libdir}/openmpi/lib:%{buildroot}%{_fmoddir}/openmpi-%{_arch}:%{buildroot}%{_libdir}:%{_libdir}/openmpi/lib -np 4 fark_diag_kry_bbd_p
+mpirun -wdir buildparallel_dir/examples/arkode/C_parallel -x LD_LIBRARY_PATH=%{buildroot}%{_libdir}/openmpi/lib:%{buildroot}%{_libdir} -np 4 ark_diurnal_kry_bbd_p
+mpirun -wdir buildparallel_dir/examples/arkode/F77_parallel -x LD_LIBRARY_PATH=%{buildroot}%{_libdir}/openmpi/lib:%{buildroot}%{_libdir} -np 4 fark_diag_kry_bbd_p
 
 ##cvode
-mpirun -wdir buildparallel_dir/examples/cvode/fcmix_parallel -x LD_LIBRARY_PATH=%{buildroot}%{_fmoddir}/openmpi-%{_arch}:%{buildroot}%{_libdir}/openmpi/lib:%{buildroot}%{_libdir}:%{_libdir}/openmpi/lib fcvDiag_kry_bbd_p -np 4
-mpirun -wdir buildparallel_dir/examples/cvode/parallel -x LD_LIBRARY_PATH=%{buildroot}%{_libdir}/openmpi/lib:%{buildroot}%{_libdir}:%{buildroot}%{_libdir}:%{_libdir}/openmpi/lib -np 4 cvAdvDiff_diag_p
+mpirun -wdir buildparallel_dir/examples/cvode/fcmix_parallel -x LD_LIBRARY_PATH=%{buildroot}%{_libdir}/openmpi/lib:%{buildroot}%{_libdir} -np 4 fcvDiag_kry_bbd_p
+mpirun -wdir buildparallel_dir/examples/cvode/parallel -x LD_LIBRARY_PATH=%{buildroot}%{_libdir}/openmpi/lib:%{buildroot}%{_libdir} -np 4 cvAdvDiff_diag_p
 
 ##cvodes
-mpirun -wdir buildparallel_dir/examples/cvodes/parallel -x LD_LIBRARY_PATH=%{buildroot}%{_libdir}/openmpi/lib:%{buildroot}%{_libdir}:%{_libdir}/openmpi/lib -np 4 cvsAdvDiff_ASAp_non_p
+mpirun -wdir buildparallel_dir/examples/cvodes/parallel -x LD_LIBRARY_PATH=%{buildroot}%{_libdir}/openmpi/lib:%{buildroot}%{_libdir} -np 4 cvsAdvDiff_ASAp_non_p
 
 ##ida
-mpirun -wdir buildparallel_dir/examples/ida/fcmix_parallel -x LD_LIBRARY_PATH=%{buildroot}%{_fmoddir}/openmpi-%{_arch}:%{buildroot}%{_libdir}/openmpi/lib:%{buildroot}%{_libdir}:%{_libdir}/openmpi/lib -np 4 fidaHeat2D_kry_bbd_p
-mpirun -wdir buildparallel_dir/examples/ida/parallel -x LD_LIBRARY_PATH=%{buildroot}%{_libdir}/openmpi/lib:%{buildroot}%{_libdir}:%{_libdir}/openmpi/lib -np 4 idaFoodWeb_kry_bbd_p
+mpirun -wdir buildparallel_dir/examples/ida/fcmix_parallel -x LD_LIBRARY_PATH=%{buildroot}%{_libdir}/openmpi/lib:%{buildroot}%{_libdir} -np 4 fidaHeat2D_kry_bbd_p
+mpirun -wdir buildparallel_dir/examples/ida/parallel -x LD_LIBRARY_PATH=%{buildroot}%{_libdir}/openmpi/lib:%{buildroot}%{_libdir} -np 4 idaFoodWeb_kry_bbd_p
 
 ##idas
-mpirun -wdir buildparallel_dir/examples/idas/parallel -x LD_LIBRARY_PATH=%{buildroot}%{_libdir}/openmpi/lib:%{buildroot}%{_libdir}:%{_libdir}/openmpi/lib -np 4 idasBruss_ASAp_kry_bbd_p
+mpirun -wdir buildparallel_dir/examples/idas/parallel -x LD_LIBRARY_PATH=%{buildroot}%{_libdir}/openmpi/lib:%{buildroot}%{_libdir} -np 4 idasBruss_ASAp_kry_bbd_p
 
 ##kinsol
-mpirun -wdir buildparallel_dir/examples/kinsol/fcmix_parallel -x LD_LIBRARY_PATH=%{buildroot}%{_fmoddir}/openmpi-%{_arch}:%{buildroot}%{_libdir}/openmpi/lib:%{buildroot}%{_libdir}:%{_libdir}/openmpi/lib -np 4 fkinDiagon_kry_p
-mpirun -wdir buildparallel_dir/examples/kinsol/parallel -x LD_LIBRARY_PATH=%{buildroot}%{_libdir}/openmpi/lib:%{buildroot}%{_libdir}:%{_libdir}/openmpi/lib -np 4 kinFoodWeb_kry_bbd_p
+mpirun -wdir buildparallel_dir/examples/kinsol/fcmix_parallel -x LD_LIBRARY_PATH=%{buildroot}%{_libdir}/openmpi/lib:%{buildroot}%{_libdir} -np 4 fkinDiagon_kry_p
+mpirun -wdir buildparallel_dir/examples/kinsol/parallel -x LD_LIBRARY_PATH=%{buildroot}%{_libdir}/openmpi/lib:%{buildroot}%{_libdir} -np 4 kinFoodWeb_kry_bbd_p
 
 ##nvector
-mpirun -wdir buildparallel_dir/examples/nvector/parallel -x LD_LIBRARY_PATH=%{buildroot}%{_libdir}/openmpi/lib:%{buildroot}%{_libdir}:%{_libdir}/openmpi/lib -np 4 test_nvector_mpi 5000 4 1
+mpirun -wdir buildparallel_dir/examples/nvector/parallel -x LD_LIBRARY_PATH=%{buildroot}%{_libdir}/openmpi/lib:%{buildroot}%{_libdir} -np 4 test_nvector_mpi 5000 4 1
 %{_openmpi_unload}
 %endif ##if openmpi
 %endif ## if with_parcheck
 
 %if 0%{?with_sercheck}
 pushd buildserial_dir/examples
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:%{buildroot}%{_libdir}:%{buildroot}%{_fmoddir}
+export LD_LIBRARY_PATH=%{buildroot}%{_libdir}
 ##arkode
 cd arkode/C_serial
 ./ark_analytic
@@ -513,26 +522,28 @@ popd
 %files openmpi-devel
 %{_includedir}/openmpi-%{_arch}/nvector/nvector_parallel.h
 %{_libdir}/openmpi/lib/libsundials_nvecparallel.so
+%{_libdir}/openmpi/lib/pkgconfig/nvec_parallel.pc
 
 %files fortran-openmpi
 %license LICENSE
 %doc README src/README-nvec_par
-%{_fmoddir}/openmpi-%{_arch}/libsundials_fnvecparallel.so.*
+%{_libdir}/openmpi/lib/libsundials_fnvecparallel.so.*
 
 %files fortran-openmpi-devel
 %{_includedir}/openmpi-%{_arch}/nvector/nvector_parallel.h
-%{_fmoddir}/openmpi-%{_arch}/libsundials_fnvecparallel.so
+%{_libdir}/openmpi/lib/libsundials_fnvecparallel.so
+%{_libdir}/openmpi/lib/pkgconfig/fnvec_parallel.pc
 %endif
 
 %files fortran
 %license LICENSE
 %doc README
-%{_fmoddir}/libsundials_fnvecserial.so.*
+%{_libdir}/libsundials_fnvecserial.so.*
 
 %files fortran-devel
 %{_includedir}/sundials/sundials_fnvector.h
-%{_fmoddir}/libsundials_fnvecserial.so
-%{_fmoddir}/libsundials_*.a
+%{_libdir}/libsundials_fnvecserial.so
+%{_libdir}/libsundials_*.a
 %{_libdir}/pkgconfig/fcvode_serial.pc
 %{_libdir}/pkgconfig/fkinsol_serial.pc
 %{_libdir}/pkgconfig/fnvec_serial.pc
@@ -543,16 +554,21 @@ popd
 %license LICENSE
 %doc README src/README-nvec_pthreads
 %{_libdir}/libsundials_nvecpthreads.so.*
-%{_fmoddir}/libsundials_fnvecpthreads.so.*
+%{_libdir}/libsundials_fnvecpthreads.so.*
 
 %files threads-devel
-%{_fmoddir}/libsundials_fnvecpthreads.so
+%{_libdir}/libsundials_fnvecpthreads.so
 %{_libdir}/libsundials_nvecpthreads.so
 %{_includedir}/nvector/nvector_pthreads.h
 %{_libdir}/pkgconfig/nvec_pthreads.pc
 %{_libdir}/pkgconfig/fnvec_pthreads.pc
 
 %changelog
+* Sat Dec 26 2015 Antonio Trande <sagitterATfedoraproject.org> - 2.6.2-12
+- Fixed pkgconfig files
+- Added pkgconfig files for OpenMPI libraries
+- All Fortran libraries moved to default library paths
+
 * Thu Nov 12 2015 Antonio Trande <sagitterATfedoraproject.org> - 2.6.2-11
 - Fixes for EPEL7
 - Set mpif77 only for OpenMPI < 1.17 (EPEL7)
