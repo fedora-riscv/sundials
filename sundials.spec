@@ -9,26 +9,13 @@
 %global with_openmpi 1
 %endif
 
-## openmpi tests still crash/hang on i686 with openmpi-1.18 (F21)
-%if 0%{?fedora} == 21
-%ifnarch %ix86 %{arm}
 %global with_parcheck 1
 %global with_sercheck 1
-%else
-%global with_parcheck 0
-%global with_sercheck 1
-%endif
-%endif
-
-%if ( 0%{?fedora} && 0%{?fedora} > 21 ) || ( 0%{?epel} && 0%{?epel} > 6 )
-%global with_parcheck 1
-%global with_sercheck 1
-%endif
 
 Summary:    Suite of nonlinear solvers
 Name:       sundials
 Version:    2.6.2
-Release:    12%{?dist}
+Release:    13%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -293,16 +280,22 @@ make install DESTDIR=%{buildroot} -C buildserial_dir
 ##Install all .pc files
 mkdir -p %{buildroot}%{_libdir}/openmpi/lib/pkgconfig
 mkdir -p %{buildroot}%{_libdir}/pkgconfig
+%ifarch s390 s390x
+rm -f PKGC_files/*nvec_parallel.pc
+%else
 mv PKGC_files/*nvec_parallel.pc %{buildroot}%{_libdir}/openmpi/lib/pkgconfig
+%endif
 mv PKGC_files/*.pc %{buildroot}%{_libdir}/pkgconfig
 
 ##Define library dirs in the pkg-config files
 sed -i 's|${libdir}|%{_libdir}|g' %{buildroot}%{_libdir}/pkgconfig/*.pc
 sed -i 's|${libdir}|%{_libdir}|g' %{buildroot}%{_libdir}/pkgconfig/*.pc
 sed -i 's|${includedir}|%{_includedir}|g' %{buildroot}%{_libdir}/pkgconfig/*.pc
+%ifnarch s390 s390x
 sed -i 's|${lib}|%{_lib}|g' %{buildroot}%{_libdir}/openmpi/lib/pkgconfig/*.pc
 sed -i 's|${arch}|%{_arch}|g' %{buildroot}%{_libdir}/openmpi/lib/pkgconfig/*.pc
 sed -i 's|includedir=${includedir}|includedir=%{_includedir}|g' %{buildroot}%{_libdir}/openmpi/lib/pkgconfig/*.pc
+%endif
 
 %post -p /sbin/ldconfig
 %postun -p /sbin/ldconfig
@@ -522,7 +515,9 @@ popd
 %files openmpi-devel
 %{_includedir}/openmpi-%{_arch}/nvector/nvector_parallel.h
 %{_libdir}/openmpi/lib/libsundials_nvecparallel.so
+%ifnarch s390 s390x
 %{_libdir}/openmpi/lib/pkgconfig/nvec_parallel.pc
+%endif
 
 %files fortran-openmpi
 %license LICENSE
@@ -532,7 +527,9 @@ popd
 %files fortran-openmpi-devel
 %{_includedir}/openmpi-%{_arch}/nvector/nvector_parallel.h
 %{_libdir}/openmpi/lib/libsundials_fnvecparallel.so
+%ifnarch s390 s390x
 %{_libdir}/openmpi/lib/pkgconfig/fnvec_parallel.pc
+%endif
 %endif
 
 %files fortran
@@ -564,6 +561,9 @@ popd
 %{_libdir}/pkgconfig/fnvec_pthreads.pc
 
 %changelog
+* Thu Dec 31 2015 Antonio Trande <sagitterATfedoraproject.org> - 2.6.2-13
+- Exclude pkgconfig for OpenMPI libs on s390
+
 * Sat Dec 26 2015 Antonio Trande <sagitterATfedoraproject.org> - 2.6.2-12
 - Fixed pkgconfig files
 - Added pkgconfig files for OpenMPI libraries
