@@ -22,7 +22,7 @@
 Summary:    Suite of nonlinear solvers
 Name:       sundials
 Version:    2.6.2
-Release:    14%{?dist}
+Release:    15%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -265,7 +265,7 @@ mkdir -p build && cd build
  -DCMAKE_BUILD_TYPE:STRING=Release \
  -DCMAKE_C_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now" \
  -DCMAKE_MODULE_LINKER_FLAGS:STRING="%{__global_ldflags} -Wl,-z,now" \
- -DCMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING="%{__global_ldflags} -Wl,-z,now -llapack -lblas -Wl,--as-needed -lpthread -lm" \
+ -DCMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING="%{__global_ldflags} -Wl,-z,now -llapack -lblas -Wl,--as-needed -pthread -lm" \
  -DCMAKE_INSTALL_PREFIX=%{_prefix} \
  -DEXAMPLES_ENABLE=ON -DEXAMPLES_INSTALL=OFF -DEXAMPLES_INSTALL_PATH:PATH=%{_datadir}/%{name}/serial_examples \
  -DCMAKE_SKIP_RPATH:BOOL=YES -DCMAKE_SKIP_INSTALL_RPATH:BOOL=YES \
@@ -277,7 +277,7 @@ mkdir -p build && cd build
  -DUSE_GENERIC_MATH:BOOL=ON \
  -DOPENMP_ENABLE:BOOL=OFF \
  -DCXX_ENABLE:BOOL=ON \
- -DCMAKE_Fortran_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now" \
+ -DCMAKE_Fortran_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now -pthread" \
  -DPTHREAD_ENABLE:BOOL=ON \
  -DLAPACK_ENABLE:BOOL=ON -DSUPERLUMT_ENABLE:BOOL=OFF \
  -DKLU_ENABLE:BOOL=OFF -Wno-dev ..
@@ -307,7 +307,7 @@ export FC=mpif77
  -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
  -DCMAKE_BUILD_TYPE:STRING=Release \
  -DCMAKE_C_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now" \
- -DCMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING="%{__global_ldflags} -Wl,-z,now" \
+ -DCMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING="%{__global_ldflags} -Wl,-z,now -lm -pthread" \
  -DCMAKE_INSTALL_PREFIX=%{_prefix} \
  -DEXAMPLES_ENABLE=ON -DEXAMPLES_INSTALL=OFF -DEXAMPLES_INSTALL_PATH:PATH=%{_datadir}/%{name}/openmpi_examples \
  -DBUILD_SHARED_LIBS:BOOL=ON -DBUILD_STATIC_LIBS:BOOL=OFF \
@@ -322,7 +322,7 @@ export FC=mpif77
  -DOPENMP_ENABLE:BOOL=OFF \
  -DCXX_ENABLE:BOOL=ON \
  -DCMAKE_Fortran_COMPILER:STRING=%{_libdir}/openmpi/bin/mpif77 \
- -DCMAKE_Fortran_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now" \
+ -DCMAKE_Fortran_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now -lm -pthread" \
  -DPTHREAD_ENABLE:BOOL=ON \
  -DLAPACK_ENABLE:BOOL=ON -DSUPERLUMT_ENABLE:BOOL=OFF \
  -DKLU_ENABLE:BOOL=OFF -Wno-dev ..
@@ -363,7 +363,7 @@ export FC=mpifort
  -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
  -DCMAKE_BUILD_TYPE:STRING=Release \
  -DCMAKE_C_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now" \
- -DCMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING="%{__global_ldflags} -Wl,-z,now" \
+ -DCMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING="%{__global_ldflags} -Wl,-z,now -lm -pthread" \
  -DCMAKE_INSTALL_PREFIX=%{_prefix} \
  -DEXAMPLES_ENABLE=ON -DEXAMPLES_INSTALL=OFF -DEXAMPLES_INSTALL_PATH:PATH=%{_datadir}/%{name}/mpich_examples \
  -DBUILD_SHARED_LIBS:BOOL=ON -DBUILD_STATIC_LIBS:BOOL=OFF \
@@ -384,7 +384,7 @@ export FC=mpifort
  -DOPENMP_ENABLE:BOOL=OFF \
  -DCXX_ENABLE:BOOL=ON \
  -DCMAKE_Fortran_COMPILER:STRING=%{_libdir}/mpich/bin/mpif77 \
- -DCMAKE_Fortran_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now" \
+ -DCMAKE_Fortran_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now -lm -pthread" \
  -DPTHREAD_ENABLE:BOOL=ON \
  -DLAPACK_ENABLE:BOOL=ON -DSUPERLUMT_ENABLE:BOOL=OFF \
  -DKLU_ENABLE:BOOL=OFF -Wno-dev ..
@@ -493,48 +493,14 @@ mpirun buildopenmpi_dir/build/examples/nvector/parallel/test_nvector_mpi
 %{_openmpi_unload}
 %endif ##if openmpi
 
-%if 0%{with_openmpi} || 0%{with_mpich}
-# First, purge all modules so that user environment doesn't conflict
-# with the build.
-module purge ||:
-%endif
-
 %if 0%{?with_mpich}
 #%%{_mpich_load}
-##It seems that tests cannot be executed on koji
-##arkode
-#buildmpich_dir/build/examples/arkode/CXX_parallel/ark_heat2D
-#buildmpich_dir/build/examples/arkode/F77_parallel/fark_diag_kry_bbd_p
-
-##cvode
-#buildmpich_dir/build/examples/cvode/fcmix_parallel/fcvDiag_kry_bbd_p
-#buildmpich_dir/build/examples/cvode/parallel/cvAdvDiff_diag_p
-
-##cvodes
-#mpirun -np 2 buildmpich_dir/build/examples/cvodes/parallel/cvsAdvDiff_ASAp_non_p
-
-#ida
-#mpirun -np 4 buildmpich_dir/build/examples/ida/fcmix_parallel/fidaHeat2D_kry_bbd_p
-#mpirun -np 4 buildmpich_dir/build/examples/ida/parallel/idaFoodWeb_kry_bbd_p
-
-#idas
-#mpirun -np 4 buildmpich_dir/build/examples/idas/parallel/idasBruss_ASAp_kry_bbd_p
-
-#kinsol
-#mpirun -np 4 buildmpich_dir/build/examples/kinsol/fcmix_parallel/fkinDiagon_kry_p
-#mpirun -np 4 buildmpich_dir/build/examples/kinsol/parallel/kinFoodWeb_kry_bbd_p
-
-#nvector
-#mpirun buildmpich_dir/build/examples/nvector/parallel/test_nvector_mpi
+#export LD_LIBRARY_PATH=%%{buildroot}%%{_libdir}/mpich/lib:%%{buildroot}%%{_libdir}
+#export MPICH_INTERFACE_HOSTNAME=localhost
+## Tests not perfomred due to 'gethostname' failure on koji
 #%%{_mpich_unload}
 %endif ##if openmpi
 %endif ## if with_parcheck
-
-%if 0%{with_openmpi} || 0%{with_mpich}
-# First, purge all modules so that user environment doesn't conflict
-# with the build.
-module purge ||:
-%endif
 
 %if 0%{?with_sercheck}
 pushd sundials-%{version}/build/examples
@@ -792,6 +758,9 @@ popd
 %{_libdir}/pkgconfig/fnvec_pthreads.pc
 
 %changelog
+* Mon Jan 25 2016 Antonio Trande <sagitterATfedoraproject.org> - 2.6.2-15
+- Fixed pthread flags
+
 * Sun Jan 17 2016 Antonio Trande <sagitterATfedoraproject.org> - 2.6.2-14
 - Fix OpenMPI compilers
 - MPICH libraries enabled
