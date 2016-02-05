@@ -22,7 +22,7 @@
 Summary:    Suite of nonlinear solvers
 Name:       sundials
 Version:    2.6.2
-Release:    15%{?dist}
+Release:    16%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -758,6 +758,9 @@ popd
 %{_libdir}/pkgconfig/fnvec_pthreads.pc
 
 %changelog
+* Fri Feb 05 2016 Fedora Release Engineering <releng@fedoraproject.org> - 2.6.2-16
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_24_Mass_Rebuild
+
 * Mon Jan 25 2016 Antonio Trande <sagitterATfedoraproject.org> - 2.6.2-15
 - Fixed pthread flags
 
