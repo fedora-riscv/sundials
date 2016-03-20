@@ -22,7 +22,7 @@
 Summary:    Suite of nonlinear solvers
 Name:       sundials
 Version:    2.6.2
-Release:    16%{?dist}
+Release:    17%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -56,6 +56,7 @@ preconditioners.
 Summary:    Suite of nonlinear solvers (developer files)
 Group:      Development/Libraries
 Requires:   %{name}%{?_isa} = %{version}-%{release}
+Requires:   lapack-devel
 Provides:   %{name}-static = %{version}-%{release}
 %description devel
 SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
@@ -758,6 +759,9 @@ popd
 %{_libdir}/pkgconfig/fnvec_pthreads.pc
 
 %changelog
+* Sun Mar 20 2016 Mukundan Ragavan <nonamedotc@fedoraproject.org> - 2.6.2-17
+- Add lapack-devel requires to -devel package
+
 * Fri Feb 05 2016 Fedora Release Engineering <releng@fedoraproject.org> - 2.6.2-16
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_24_Mass_Rebuild
 
