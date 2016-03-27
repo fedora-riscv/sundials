@@ -22,7 +22,7 @@
 Summary:    Suite of nonlinear solvers
 Name:       sundials
 Version:    2.6.2
-Release:    18%{?dist}
+Release:    19%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -73,8 +73,8 @@ This package contains Sundials libraries with OpenMP support.
 %package openmp-devel
 Summary:    Suite of nonlinear solvers with OpenMP (developer files)
 Group:      Development/Libraries
-Requires:   %{name}openmp%{?_isa} = %{version}-%{release}
-Requires:   %{name}devel%{?_isa} = %{version}-%{release}
+Requires:   %{name}-openmp%{?_isa} = %{version}-%{release}
+Requires:   %{name}-devel%{?_isa} = %{version}-%{release}
 %description openmp-devel
 SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
 for use in writing mathematical software.
@@ -91,8 +91,8 @@ This package contains Sundials fortran libraries with OpenMP support.
 %package fortran-openmp-devel
 Summary:    Suite of nonlinear solvers with OpenMP (developer files)
 Group:      Development/Libraries
-Requires:   %{name}fortran-openmp%{?_isa} = %{version}-%{release}
-Requires:   %{name}devel%{?_isa} = %{version}-%{release}
+Requires:   %{name}-fortran-openmp%{?_isa} = %{version}-%{release}
+Requires:   %{name}-devel%{?_isa} = %{version}-%{release}
 %description fortran-openmp-devel
 SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
 for use in writing mathematical software.
@@ -817,6 +817,9 @@ popd
 %{_libdir}/pkgconfig/fnvec_pthreads.pc
 
 %changelog
+* Sun Mar 27 2016 Antonio Trande <sagitterATfedoraproject.org> - 2.6.2-19
+- Typos fixed
+
 * Sat Mar 26 2016 Antonio Trande <sagitterATfedoraproject.org> - 2.6.2-18
 - Enabled OpenMP support
 
