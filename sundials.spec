@@ -22,7 +22,7 @@
 Summary:    Suite of nonlinear solvers
 Name:       sundials
 Version:    2.6.2
-Release:    15%{?dist}
+Release:    19%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -60,8 +60,43 @@ Provides:   %{name}-static = %{version}-%{release}
 %description devel
 SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
 for use in writing mathematical software.
-This package contains the developer files (.so file, header files)
+This package contains the developer files (.so file, header files).
 
+%package openmp
+Summary:    Suite of nonlinear solvers with OpenMP
+Group:      Development/Libraries
+%description openmp
+SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
+for use in writing mathematical software.
+This package contains Sundials libraries with OpenMP support.
+
+%package openmp-devel
+Summary:    Suite of nonlinear solvers with OpenMP (developer files)
+Group:      Development/Libraries
+Requires:   %{name}-openmp%{?_isa} = %{version}-%{release}
+Requires:   %{name}-devel%{?_isa} = %{version}-%{release}
+%description openmp-devel
+SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
+for use in writing mathematical software.
+This package contains the developer files (.so file).
+
+%package fortran-openmp
+Summary:    Suite of nonlinear solvers with OpenMP
+Group:      Development/Libraries
+%description fortran-openmp
+SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
+for use in writing mathematical software.
+This package contains Sundials fortran libraries with OpenMP support.
+
+%package fortran-openmp-devel
+Summary:    Suite of nonlinear solvers with OpenMP (developer files)
+Group:      Development/Libraries
+Requires:   %{name}-fortran-openmp%{?_isa} = %{version}-%{release}
+Requires:   %{name}-devel%{?_isa} = %{version}-%{release}
+%description fortran-openmp-devel
+SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
+for use in writing mathematical software.
+This package contains the developer files (.so file).
 #############################################################################
 #########
 %if 0%{?with_openmpi}
@@ -216,6 +251,7 @@ sed -i 's|DESTINATION lib|DESTINATION %{_lib}|g' src/ida/fcmix/CMakeLists.txt
 sed -i 's/DESTINATION lib/DESTINATION %{_lib}/g' src/idas/CMakeLists.txt
 sed -i 's/DESTINATION lib/DESTINATION %{_lib}/g' src/kinsol/CMakeLists.txt
 sed -i 's|DESTINATION lib|DESTINATION %{_lib}|g' src/kinsol/fcmix/CMakeLists.txt
+sed -i 's|DESTINATION lib|DESTINATION %{_lib}|g' src/nvec_openmp/CMakeLists.txt
 
 ##Set pthread library's paths
 sed -i \
@@ -265,7 +301,7 @@ mkdir -p build && cd build
  -DCMAKE_BUILD_TYPE:STRING=Release \
  -DCMAKE_C_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now" \
  -DCMAKE_MODULE_LINKER_FLAGS:STRING="%{__global_ldflags} -Wl,-z,now" \
- -DCMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING="%{__global_ldflags} -Wl,-z,now -llapack -lblas -Wl,--as-needed -pthread -lm" \
+ -DCMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING="%{__global_ldflags} -Wl,-z,now -llapack -lblas -lgomp -Wl,--as-needed -lpthread -lm" \
  -DCMAKE_INSTALL_PREFIX=%{_prefix} \
  -DEXAMPLES_ENABLE=ON -DEXAMPLES_INSTALL=OFF -DEXAMPLES_INSTALL_PATH:PATH=%{_datadir}/%{name}/serial_examples \
  -DCMAKE_SKIP_RPATH:BOOL=YES -DCMAKE_SKIP_INSTALL_RPATH:BOOL=YES \
@@ -275,11 +311,12 @@ mkdir -p build && cd build
  -DFCMIX_ENABLE:BOOL=ON \
  -DF90_ENABLE:BOOL=ON \
  -DUSE_GENERIC_MATH:BOOL=ON \
- -DOPENMP_ENABLE:BOOL=OFF \
+ -DOPENMP_ENABLE:BOOL=ON \
  -DCXX_ENABLE:BOOL=ON \
- -DCMAKE_Fortran_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now -pthread" \
+ -DCMAKE_Fortran_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now -lpthread -lgomp" \
  -DPTHREAD_ENABLE:BOOL=ON \
- -DLAPACK_ENABLE:BOOL=ON -DSUPERLUMT_ENABLE:BOOL=OFF \
+ -DLAPACK_ENABLE:BOOL=ON \
+ -DSUPERLUMT_ENABLE:BOOL=OFF \
  -DKLU_ENABLE:BOOL=OFF -Wno-dev ..
 make V=1 %{?_smp_mflags}
 cd ..
@@ -307,7 +344,7 @@ export FC=mpif77
  -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
  -DCMAKE_BUILD_TYPE:STRING=Release \
  -DCMAKE_C_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now" \
- -DCMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING="%{__global_ldflags} -Wl,-z,now -lm -pthread" \
+ -DCMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING="%{__global_ldflags} -Wl,-z,now -lm -lpthread -lgomp" \
  -DCMAKE_INSTALL_PREFIX=%{_prefix} \
  -DEXAMPLES_ENABLE=ON -DEXAMPLES_INSTALL=OFF -DEXAMPLES_INSTALL_PATH:PATH=%{_datadir}/%{name}/openmpi_examples \
  -DBUILD_SHARED_LIBS:BOOL=ON -DBUILD_STATIC_LIBS:BOOL=OFF \
@@ -319,12 +356,13 @@ export FC=mpif77
  -DFCMIX_ENABLE:BOOL=ON \
  -DF90_ENABLE:BOOL=OFF \
  -DUSE_GENERIC_MATH:BOOL=ON \
- -DOPENMP_ENABLE:BOOL=OFF \
+ -DOPENMP_ENABLE:BOOL=ON \
  -DCXX_ENABLE:BOOL=ON \
  -DCMAKE_Fortran_COMPILER:STRING=%{_libdir}/openmpi/bin/mpif77 \
- -DCMAKE_Fortran_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now -lm -pthread" \
+ -DCMAKE_Fortran_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now -lm -lpthread -lgomp" \
  -DPTHREAD_ENABLE:BOOL=ON \
- -DLAPACK_ENABLE:BOOL=ON -DSUPERLUMT_ENABLE:BOOL=OFF \
+ -DLAPACK_ENABLE:BOOL=ON \
+ -DSUPERLUMT_ENABLE:BOOL=OFF \
  -DKLU_ENABLE:BOOL=OFF -Wno-dev ..
 make V=1 %{?_smp_mflags}
 %{_openmpi_unload}
@@ -363,7 +401,7 @@ export FC=mpifort
  -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
  -DCMAKE_BUILD_TYPE:STRING=Release \
  -DCMAKE_C_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now" \
- -DCMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING="%{__global_ldflags} -Wl,-z,now -lm -pthread" \
+ -DCMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING="%{__global_ldflags} -Wl,-z,now -lm -lpthread -lgomp" \
  -DCMAKE_INSTALL_PREFIX=%{_prefix} \
  -DEXAMPLES_ENABLE=ON -DEXAMPLES_INSTALL=OFF -DEXAMPLES_INSTALL_PATH:PATH=%{_datadir}/%{name}/mpich_examples \
  -DBUILD_SHARED_LIBS:BOOL=ON -DBUILD_STATIC_LIBS:BOOL=OFF \
@@ -381,12 +419,13 @@ export FC=mpifort
  -DFCMIX_ENABLE:BOOL=ON \
  -DF90_ENABLE:BOOL=ON \
  -DUSE_GENERIC_MATH:BOOL=ON \
- -DOPENMP_ENABLE:BOOL=OFF \
+ -DOPENMP_ENABLE:BOOL=ON \
  -DCXX_ENABLE:BOOL=ON \
  -DCMAKE_Fortran_COMPILER:STRING=%{_libdir}/mpich/bin/mpif77 \
- -DCMAKE_Fortran_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now -lm -pthread" \
+ -DCMAKE_Fortran_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now -lm -lpthread -lgomp" \
  -DPTHREAD_ENABLE:BOOL=ON \
- -DLAPACK_ENABLE:BOOL=ON -DSUPERLUMT_ENABLE:BOOL=OFF \
+ -DLAPACK_ENABLE:BOOL=ON \
+ -DSUPERLUMT_ENABLE:BOOL=OFF \
  -DKLU_ENABLE:BOOL=OFF -Wno-dev ..
 make V=1 %{?_smp_mflags}
 %{_mpich_unload}
@@ -672,6 +711,26 @@ popd
 %{_libdir}/pkgconfig/kinsol.pc
 %{_libdir}/pkgconfig/nvec_serial.pc
 
+%files openmp
+%{!?_licensedir:%global license %doc}
+%license sundials-%{version}/LICENSE
+%doc sundials-%{version}/README sundials-%{version}/src/README-*
+%{_libdir}/libsundials_nvecopenmp.so.*
+
+%files openmp-devel
+%{_libdir}/libsundials_nvecopenmp.so
+%{_libdir}/pkgconfig/nvec_openmp.pc
+
+%files fortran-openmp
+%{!?_licensedir:%global license %doc}
+%license sundials-%{version}/LICENSE
+%doc sundials-%{version}/README sundials-%{version}/src/README-*
+%{_libdir}/libsundials_fnvecopenmp.so.*
+
+%files fortran-openmp-devel
+%{_libdir}/libsundials_fnvecopenmp.so
+%{_libdir}/pkgconfig/fnvec_openmp.pc
+
 %if 0%{?with_openmpi}
 %files openmpi
 %license sundials-%{version}/LICENSE
@@ -758,6 +817,18 @@ popd
 %{_libdir}/pkgconfig/fnvec_pthreads.pc
 
 %changelog
+* Sun Mar 27 2016 Antonio Trande <sagitterATfedoraproject.org> - 2.6.2-19
+- Typos fixed
+
+* Sat Mar 26 2016 Antonio Trande <sagitterATfedoraproject.org> - 2.6.2-18
+- Enabled OpenMP support
+
+* Sun Mar 20 2016 Mukundan Ragavan <nonamedotc@fedoraproject.org> - 2.6.2-17
+- Add lapack-devel requires to -devel package
+
+* Fri Feb 05 2016 Fedora Release Engineering <releng@fedoraproject.org> - 2.6.2-16
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_24_Mass_Rebuild
+
 * Mon Jan 25 2016 Antonio Trande <sagitterATfedoraproject.org> - 2.6.2-15
 - Fixed pthread flags
 
