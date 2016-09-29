@@ -21,8 +21,8 @@
 
 Summary:    Suite of nonlinear solvers
 Name:       sundials
-Version:    2.6.2
-Release:    19%{?dist}
+Version:    2.7.0
+Release:    1%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -31,7 +31,7 @@ URL:        http://www.llnl.gov/casc/sundials/
 Source0:    http://www.llnl.gov/casc/sundials/download/code/%{name}-%{version}.tar.gz
 
 ##This package provides pkg-config files of Sundials
-Source1:    %{name}-pkgconfig_files.tar.gz
+Source1:    %{name}-%{version}-pkgconfig_files.tar.gz
 
 BuildRequires: gcc-gfortran
 BuildRequires: cmake
@@ -533,11 +533,7 @@ mpirun buildopenmpi_dir/build/examples/nvector/parallel/test_nvector_mpi
 %endif ##if openmpi
 
 %if 0%{?with_mpich}
-#%%{_mpich_load}
-#export LD_LIBRARY_PATH=%%{buildroot}%%{_libdir}/mpich/lib:%%{buildroot}%%{_libdir}
-#export MPICH_INTERFACE_HOSTNAME=localhost
 ## Tests not perfomred due to 'gethostname' failure on koji
-#%%{_mpich_unload}
 %endif ##if openmpi
 %endif ## if with_parcheck
 
@@ -817,6 +813,9 @@ popd
 %{_libdir}/pkgconfig/fnvec_pthreads.pc
 
 %changelog
+* Thu Sep 29 2016 Antonio Trande <sagitterATfedoraproject.org> - 2.7.0-1
+- Update to 2.7.0
+
 * Sun Mar 27 2016 Antonio Trande <sagitterATfedoraproject.org> - 2.6.2-19
 - Typos fixed
 
