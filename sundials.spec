@@ -481,10 +481,10 @@ find %{buildroot} -name '*.a' -delete
 ##Install all .pc files
 %if 0%{?with_openmpi}
 %ifarch s390 s390x
-rm -rf PKGC_files/openmpi
+rm -rf %{name}-%{version}_pkgconfig_files/openmpi
 %else
 mkdir -p %{buildroot}%{_libdir}/openmpi/lib/pkgconfig
-mv PKGC_files/openmpi/*.pc %{buildroot}%{_libdir}/openmpi/lib/pkgconfig
+mv %{name}-%{version}_pkgconfig_files/openmpi/*.pc %{buildroot}%{_libdir}/openmpi/lib/pkgconfig
 sed -i 's|${prefix}|%{_prefix}|g' %{buildroot}%{_libdir}/openmpi/lib/pkgconfig/*.pc
 sed -i 's|${lib}|%{_lib}|g' %{buildroot}%{_libdir}/openmpi/lib/pkgconfig/*.pc
 sed -i 's|${arch}|%{_arch}|g' %{buildroot}%{_libdir}/openmpi/lib/pkgconfig/*.pc
@@ -494,10 +494,10 @@ sed -i 's|includedir=${includedir}|includedir=%{_includedir}|g' %{buildroot}%{_l
 
 %if 0%{?with_mpich}
 %ifarch ppc64 ppc64le
-rm -rf PKGC_files/mpich
+rm -rf %{name}-%{version}_pkgconfig_files/mpich
 %else
 mkdir -p %{buildroot}%{_libdir}/mpich/lib/pkgconfig
-mv PKGC_files/mpich/*.pc %{buildroot}%{_libdir}/mpich/lib/pkgconfig
+mv %{name}-%{version}_pkgconfig_files/mpich/*.pc %{buildroot}%{_libdir}/mpich/lib/pkgconfig
 sed -i 's|${prefix}|%{_prefix}|g' %{buildroot}%{_libdir}/mpich/lib/pkgconfig/*.pc
 sed -i 's|${lib}|%{_lib}|g' %{buildroot}%{_libdir}/mpich/lib/pkgconfig/*.pc
 sed -i 's|${arch}|%{_arch}|g' %{buildroot}%{_libdir}/mpich/lib/pkgconfig/*.pc
@@ -506,7 +506,7 @@ sed -i 's|includedir=${includedir}|includedir=%{_includedir}|g' %{buildroot}%{_l
 %endif
 
 mkdir -p %{buildroot}%{_libdir}/pkgconfig
-mv PKGC_files/*.pc %{buildroot}%{_libdir}/pkgconfig
+mv %{name}-%{version}_pkgconfig_files/*.pc %{buildroot}%{_libdir}/pkgconfig
 sed -i 's|${prefix}|%{_prefix}|g' %{buildroot}%{_libdir}/pkgconfig/*.pc
 sed -i 's|${libdir}|%{_libdir}|g' %{buildroot}%{_libdir}/pkgconfig/*.pc
 sed -i 's|${libdir}|%{_libdir}|g' %{buildroot}%{_libdir}/pkgconfig/*.pc
