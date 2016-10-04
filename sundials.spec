@@ -768,6 +768,7 @@ popd
 %{_libdir}/openmpi/lib/libsundials_nvecparhyp.so
 %ifnarch s390 s390x
 %{_libdir}/openmpi/lib/pkgconfig/nvec_parallel.pc
+%{_libdir}/openmpi/lib/pkgconfig/nvec_parhyp.pc
 %endif
 
 %files fortran-openmpi
@@ -781,7 +782,6 @@ popd
 %{_libdir}/openmpi/lib/libsundials_fnvecparallel.so
 %ifnarch s390 s390x
 %{_libdir}/openmpi/lib/pkgconfig/fnvec_parallel.pc
-%{_libdir}/openmpi/lib/pkgconfig/fnvec_parhyp.pc
 %endif
 %endif
 
