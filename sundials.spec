@@ -475,9 +475,6 @@ make install DESTDIR=%{buildroot} -C buildmpich_dir/build
 
 make install DESTDIR=%{buildroot} -C sundials-%{version}/build
 
-# Remove archive files
-find %{buildroot} -name '*.a' -delete
-
 ##Install all .pc files
 %if 0%{?with_openmpi}
 %ifarch s390 s390x
