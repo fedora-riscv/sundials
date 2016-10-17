@@ -1,3 +1,7 @@
+## Debug builds?
+%bcond_with debug
+#
+
 %if 0%{?rhel} && 0%{?rhel} < 7
 %{!?__global_ldflags: %global __global_ldflags -Wl,-z,relro}
 %endif
@@ -22,7 +26,7 @@
 Summary:    Suite of nonlinear solvers
 Name:       sundials
 Version:    2.7.0
-Release:    3%{?dist}
+Release:    4%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -306,16 +310,31 @@ cp -a sundials-%{version} buildmpich_dir
 %build
 pushd sundials-%{version}
 mkdir -p build && cd build
+%if %{with debug}
+export CFLAGS=""
+cmake \
+ -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
+ -DCMAKE_BUILD_TYPE:STRING=Debug \
+ -DCMAKE_C_FLAGS_DEBUG:STRING="-O0 -g -Wl,-z,relro -Wl,-z,now" \
+ -DCMAKE_Fortran_FLAGS_DEBUG:STRING="-O0 -g -Wl,-z,relro -Wl,-z,now -lpthread -lgomp" \
+%ifnarch %{power64} aarch64
+ -DCMAKE_SHARED_LINKER_FLAGS_DEBUG:STRING="%{__global_ldflags} -Wl,-z,now -llapack -lblas -lgomp -lsuperlumt_d -Wl,--as-needed -lpthread -lm" \
+%else
+ -DCMAKE_SHARED_LINKER_FLAGS_DEBUG:STRING="%{__global_ldflags} -Wl,-z,now -llapack -lblas -lgomp -Wl,--as-needed -lpthread -lm" \
+%endif
+%else
 %cmake \
  -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
  -DCMAKE_BUILD_TYPE:STRING=Release \
  -DCMAKE_C_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now" \
- -DCMAKE_MODULE_LINKER_FLAGS:STRING="%{__global_ldflags} -Wl,-z,now" \
+ -DCMAKE_Fortran_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now -lpthread -lgomp" \
 %ifnarch %{power64} aarch64
  -DCMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING="%{__global_ldflags} -Wl,-z,now -llapack -lblas -lgomp -lsuperlumt_d -Wl,--as-needed -lpthread -lm" \
 %else
  -DCMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING="%{__global_ldflags} -Wl,-z,now -llapack -lblas -lgomp -Wl,--as-needed -lpthread -lm" \
 %endif
+%endif
+ -DCMAKE_MODULE_LINKER_FLAGS:STRING="%{__global_ldflags} -Wl,-z,now" \
  -DCMAKE_INSTALL_PREFIX=%{_prefix} \
  -DEXAMPLES_ENABLE=ON -DEXAMPLES_INSTALL=OFF -DEXAMPLES_INSTALL_PATH:PATH=%{_datadir}/%{name}/serial_examples \
  -DCMAKE_SKIP_RPATH:BOOL=YES -DCMAKE_SKIP_INSTALL_RPATH:BOOL=YES \
@@ -327,7 +346,6 @@ mkdir -p build && cd build
  -DUSE_GENERIC_MATH:BOOL=ON \
  -DOPENMP_ENABLE:BOOL=ON \
  -DCXX_ENABLE:BOOL=ON \
- -DCMAKE_Fortran_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now -lpthread -lgomp" \
  -DPTHREAD_ENABLE:BOOL=ON \
  -DLAPACK_ENABLE:BOOL=ON \
  -DSUNDIALS_PRECISION:STRING=double \
@@ -364,11 +382,22 @@ mkdir -p build && cd build
 export CC=mpicc
 export CXX=mpicxx
 export FC=mpif77
+%if %{with debug}
+export CFLAGS=""
+cmake \
+ -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
+ -DCMAKE_BUILD_TYPE:STRING=Debug \
+ -DCMAKE_C_FLAGS_DEBUG:STRING="-O0 -g -Wl,-z,relro -Wl,-z,now" \
+ -DCMAKE_Fortran_FLAGS_DEBUG:STRING="-O0 -g -Wl,-z,relro -Wl,-z,now -lm -lpthread -lgomp" \
+ -DCMAKE_SHARED_LINKER_FLAGS_DEBUG:STRING="%{__global_ldflags} -Wl,-z,now -lm -lpthread -lgomp -L%{_libdir}/openmpi/lib -lHYPRE" \
+%else
 %cmake \
  -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
  -DCMAKE_BUILD_TYPE:STRING=Release \
  -DCMAKE_C_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now" \
+ -DCMAKE_Fortran_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now -lm -lpthread -lgomp" \
  -DCMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING="%{__global_ldflags} -Wl,-z,now -lm -lpthread -lgomp -L%{_libdir}/openmpi/lib -lHYPRE" \
+%endif
  -DCMAKE_INSTALL_PREFIX=%{_prefix} \
  -DEXAMPLES_ENABLE=ON -DEXAMPLES_INSTALL=OFF -DEXAMPLES_INSTALL_PATH:PATH=%{_datadir}/%{name}/openmpi_examples \
  -DBUILD_SHARED_LIBS:BOOL=ON -DBUILD_STATIC_LIBS:BOOL=OFF \
@@ -383,7 +412,6 @@ export FC=mpif77
  -DOPENMP_ENABLE:BOOL=ON \
  -DCXX_ENABLE:BOOL=ON \
  -DCMAKE_Fortran_COMPILER:STRING=%{_libdir}/openmpi/bin/mpif77 \
- -DCMAKE_Fortran_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now -lm -lpthread -lgomp" \
  -DPTHREAD_ENABLE:BOOL=ON \
  -DLAPACK_ENABLE:BOOL=ON \
  -DSUPERLUMT_ENABLE:BOOL=OFF \
@@ -427,11 +455,22 @@ export CXX=mpicxx
 export F77=mpifort
 export FC=mpifort
 %endif
+%if %{with debug}
+export CFLAGS=""
+cmake \
+ -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
+ -DCMAKE_BUILD_TYPE:STRING=Debug \
+ -DCMAKE_C_FLAGS_DEBUG:STRING="-O0 -g -Wl,-z,relro -Wl,-z,now" \
+ -DCMAKE_Fortran_FLAGS_DEBUG:STRING="-O0 -g -Wl,-z,relro -Wl,-z,now -lm -lpthread -lgomp" \
+ -DCMAKE_SHARED_LINKER_FLAGS_DEBUG:STRING="%{__global_ldflags} -Wl,-z,now -lm -lpthread -lgomp -L%{_libdir}/mpich/lib -lHYPRE" \
+%else
 %cmake \
  -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
  -DCMAKE_BUILD_TYPE:STRING=Release \
  -DCMAKE_C_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now" \
+ -DCMAKE_Fortran_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now -lm -lpthread -lgomp" \
  -DCMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING="%{__global_ldflags} -Wl,-z,now -lm -lpthread -lgomp -L%{_libdir}/mpich/lib -lHYPRE" \
+%endif
  -DCMAKE_INSTALL_PREFIX=%{_prefix} \
  -DEXAMPLES_ENABLE=ON -DEXAMPLES_INSTALL=OFF -DEXAMPLES_INSTALL_PATH:PATH=%{_datadir}/%{name}/mpich_examples \
  -DBUILD_SHARED_LIBS:BOOL=ON -DBUILD_STATIC_LIBS:BOOL=OFF \
@@ -452,7 +491,6 @@ export FC=mpifort
  -DOPENMP_ENABLE:BOOL=ON \
  -DCXX_ENABLE:BOOL=ON \
  -DCMAKE_Fortran_COMPILER:STRING=%{_libdir}/mpich/bin/mpif77 \
- -DCMAKE_Fortran_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now -lm -lpthread -lgomp" \
  -DPTHREAD_ENABLE:BOOL=ON \
  -DLAPACK_ENABLE:BOOL=ON \
  -DSUPERLUMT_ENABLE:BOOL=OFF \
@@ -788,9 +826,12 @@ popd
 %{_includedir}/nvector/nvector_pthreads.h
 
 %changelog
+* Mon Oct 17 2016 Antonio Trande <sagitterATfedoraproject.org> - 2.7.0-4
+- Set debug builds
+
 * Thu Oct 06 2016 Antonio Trande <sagitterATfedoraproject.org> - 2.7.0-3
 - SuperLUMT support condizionalized
-- Removed pkgconfig files 
+- Removed pkgconfig files
 
 * Tue Oct 04 2016 Antonio Trande <sagitterATfedoraproject.org> - 2.7.0-2
 - Enabled SuperLUMT and HYPRE support
