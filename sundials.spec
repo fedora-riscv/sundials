@@ -26,7 +26,7 @@
 Summary:    Suite of nonlinear solvers
 Name:       sundials
 Version:    2.7.0
-Release:    4%{?dist}
+Release:    5%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -826,6 +826,9 @@ popd
 %{_includedir}/nvector/nvector_pthreads.h
 
 %changelog
+* Fri Oct 21 2016 Orion Poplawski <orion@cora.nwra.com> - 2.7.0-5
+- Rebuild for openmpi 2.0
+
 * Mon Oct 17 2016 Antonio Trande <sagitterATfedoraproject.org> - 2.7.0-4
 - Set debug builds
 
