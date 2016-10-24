@@ -14,9 +14,17 @@
 %endif
 
 # No MPICH support on these arches
-%ifarch ppc64 ppc64le
+%if 0%{?rhel} || 0%{?rhel} < 7
+%ifarch %{power64}
 %global with_mpich 0
-%else
+%endif
+%endif
+%if 0%{?rhel} || 0%{?rhel} < 7
+%ifnarch %{power64}
+%global with_mpich 1
+%endif
+%endif
+%if 0%{?fedora} || 0%{?rhel} >= 7
 %global with_mpich 1
 %endif
 
@@ -26,7 +34,7 @@
 Summary:    Suite of nonlinear solvers
 Name:       sundials
 Version:    2.7.0
-Release:    5%{?dist}
+Release:    6%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -826,6 +834,9 @@ popd
 %{_includedir}/nvector/nvector_pthreads.h
 
 %changelog
+* Mon Oct 24 2016 Antonio Trande <sagitterATfedoraproject.org> - 2.7.0-6
+- Fix builds of MPICH libraries
+
 * Fri Oct 21 2016 Orion Poplawski <orion@cora.nwra.com> - 2.7.0-5
 - Rebuild for openmpi 2.0
 
