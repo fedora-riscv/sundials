@@ -34,7 +34,7 @@
 Summary:    Suite of nonlinear solvers
 Name:       sundials
 Version:    2.7.0
-Release:    6%{?dist}
+Release:    7%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -834,6 +834,9 @@ popd
 %{_includedir}/nvector/nvector_pthreads.h
 
 %changelog
+* Tue Nov 01 2016 Antonio Trande <sagitterATfedoraproject.org> - 2.7.0-7
+- New architectures
+
 * Mon Oct 24 2016 Antonio Trande <sagitterATfedoraproject.org> - 2.7.0-6
 - Fix builds of MPICH libraries
 
