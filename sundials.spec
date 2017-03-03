@@ -25,15 +25,18 @@
 # No MPICH support on these arches
 %if 0%{?rhel} && 0%{?rhel} < 7
 %ifarch %{power64}
+%global with_openmpi 1
 %global with_mpich 0
 %endif
 %endif
 %if 0%{?rhel} && 0%{?rhel} < 7
 %ifnarch %{power64}
+%global with_openmpi 1
 %global with_mpich 1
 %endif
 %endif
 %if 0%{?rhel} && 0%{?rhel} >= 7
+%global with_openmpi 1
 %global with_mpich 1
 %endif
 
@@ -43,7 +46,7 @@
 Summary:    Suite of nonlinear solvers
 Name:       sundials
 Version:    2.7.0
-Release:    9%{?dist}
+Release:    10%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -854,6 +857,9 @@ popd
 %{_includedir}/nvector/nvector_pthreads.h
 
 %changelog
+* Fri Mar 03 2017 Antonio Trande <sagitterATfedoraproject.org> - 2.7.0-10
+- Build OpenMPI libraries on EPEL
+
 * Fri Mar 03 2017 Antonio Trande <sagitterATfedoraproject.org> - 2.7.0-9
 - Add KLU support
 
