@@ -7,24 +7,33 @@
 %endif
 
 ## Define if use openmpi or not
-%ifarch s390 s390x
-%global with_openmpi 0
+%ifarch s390x
+%if 0%{?fedora} >= 26
+%global with_mpich 1
+%global with_openmpi 1
 %else
+%global with_mpich 1
+%global with_openmpi 0
+%endif
+%endif
+
+%if 0%{?fedora}
+%global with_mpich 1
 %global with_openmpi 1
 %endif
 
 # No MPICH support on these arches
-%if 0%{?rhel} || 0%{?rhel} < 7
+%if 0%{?rhel} && 0%{?rhel} < 7
 %ifarch %{power64}
 %global with_mpich 0
 %endif
 %endif
-%if 0%{?rhel} || 0%{?rhel} < 7
+%if 0%{?rhel} && 0%{?rhel} < 7
 %ifnarch %{power64}
 %global with_mpich 1
 %endif
 %endif
-%if 0%{?fedora} || 0%{?rhel} >= 7
+%if 0%{?rhel} && 0%{?rhel} >= 7
 %global with_mpich 1
 %endif
 
@@ -34,7 +43,7 @@
 Summary:    Suite of nonlinear solvers
 Name:       sundials
 Version:    2.7.0
-Release:    6%{?dist}
+Release:    9%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -46,6 +55,7 @@ Source0:    http://www.llnl.gov/casc/sundials/download/code/%{name}-%{version}.t
 Patch0:     %{name}-%{version}-set_superlumt_name.patch
 
 BuildRequires: gcc-gfortran
+BuildRequires: suitesparse-devel
 BuildRequires: cmake
 BuildRequires: lapack-devel
 BuildRequires: blas-devel
@@ -54,7 +64,6 @@ BuildRequires: blas-devel
 %ifnarch %{power64} aarch64
 BuildRequires: SuperLUMT-devel
 %endif
-BuildRequires: hypre-devel
 %if 0%{?rhel}
 BuildRequires: rsh
 %endif
@@ -122,7 +131,10 @@ This package contains the developer files (.so file).
 Summary:    Suite of nonlinear solvers
 Group:      Development/Libraries
 BuildRequires: openmpi-devel
+%ifnarch s390x
 BuildRequires: hypre-openmpi-devel
+%endif
+Requires: openmpi
 %description openmpi
 SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
 for use in writing mathematical software.
@@ -142,6 +154,7 @@ header files.
 Summary:    Suite of nonlinear solvers
 Group:      Development/Libraries
 Requires:   gcc-gfortran%{?_isa}
+Requires: openmpi
 %description fortran-openmpi
 SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
 for use in writing mathematical software.
@@ -165,7 +178,10 @@ header files.
 Summary:    Suite of nonlinear solvers
 Group:      Development/Libraries
 BuildRequires: mpich-devel
+%ifnarch s390x
 BuildRequires: hypre-mpich-devel
+%endif
+Requires: mpich
 %description mpich
 SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
 for use in writing mathematical software.
@@ -185,6 +201,7 @@ header files.
 Summary:    Suite of nonlinear solvers
 Group:      Development/Libraries
 Requires:   gcc-gfortran%{?_isa}
+Requires:   mpich
 %description fortran-mpich
 SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
 for use in writing mathematical software.
@@ -276,21 +293,13 @@ sed -i 's|DESTINATION lib|DESTINATION %{_lib}|g' src/kinsol/fcmix/CMakeLists.txt
 sed -i 's|DESTINATION lib|DESTINATION %{_lib}|g' src/nvec_openmp/CMakeLists.txt
 
 ##Set pthread library's paths
-sed -i \
- 's|INSTALL(TARGETS sundials_nvecpthreads_shared DESTINATION lib)|INSTALL(TARGETS sundials_nvecpthreads_shared DESTINATION %{_libdir})|g' \
-  src/nvec_pthreads/CMakeLists.txt
-sed -i \
- 's|INSTALL(TARGETS sundials_fnvecpthreads_shared DESTINATION lib)|INSTALL(TARGETS sundials_fnvecpthreads_shared DESTINATION %{_libdir})|g' \
-  src/nvec_pthreads/CMakeLists.txt
+sed -i 's|INSTALL(TARGETS sundials_nvecpthreads_shared DESTINATION lib)|INSTALL(TARGETS sundials_nvecpthreads_shared DESTINATION %{_libdir})|g' src/nvec_pthreads/CMakeLists.txt
+sed -i 's|INSTALL(TARGETS sundials_fnvecpthreads_shared DESTINATION lib)|INSTALL(TARGETS sundials_fnvecpthreads_shared DESTINATION %{_libdir})|g' src/nvec_pthreads/CMakeLists.txt
 
 ##Set serial library's paths
-sed -i \
- 's|TARGETS sundials_nvecserial_shared DESTINATION lib|TARGETS sundials_nvecserial_shared DESTINATION %{_libdir}|g' \
-  src/nvec_ser/CMakeLists.txt
+sed -i 's|TARGETS sundials_nvecserial_shared DESTINATION lib|TARGETS sundials_nvecserial_shared DESTINATION %{_libdir}|g' src/nvec_ser/CMakeLists.txt
 sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/nvector|g' src/nvec_ser/CMakeLists.txt
-sed -i \
- 's|TARGETS sundials_fnvecserial_shared DESTINATION lib|TARGETS sundials_fnvecserial_shared DESTINATION %{_libdir}|g' \
-  src/nvec_ser/CMakeLists.txt
+sed -i 's|TARGETS sundials_fnvecserial_shared DESTINATION lib|TARGETS sundials_fnvecserial_shared DESTINATION %{_libdir}|g' src/nvec_ser/CMakeLists.txt
 
 ## mpif77 test fails
 ## Hardened flags break cmake's MPI Fortran compiler test
@@ -326,9 +335,9 @@ cmake \
  -DCMAKE_C_FLAGS_DEBUG:STRING="-O0 -g -Wl,-z,relro -Wl,-z,now" \
  -DCMAKE_Fortran_FLAGS_DEBUG:STRING="-O0 -g -Wl,-z,relro -Wl,-z,now -lpthread -lgomp" \
 %ifnarch %{power64} aarch64
- -DCMAKE_SHARED_LINKER_FLAGS_DEBUG:STRING="%{__global_ldflags} -Wl,-z,now -llapack -lblas -lgomp -lsuperlumt_d -Wl,--as-needed -lpthread -lm" \
+ -DCMAKE_SHARED_LINKER_FLAGS_DEBUG:STRING="%{__global_ldflags} -Wl,-z,now -lklu -llapack -lblas -lgomp -lsuperlumt_d -lpthread -lm" \
 %else
- -DCMAKE_SHARED_LINKER_FLAGS_DEBUG:STRING="%{__global_ldflags} -Wl,-z,now -llapack -lblas -lgomp -Wl,--as-needed -lpthread -lm" \
+ -DCMAKE_SHARED_LINKER_FLAGS_DEBUG:STRING="%{__global_ldflags} -Wl,-z,now -lklu -llapack -lblas -lgomp -lpthread -lm" \
 %endif
 %else
 %cmake \
@@ -337,9 +346,9 @@ cmake \
  -DCMAKE_C_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now" \
  -DCMAKE_Fortran_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now -lpthread -lgomp" \
 %ifnarch %{power64} aarch64
- -DCMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING="%{__global_ldflags} -Wl,-z,now -llapack -lblas -lgomp -lsuperlumt_d -Wl,--as-needed -lpthread -lm" \
+ -DCMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING="%{__global_ldflags} -Wl,-z,now -lklu -llapack -lblas -lgomp -lsuperlumt_d -lpthread -lm" \
 %else
- -DCMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING="%{__global_ldflags} -Wl,-z,now -llapack -lblas -lgomp -Wl,--as-needed -lpthread -lm" \
+ -DCMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING="%{__global_ldflags} -Wl,-z,now -lklu -llapack -lblas -lgomp -lpthread -lm" \
 %endif
 %endif
  -DCMAKE_MODULE_LINKER_FLAGS:STRING="%{__global_ldflags} -Wl,-z,now" \
@@ -364,7 +373,8 @@ cmake \
  -DSUPERLUMT_THREAD_TYPE:STRING=OpenMP \
 %endif
  -DHYPRE_ENABLE:BOOL=OFF \
- -DKLU_ENABLE:BOOL=OFF -Wno-dev ..
+ -DKLU_ENABLE=ON -DKLU_LIBRARY_DIR:PATH=%{_libdir} -DKLU_INCLUDE_DIR:PATH=%{_includedir}/suitesparse -Wno-dev ..
+
 make V=1 %{?_smp_mflags}
 cd ..
 popd
@@ -374,16 +384,10 @@ popd
 %if 0%{?with_openmpi}
 pushd buildopenmpi_dir
 ##Set openmpi library's paths
-sed -i \
- 's|TARGETS sundials_nvecparallel_shared DESTINATION lib|TARGETS sundials_nvecparallel_shared DESTINATION %{_libdir}/openmpi/lib|g' \
-  src/nvec_par/CMakeLists.txt
+sed -i 's|TARGETS sundials_nvecparallel_shared DESTINATION lib|TARGETS sundials_nvecparallel_shared DESTINATION %{_libdir}/openmpi/lib|g' src/nvec_par/CMakeLists.txt
 sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/openmpi-%{_arch}/nvector|g' src/nvec_par/CMakeLists.txt
-sed -i \
- 's|TARGETS sundials_fnvecparallel_shared DESTINATION lib|TARGETS sundials_fnvecparallel_shared DESTINATION %{_libdir}/openmpi/lib|g' \
-  src/nvec_par/CMakeLists.txt
-sed -i \
- 's|TARGETS sundials_nvecparhyp_shared DESTINATION lib|TARGETS sundials_nvecparhyp_shared DESTINATION %{_libdir}/openmpi/lib|g' \
-  src/nvec_parhyp/CMakeLists.txt
+sed -i 's|TARGETS sundials_fnvecparallel_shared DESTINATION lib|TARGETS sundials_fnvecparallel_shared DESTINATION %{_libdir}/openmpi/lib|g' src/nvec_par/CMakeLists.txt
+sed -i 's|TARGETS sundials_nvecparhyp_shared DESTINATION lib|TARGETS sundials_nvecparhyp_shared DESTINATION %{_libdir}/openmpi/lib|g' src/nvec_parhyp/CMakeLists.txt
 
 mkdir -p build && cd build
 %{_openmpi_load}
@@ -397,14 +401,21 @@ cmake \
  -DCMAKE_BUILD_TYPE:STRING=Debug \
  -DCMAKE_C_FLAGS_DEBUG:STRING="-O0 -g -Wl,-z,relro -Wl,-z,now" \
  -DCMAKE_Fortran_FLAGS_DEBUG:STRING="-O0 -g -Wl,-z,relro -Wl,-z,now -lm -lpthread -lgomp" \
- -DCMAKE_SHARED_LINKER_FLAGS_DEBUG:STRING="%{__global_ldflags} -Wl,-z,now -lm -lpthread -lgomp -L%{_libdir}/openmpi/lib -lHYPRE" \
+ -DCMAKE_SHARED_LINKER_FLAGS_DEBUG:STRING="%{__global_ldflags} -Wl,-z,now -lm -lpthread -lgomp -lklu \
+%ifnarch s390x
+-L%{_libdir}/openmpi/lib -lHYPRE" \
+%endif
 %else
 %cmake \
  -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
  -DCMAKE_BUILD_TYPE:STRING=Release \
  -DCMAKE_C_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now" \
  -DCMAKE_Fortran_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now -lm -lpthread -lgomp" \
- -DCMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING="%{__global_ldflags} -Wl,-z,now -lm -lpthread -lgomp -L%{_libdir}/openmpi/lib -lHYPRE" \
+%ifnarch s390x
+ -DCMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING="%{__global_ldflags} -Wl,-z,now -lm -lpthread -lgomp -lklu -L%{_libdir}/openmpi/lib -lHYPRE" \
+%else
+ -DCMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING="%{__global_ldflags} -Wl,-z,now -lm -lpthread -lgomp -lklu" \
+%endif
 %endif
  -DCMAKE_INSTALL_PREFIX=%{_prefix} \
  -DEXAMPLES_ENABLE=ON -DEXAMPLES_INSTALL=OFF -DEXAMPLES_INSTALL_PATH:PATH=%{_datadir}/%{name}/openmpi_examples \
@@ -423,10 +434,13 @@ cmake \
  -DPTHREAD_ENABLE:BOOL=ON \
  -DLAPACK_ENABLE:BOOL=ON \
  -DSUPERLUMT_ENABLE:BOOL=OFF \
+%ifnarch s390x
  -DHYPRE_ENABLE:BOOL=ON \
  -DHYPRE_INCLUDE_DIR:PATH=%{_includedir}/openmpi-%{_arch}/hypre \
  -DHYPRE_LIBRARY_DIR:PATH=%{_libdir}/openmpi/lib \
- -DKLU_ENABLE:BOOL=OFF -Wno-dev ..
+%endif
+ -DKLU_ENABLE=ON -DKLU_LIBRARY_DIR:PATH=%{_libdir} -DKLU_INCLUDE_DIR:PATH=%{_includedir}/suitesparse -Wno-dev ..
+
 make V=1 %{?_smp_mflags}
 %{_openmpi_unload}
 cd ..
@@ -438,16 +452,10 @@ popd
 %if 0%{?with_mpich}
 pushd buildmpich_dir
 ##Set mpich library's paths
-sed -i \
- 's|TARGETS sundials_nvecparallel_shared DESTINATION lib|TARGETS sundials_nvecparallel_shared DESTINATION %{_libdir}/mpich/lib|g' \
-  src/nvec_par/CMakeLists.txt
+sed -i 's|TARGETS sundials_nvecparallel_shared DESTINATION lib|TARGETS sundials_nvecparallel_shared DESTINATION %{_libdir}/mpich/lib|g' src/nvec_par/CMakeLists.txt
 sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/mpich-%{_arch}/nvector|g' src/nvec_par/CMakeLists.txt
-sed -i \
- 's|TARGETS sundials_fnvecparallel_shared DESTINATION lib|TARGETS sundials_fnvecparallel_shared DESTINATION %{_libdir}/mpich/lib|g' \
-  src/nvec_par/CMakeLists.txt
-sed -i \
- 's|TARGETS sundials_nvecparhyp_shared DESTINATION lib|TARGETS sundials_nvecparhyp_shared DESTINATION %{_libdir}/mpich/lib|g' \
-  src/nvec_parhyp/CMakeLists.txt
+sed -i 's|TARGETS sundials_fnvecparallel_shared DESTINATION lib|TARGETS sundials_fnvecparallel_shared DESTINATION %{_libdir}/mpich/lib|g' src/nvec_par/CMakeLists.txt
+sed -i 's|TARGETS sundials_nvecparhyp_shared DESTINATION lib|TARGETS sundials_nvecparhyp_shared DESTINATION %{_libdir}/mpich/lib|g' src/nvec_parhyp/CMakeLists.txt
 
 mkdir -p build && cd build
 %{_mpich_load}
@@ -470,14 +478,21 @@ cmake \
  -DCMAKE_BUILD_TYPE:STRING=Debug \
  -DCMAKE_C_FLAGS_DEBUG:STRING="-O0 -g -Wl,-z,relro -Wl,-z,now" \
  -DCMAKE_Fortran_FLAGS_DEBUG:STRING="-O0 -g -Wl,-z,relro -Wl,-z,now -lm -lpthread -lgomp" \
- -DCMAKE_SHARED_LINKER_FLAGS_DEBUG:STRING="%{__global_ldflags} -Wl,-z,now -lm -lpthread -lgomp -L%{_libdir}/mpich/lib -lHYPRE" \
+ -DCMAKE_SHARED_LINKER_FLAGS_DEBUG:STRING="%{__global_ldflags} -Wl,-z,now -lm -lpthread -lgomp -lklu \
+%ifnarch s390x
+-L%{_libdir}/openmpi/lib -lHYPRE" \
+%endif
 %else
 %cmake \
  -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
  -DCMAKE_BUILD_TYPE:STRING=Release \
  -DCMAKE_C_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now" \
  -DCMAKE_Fortran_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now -lm -lpthread -lgomp" \
- -DCMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING="%{__global_ldflags} -Wl,-z,now -lm -lpthread -lgomp -L%{_libdir}/mpich/lib -lHYPRE" \
+%ifnarch s390x
+ -DCMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING="%{__global_ldflags} -Wl,-z,now -lm -lpthread -lgomp -lklu -L%{_libdir}/mpich/lib -lHYPRE" \
+%else
+ -DCMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING="%{__global_ldflags} -Wl,-z,now -lm -lpthread -lgomp -lklu" \
+%endif
 %endif
  -DCMAKE_INSTALL_PREFIX=%{_prefix} \
  -DEXAMPLES_ENABLE=ON -DEXAMPLES_INSTALL=OFF -DEXAMPLES_INSTALL_PATH:PATH=%{_datadir}/%{name}/mpich_examples \
@@ -502,10 +517,13 @@ cmake \
  -DPTHREAD_ENABLE:BOOL=ON \
  -DLAPACK_ENABLE:BOOL=ON \
  -DSUPERLUMT_ENABLE:BOOL=OFF \
+%ifnarch s390x
  -DHYPRE_ENABLE:BOOL=ON \
  -DHYPRE_INCLUDE_DIR:PATH=%{_includedir}/mpich-%{_arch}/hypre \
  -DHYPRE_LIBRARY_DIR:PATH=%{_libdir}/mpich/lib \
- -DKLU_ENABLE:BOOL=OFF -Wno-dev ..
+%endif
+ -DKLU_ENABLE=ON -DKLU_LIBRARY_DIR:PATH=%{_libdir} -DKLU_INCLUDE_DIR:PATH=%{_includedir}/suitesparse -Wno-dev ..
+
 make V=1 %{?_smp_mflags}
 %{_mpich_unload}
 cd ..
@@ -539,12 +557,6 @@ make install DESTDIR=%{buildroot} -C sundials-%{version}/build
 %postun fortran -p /sbin/ldconfig
 
 %check
-
-%if 0%{with_openmpi} || 0%{with_mpich}
-# First, purge all modules so that user environment doesn't conflict
-# with the build.
-module purge ||:
-%endif
 
 %if 0%{?with_parcheck}
 %if 0%{?with_openmpi}
@@ -768,12 +780,16 @@ popd
 %license sundials-%{version}/LICENSE
 %doc sundials-%{version}/README sundials-%{version}/src/README-nvec_par
 %{_libdir}/openmpi/lib/libsundials_nvecparallel.so.*
+%ifnarch s390x
 %{_libdir}/openmpi/lib/libsundials_nvecparhyp.so.*
+%endif
 
 %files openmpi-devel
 %{_includedir}/openmpi-%{_arch}/nvector/nvector_parallel.h
 %{_libdir}/openmpi/lib/libsundials_nvecparallel.so
+%ifnarch s390x
 %{_libdir}/openmpi/lib/libsundials_nvecparhyp.so
+%endif
 
 %files fortran-openmpi
 %{!?_licensedir:%global license %doc}
@@ -792,12 +808,16 @@ popd
 %license sundials-%{version}/LICENSE
 %doc sundials-%{version}/README sundials-%{version}/src/README-nvec_par
 %{_libdir}/mpich/lib/libsundials_nvecparallel.so.*
+%ifnarch s390x
 %{_libdir}/mpich/lib/libsundials_nvecparhyp.so.*
+%endif
 
 %files mpich-devel
 %{_includedir}/mpich-%{_arch}/nvector/nvector_parallel.h
 %{_libdir}/mpich/lib/libsundials_nvecparallel.so
+%ifnarch s390x
 %{_libdir}/mpich/lib/libsundials_nvecparhyp.so
+%endif
 
 %files fortran-mpich
 %{!?_licensedir:%global license %doc}
@@ -834,6 +854,15 @@ popd
 %{_includedir}/nvector/nvector_pthreads.h
 
 %changelog
+* Fri Mar 03 2017 Antonio Trande <sagitterATfedoraproject.org> - 2.7.0-9
+- Add KLU support
+
+* Sat Feb 11 2017 Fedora Release Engineering <releng@fedoraproject.org> - 2.7.0-8
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_26_Mass_Rebuild
+
+* Tue Nov 01 2016 Antonio Trande <sagitterATfedoraproject.org> - 2.7.0-7
+- New architectures
+
 * Mon Oct 24 2016 Antonio Trande <sagitterATfedoraproject.org> - 2.7.0-6
 - Fix builds of MPICH libraries
 
