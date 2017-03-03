@@ -7,10 +7,14 @@
 %endif
 
 ## Define if use openmpi or not
-%ifarch s390 s390x
-%global with_openmpi 0
-%else
+%ifarch s390x
+%if 0%{?fedora} >= 26
+%global with_mpich 1
 %global with_openmpi 1
+%else
+%global with_mpich 0
+%global with_openmpi 0
+%endif
 %endif
 
 # No MPICH support on these arches
@@ -34,7 +38,7 @@
 Summary:    Suite of nonlinear solvers
 Name:       sundials
 Version:    2.7.0
-Release:    8%{?dist}
+Release:    9%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -46,6 +50,7 @@ Source0:    http://www.llnl.gov/casc/sundials/download/code/%{name}-%{version}.t
 Patch0:     %{name}-%{version}-set_superlumt_name.patch
 
 BuildRequires: gcc-gfortran
+BuildRequires: suitesparse-devel
 BuildRequires: cmake
 BuildRequires: lapack-devel
 BuildRequires: blas-devel
@@ -123,6 +128,7 @@ Summary:    Suite of nonlinear solvers
 Group:      Development/Libraries
 BuildRequires: openmpi-devel
 BuildRequires: hypre-openmpi-devel
+Requires: openmpi
 %description openmpi
 SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
 for use in writing mathematical software.
@@ -142,6 +148,7 @@ header files.
 Summary:    Suite of nonlinear solvers
 Group:      Development/Libraries
 Requires:   gcc-gfortran%{?_isa}
+Requires: openmpi
 %description fortran-openmpi
 SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
 for use in writing mathematical software.
@@ -166,6 +173,7 @@ Summary:    Suite of nonlinear solvers
 Group:      Development/Libraries
 BuildRequires: mpich-devel
 BuildRequires: hypre-mpich-devel
+Requires: mpich
 %description mpich
 SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
 for use in writing mathematical software.
@@ -185,6 +193,7 @@ header files.
 Summary:    Suite of nonlinear solvers
 Group:      Development/Libraries
 Requires:   gcc-gfortran%{?_isa}
+Requires:   mpich
 %description fortran-mpich
 SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
 for use in writing mathematical software.
@@ -326,9 +335,9 @@ cmake \
  -DCMAKE_C_FLAGS_DEBUG:STRING="-O0 -g -Wl,-z,relro -Wl,-z,now" \
  -DCMAKE_Fortran_FLAGS_DEBUG:STRING="-O0 -g -Wl,-z,relro -Wl,-z,now -lpthread -lgomp" \
 %ifnarch %{power64} aarch64
- -DCMAKE_SHARED_LINKER_FLAGS_DEBUG:STRING="%{__global_ldflags} -Wl,-z,now -llapack -lblas -lgomp -lsuperlumt_d -Wl,--as-needed -lpthread -lm" \
+ -DCMAKE_SHARED_LINKER_FLAGS_DEBUG:STRING="%{__global_ldflags} -Wl,-z,now -lklu -llapack -lblas -lgomp -lsuperlumt_d -lpthread -lm" \
 %else
- -DCMAKE_SHARED_LINKER_FLAGS_DEBUG:STRING="%{__global_ldflags} -Wl,-z,now -llapack -lblas -lgomp -Wl,--as-needed -lpthread -lm" \
+ -DCMAKE_SHARED_LINKER_FLAGS_DEBUG:STRING="%{__global_ldflags} -Wl,-z,now -lklu -llapack -lblas -lgomp -lpthread -lm" \
 %endif
 %else
 %cmake \
@@ -337,9 +346,9 @@ cmake \
  -DCMAKE_C_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now" \
  -DCMAKE_Fortran_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now -lpthread -lgomp" \
 %ifnarch %{power64} aarch64
- -DCMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING="%{__global_ldflags} -Wl,-z,now -llapack -lblas -lgomp -lsuperlumt_d -Wl,--as-needed -lpthread -lm" \
+ -DCMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING="%{__global_ldflags} -Wl,-z,now -lklu -llapack -lblas -lgomp -lsuperlumt_d -lpthread -lm" \
 %else
- -DCMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING="%{__global_ldflags} -Wl,-z,now -llapack -lblas -lgomp -Wl,--as-needed -lpthread -lm" \
+ -DCMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING="%{__global_ldflags} -Wl,-z,now -lklu -llapack -lblas -lgomp -lpthread -lm" \
 %endif
 %endif
  -DCMAKE_MODULE_LINKER_FLAGS:STRING="%{__global_ldflags} -Wl,-z,now" \
@@ -364,7 +373,7 @@ cmake \
  -DSUPERLUMT_THREAD_TYPE:STRING=OpenMP \
 %endif
  -DHYPRE_ENABLE:BOOL=OFF \
- -DKLU_ENABLE:BOOL=OFF -Wno-dev ..
+ -DKLU_ENABLE=ON -DKLU_LIBRARY_DIR:PATH=%{_libdir} -DKLU_INCLUDE_DIR:PATH=%{_includedir}/suitesparse -Wno-dev ..
 make V=1 %{?_smp_mflags}
 cd ..
 popd
@@ -397,14 +406,14 @@ cmake \
  -DCMAKE_BUILD_TYPE:STRING=Debug \
  -DCMAKE_C_FLAGS_DEBUG:STRING="-O0 -g -Wl,-z,relro -Wl,-z,now" \
  -DCMAKE_Fortran_FLAGS_DEBUG:STRING="-O0 -g -Wl,-z,relro -Wl,-z,now -lm -lpthread -lgomp" \
- -DCMAKE_SHARED_LINKER_FLAGS_DEBUG:STRING="%{__global_ldflags} -Wl,-z,now -lm -lpthread -lgomp -L%{_libdir}/openmpi/lib -lHYPRE" \
+ -DCMAKE_SHARED_LINKER_FLAGS_DEBUG:STRING="%{__global_ldflags} -Wl,-z,now -lm -lpthread -lgomp -lklu -L%{_libdir}/openmpi/lib -lHYPRE" \
 %else
 %cmake \
  -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
  -DCMAKE_BUILD_TYPE:STRING=Release \
  -DCMAKE_C_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now" \
  -DCMAKE_Fortran_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now -lm -lpthread -lgomp" \
- -DCMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING="%{__global_ldflags} -Wl,-z,now -lm -lpthread -lgomp -L%{_libdir}/openmpi/lib -lHYPRE" \
+ -DCMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING="%{__global_ldflags} -Wl,-z,now -lm -lpthread -lgomp -lklu -L%{_libdir}/openmpi/lib -lHYPRE" \
 %endif
  -DCMAKE_INSTALL_PREFIX=%{_prefix} \
  -DEXAMPLES_ENABLE=ON -DEXAMPLES_INSTALL=OFF -DEXAMPLES_INSTALL_PATH:PATH=%{_datadir}/%{name}/openmpi_examples \
@@ -426,7 +435,7 @@ cmake \
  -DHYPRE_ENABLE:BOOL=ON \
  -DHYPRE_INCLUDE_DIR:PATH=%{_includedir}/openmpi-%{_arch}/hypre \
  -DHYPRE_LIBRARY_DIR:PATH=%{_libdir}/openmpi/lib \
- -DKLU_ENABLE:BOOL=OFF -Wno-dev ..
+ -DKLU_ENABLE=ON -DKLU_LIBRARY_DIR:PATH=%{_libdir} -DKLU_INCLUDE_DIR:PATH=%{_includedir}/suitesparse -Wno-dev ..
 make V=1 %{?_smp_mflags}
 %{_openmpi_unload}
 cd ..
@@ -470,14 +479,14 @@ cmake \
  -DCMAKE_BUILD_TYPE:STRING=Debug \
  -DCMAKE_C_FLAGS_DEBUG:STRING="-O0 -g -Wl,-z,relro -Wl,-z,now" \
  -DCMAKE_Fortran_FLAGS_DEBUG:STRING="-O0 -g -Wl,-z,relro -Wl,-z,now -lm -lpthread -lgomp" \
- -DCMAKE_SHARED_LINKER_FLAGS_DEBUG:STRING="%{__global_ldflags} -Wl,-z,now -lm -lpthread -lgomp -L%{_libdir}/mpich/lib -lHYPRE" \
+ -DCMAKE_SHARED_LINKER_FLAGS_DEBUG:STRING="%{__global_ldflags} -Wl,-z,now -lm -lpthread -lgomp -lklu -L%{_libdir}/mpich/lib -lHYPRE" \
 %else
 %cmake \
  -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
  -DCMAKE_BUILD_TYPE:STRING=Release \
  -DCMAKE_C_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now" \
  -DCMAKE_Fortran_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now -lm -lpthread -lgomp" \
- -DCMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING="%{__global_ldflags} -Wl,-z,now -lm -lpthread -lgomp -L%{_libdir}/mpich/lib -lHYPRE" \
+ -DCMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING="%{__global_ldflags} -Wl,-z,now -lm -lpthread -lgomp -lklu -L%{_libdir}/mpich/lib -lHYPRE" \
 %endif
  -DCMAKE_INSTALL_PREFIX=%{_prefix} \
  -DEXAMPLES_ENABLE=ON -DEXAMPLES_INSTALL=OFF -DEXAMPLES_INSTALL_PATH:PATH=%{_datadir}/%{name}/mpich_examples \
@@ -505,7 +514,7 @@ cmake \
  -DHYPRE_ENABLE:BOOL=ON \
  -DHYPRE_INCLUDE_DIR:PATH=%{_includedir}/mpich-%{_arch}/hypre \
  -DHYPRE_LIBRARY_DIR:PATH=%{_libdir}/mpich/lib \
- -DKLU_ENABLE:BOOL=OFF -Wno-dev ..
+ -DKLU_ENABLE=ON -DKLU_LIBRARY_DIR:PATH=%{_libdir} -DKLU_INCLUDE_DIR:PATH=%{_includedir}/suitesparse -Wno-dev ..
 make V=1 %{?_smp_mflags}
 %{_mpich_unload}
 cd ..
@@ -539,12 +548,6 @@ make install DESTDIR=%{buildroot} -C sundials-%{version}/build
 %postun fortran -p /sbin/ldconfig
 
 %check
-
-%if 0%{with_openmpi} || 0%{with_mpich}
-# First, purge all modules so that user environment doesn't conflict
-# with the build.
-module purge ||:
-%endif
 
 %if 0%{?with_parcheck}
 %if 0%{?with_openmpi}
@@ -834,6 +837,9 @@ popd
 %{_includedir}/nvector/nvector_pthreads.h
 
 %changelog
+* Fri Mar 03 2017 Antonio Trande <sagitterATfedoraproject.org> - 2.7.0-9
+- Add KLU support
+
 * Sat Feb 11 2017 Fedora Release Engineering <releng@fedoraproject.org> - 2.7.0-8
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_26_Mass_Rebuild
 
