@@ -1,0 +1,11 @@
+--- config/FindSUPERLUMT.orig.cmake	2016-09-27 00:16:47.000000000 +0200
++++ config/FindSUPERLUMT.cmake	2016-10-04 12:08:58.202988791 +0200
+@@ -44,7 +44,7 @@
+   set(SUPERLUMT_LIBRARY_DIR ${SUPERLUMT_LIBRARY_DIR} CACHE PATH "" FORCE)
+ else()
+   # find library with user provided directory path
+-  set(SUPERLUMT_LIBRARY_NAME superlu_mt_${POST})
++  set(SUPERLUMT_LIBRARY_NAME superlumt_d)
+   find_library(SUPERLUMT_LIBRARY ${SUPERLUMT_LIBRARY_NAME} ${SUPERLUMT_LIBRARY_DIR} NO_DEFAULT_PATH)
+ endif()
+ mark_as_advanced(SUPERLUMT_LIBRARY)
