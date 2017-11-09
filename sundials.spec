@@ -58,7 +58,7 @@
 Summary:    Suite of nonlinear solvers
 Name:       sundials
 Version:    3.0.0
-Release:    1%{?dist}
+Release:    2%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -90,6 +90,7 @@ BuildRequires: SuperLUMT-devel
 %if 0%{?rhel}
 BuildRequires: rsh
 %endif
+Requires: gcc-gfortran%{?_isa}
 
 %description
 SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
@@ -106,56 +107,15 @@ preconditioners.
 Summary:    Suite of nonlinear solvers (developer files)
 Group:      Development/Libraries
 Requires:   %{name}%{?_isa} = %{version}-%{release}
-Provides:   %{name}-static = %{version}-%{release}
 %description devel
 SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
 for use in writing mathematical software.
 This package contains the developer files (.so file, header files).
 
-%package openmp
-Summary:    Suite of nonlinear solvers with OpenMP
-Group:      Development/Libraries
-%description openmp
-SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
-for use in writing mathematical software.
-This package contains Sundials libraries with OpenMP support.
-
-%package openmp-devel
-Summary:    Suite of nonlinear solvers with OpenMP (developer files)
-Group:      Development/Libraries
-Requires:   %{name}-openmp%{?_isa} = %{version}-%{release}
-Requires:   %{name}-devel%{?_isa} = %{version}-%{release}
-%description openmp-devel
-SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
-for use in writing mathematical software.
-This package contains the developer files (.so file).
-
-%package fortran-openmp
-Summary:    Suite of nonlinear solvers with OpenMP
-Group:      Development/Libraries
-%description fortran-openmp
-SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
-for use in writing mathematical software.
-This package contains Sundials fortran libraries with OpenMP support.
-
-%package fortran-openmp-devel
-Summary:    Suite of nonlinear solvers with OpenMP (developer files)
-Group:      Development/Libraries
-Requires:   %{name}-fortran-openmp%{?_isa} = %{version}-%{release}
-Requires:   %{name}-devel%{?_isa} = %{version}-%{release}
-%description fortran-openmp-devel
-SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
-for use in writing mathematical software.
-This package contains the developer files (.so file).
-
 %package samples
 Summary:    Suite of nonlinear solvers (example files)
 Group:      Development/Libraries
 Requires:   %{name}%{?_isa} = %{version}-%{release}
-Requires:   %{name}-fortran%{?_isa} = %{version}-%{release}
-Requires:   %{name}-fortran-openmp%{?_isa} = %{version}-%{release}
-Requires:   %{name}-openmp%{?_isa} = %{version}-%{release}
-Requires:   %{name}-threads%{?_isa} = %{version}-%{release}
 %description samples
 SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
 for use in writing mathematical software.
@@ -171,13 +131,14 @@ BuildRequires: openmpi-devel
 BuildRequires: hypre-openmpi-devel
 %endif
 Requires: openmpi
+Requires: gcc-gfortran%{?_isa}
 %description openmpi
 SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
 for use in writing mathematical software.
 This package contains the Sundials Fortran parallel OpenMPI libraries.
 
 %package openmpi-devel
-Summary:    Suite of nonlinear solvers (static libraries)
+Summary:    Suite of nonlinear solvers
 Group:      Development/Libraries
 Requires:   %{name}-openmpi%{?_isa} = %{version}-%{release}
 %description openmpi-devel
@@ -186,31 +147,10 @@ for use in writing mathematical software.
 This package contains the Sundials parallel OpenMPI devel libraries and
 header files.
 
-%package fortran-openmpi
-Summary:    Suite of nonlinear solvers
-Group:      Development/Libraries
-Requires:   gcc-gfortran%{?_isa}
-Requires: openmpi
-%description fortran-openmpi
-SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
-for use in writing mathematical software.
-This package contains the Sundials Fortran parallel OpenMPI libraries.
-
-%package fortran-openmpi-devel
-Summary:    Suite of nonlinear solvers
-Group:      Development/Libraries
-Requires:   %{name}-fortran-openmpi%{?_isa} = %{version}-%{release}
-%description fortran-openmpi-devel
-SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
-for use in writing mathematical software.
-This package contains the Sundials Fortran parallel OpenMPI devel libraries and
-header files.
-
 %package openmpi-samples
 Summary:    Suite of nonlinear solvers (example files)
 Group:      Development/Libraries
 Requires:   %{name}-openmpi%{?_isa} = %{version}-%{release}
-Requires:   %{name}-fortran-openmpi%{?_isa} = %{version}-%{release}
 %description openmpi-samples
 SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
 for use in writing mathematical software.
@@ -228,13 +168,14 @@ BuildRequires: mpich-devel
 BuildRequires: hypre-mpich-devel
 %endif
 Requires: mpich
+Requires: gcc-gfortran%{?_isa}
 %description mpich
 SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
 for use in writing mathematical software.
 This package contains the Sundials parallel MPICH libraries.
 
 %package mpich-devel
-Summary:    Suite of nonlinear solvers (static libraries)
+Summary:    Suite of nonlinear solvers
 Group:      Development/Libraries
 Requires:   %{name}-mpich%{?_isa} = %{version}-%{release}
 %description mpich-devel
@@ -243,31 +184,10 @@ for use in writing mathematical software.
 This package contains the Sundials parallel MPICH devel libraries and
 header files.
 
-%package fortran-mpich
-Summary:    Suite of nonlinear solvers
-Group:      Development/Libraries
-Requires:   gcc-gfortran%{?_isa}
-Requires:   mpich
-%description fortran-mpich
-SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
-for use in writing mathematical software.
-This package contains the Sundials Fortran parallel MPICH libraries.
-
-%package fortran-mpich-devel
-Summary:    Suite of nonlinear solvers
-Group:      Development/Libraries
-Requires:   %{name}-fortran-mpich%{?_isa} = %{version}-%{release}
-%description fortran-mpich-devel
-SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
-for use in writing mathematical software.
-This package contains the Sundials Fortran parallel MPICH devel libraries and
-header files.
-
 %package mpich-samples
 Summary:    Suite of nonlinear solvers (example files)
 Group:      Development/Libraries
 Requires:   %{name}-mpich%{?_isa} = %{version}-%{release}
-Requires:   %{name}-fortran-mpich%{?_isa} = %{version}-%{release}
 %description mpich-samples
 SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
 for use in writing mathematical software.
@@ -275,49 +195,6 @@ This package contains the C, CXX, F77 example files.
 %endif
 ######
 #############################################################################
-
-%package fortran
-Summary:    Suite of nonlinear solvers (static libraries)
-Group:      Development/Libraries
-Requires:   gcc-gfortran%{?_isa}
-%description fortran
-SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
-for use in writing mathematical software.
-This package contains the Sundials Fortran libraries.
-
-## Cannot build shared libraries for the FCMIX (Fortran) interfaces 
-## due to unresolved symbol errors 
-## coming from inexistent user-provided functions.
-## This package provides some static libraries
-%package fortran-devel
-Summary:    Suite of nonlinear solvers
-Group:      Development/Libraries
-Requires:   %{name}-fortran%{?_isa} = %{version}-%{release}
-Provides:   %{name}-fortran-static = %{version}-%{release}
-%description fortran-devel
-SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
-for use in writing mathematical software.
-This package contains the Sundials Fortran devel libraries and
-header files.
-
-%package threads
-Summary:    Suite of nonlinear solvers
-Group:      Development/Libraries
-%description threads
-SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
-for use in writing mathematical software.
-This package contains the Sundials libraries (included the Fortran ones)
-compiled with threading support.
-
-%package threads-devel
-Summary:    Suite of nonlinear solvers
-Group:      Development/Libraries
-Requires:   %{name}-threads%{?_isa} = %{version}-%{release}
-%description threads-devel
-SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
-for use in writing mathematical software.
-This package contains the Sundials devel library compiled with threading support
-and relative header files.
 
 %package doc
 Summary:    Suite of nonlinear solvers (documentation)
@@ -722,6 +599,9 @@ done
 
 %make_install -C sundials-%{version}/build
 
+# Remove static libraries
+rm -f %{buildroot}%{_libdir}/*.a
+
 mkdir -p %{buildroot}%{_libexecdir}/sundials-%{version}
 cp -a sundials-%{version}/build/examples %{buildroot}%{_libexecdir}/sundials-%{version}/
 
@@ -732,18 +612,6 @@ done
 
 %post -p /sbin/ldconfig
 %postun -p /sbin/ldconfig
-
-%post threads -p /sbin/ldconfig
-%postun threads -p /sbin/ldconfig
-
-%post fortran -p /sbin/ldconfig
-%postun fortran -p /sbin/ldconfig
-
-%post fortran-openmp -p /sbin/ldconfig
-%postun fortran-openmp -p /sbin/ldconfig
-
-%post openmp -p /sbin/ldconfig
-%postun openmp -p /sbin/ldconfig
 
 %check
 
@@ -893,6 +761,13 @@ popd
 %{_libdir}/libsundials_kinsol.so.*
 %{_libdir}/libsundials_sunlinsol*.so.*
 %{_libdir}/libsundials_sunmatrix*.so.*
+%{_libdir}/libsundials_nvecpthreads.so.*
+%{_libdir}/libsundials_fnvecpthreads.so.*
+%{_libdir}/libsundials_fnvecserial.so.*
+%{_libdir}/libsundials_fsunlinsol*.so.*
+%{_libdir}/libsundials_fsunmatrix*.so.*
+%{_libdir}/libsundials_fnvecopenmp.so.*
+%{_libdir}/libsundials_nvecopenmp.so.*
 
 %files doc
 %{!?_licensedir:%global license %doc}
@@ -914,6 +789,13 @@ popd
 %{_libdir}/libsundials_kinsol.so
 %{_libdir}/libsundials_sunlinsol*.so
 %{_libdir}/libsundials_sunmatrix*.so
+%{_libdir}/libsundials_fnvecpthreads.so
+%{_libdir}/libsundials_nvecpthreads.so
+%{_libdir}/libsundials_fnvecserial.so
+%{_libdir}/libsundials_fsunlinsol*.so
+%{_libdir}/libsundials_fsunmatrix*.so
+%{_libdir}/libsundials_fnvecopenmp.so
+%{_libdir}/libsundials_nvecopenmp.so
 %{_includedir}/sundials/
 %{_includedir}/cvode/
 %{_includedir}/cvodes/
@@ -925,32 +807,15 @@ popd
 %{_includedir}/sunlinsol/
 %{_includedir}/sunmatrix/
 
-%files openmp
-%{!?_licensedir:%global license %doc}
-%license sundials-%{version}/LICENSE
-%doc sundials-%{version}/README sundials-%{version}/src/README-*
-%{_libdir}/libsundials_nvecopenmp.so.*
-
-%files openmp-devel
-%{_libdir}/libsundials_nvecopenmp.so
-
-%files fortran-openmp
-%{!?_licensedir:%global license %doc}
-%license sundials-%{version}/LICENSE
-%doc sundials-%{version}/README sundials-%{version}/src/README-*
-%{_libdir}/libsundials_fnvecopenmp.so.*
-
-%files fortran-openmp-devel
-%{_libdir}/libsundials_fnvecopenmp.so
-
 %files samples
 %{_libexecdir}/sundials-%{version}/
 
 %if 0%{?with_openmpi}
 %files openmpi
 %license sundials-%{version}/LICENSE
-%doc sundials-%{version}/README sundials-%{version}/src/README-nvec_par
+%doc sundials-%{version}/README sundials-%{version}/src/README-*
 %{_libdir}/openmpi/lib/libsundials_nvecparallel.so.*
+%{_libdir}/openmpi/lib/libsundials_fnvecparallel.so.*
 %ifnarch s390x
 %{_libdir}/openmpi/lib/libsundials_nvecparhyp.so.*
 %endif
@@ -958,19 +823,10 @@ popd
 %files openmpi-devel
 %{_includedir}/openmpi-%{_arch}/nvector/nvector_parallel.h
 %{_libdir}/openmpi/lib/libsundials_nvecparallel.so
+%{_libdir}/openmpi/lib/libsundials_fnvecparallel.so
 %ifnarch s390x
 %{_libdir}/openmpi/lib/libsundials_nvecparhyp.so
 %endif
-
-%files fortran-openmpi
-%{!?_licensedir:%global license %doc}
-%license sundials-%{version}/LICENSE
-%doc sundials-%{version}/README sundials-%{version}/src/README-nvec_par
-%{_libdir}/openmpi/lib/libsundials_fnvecparallel.so.*
-
-%files fortran-openmpi-devel
-%{_includedir}/openmpi-%{_arch}/nvector/nvector_parallel.h
-%{_libdir}/openmpi/lib/libsundials_fnvecparallel.so
 
 %files openmpi-samples
 %{_libdir}/openmpi/lib/sundials-%{version}/
@@ -980,8 +836,9 @@ popd
 %files mpich
 %{!?_licensedir:%global license %doc}
 %license sundials-%{version}/LICENSE
-%doc sundials-%{version}/README sundials-%{version}/src/README-nvec_par
+%doc sundials-%{version}/README sundials-%{version}/src/README-*
 %{_libdir}/mpich/lib/libsundials_nvecparallel.so.*
+%{_libdir}/mpich/lib/libsundials_fnvecparallel.so.*
 %ifnarch s390x
 %{_libdir}/mpich/lib/libsundials_nvecparhyp.so.*
 %endif
@@ -990,52 +847,20 @@ popd
 %files mpich-devel
 %{_includedir}/mpich-%{_arch}/nvector/nvector_parallel.h
 %{_libdir}/mpich/lib/libsundials_nvecparallel.so
+%{_libdir}/mpich/lib/libsundials_fnvecparallel.so
 %ifnarch s390x
 %{_libdir}/mpich/lib/libsundials_nvecparhyp.so
 %endif
-
-%files fortran-mpich
-%{!?_licensedir:%global license %doc}
-%license sundials-%{version}/LICENSE
-%doc sundials-%{version}/README sundials-%{version}/src/README-nvec_par
-%{_libdir}/mpich/lib/libsundials_fnvecparallel.so.*
-
-%files fortran-mpich-devel
-%{_includedir}/mpich-%{_arch}/nvector/nvector_parallel.h
-%{_libdir}/mpich/lib/libsundials_fnvecparallel.so
 
 %files mpich-samples
 %{_libdir}/mpich/lib/sundials-%{version}/
 %endif
 
-%files fortran
-%{!?_licensedir:%global license %doc}
-%license sundials-%{version}/LICENSE
-%doc sundials-%{version}/README
-%{_libdir}/libsundials_fnvecserial.so.*
-%{_libdir}/libsundials_fsunlinsol*.so.*
-%{_libdir}/libsundials_fsunmatrix*.so.*
-
-%files fortran-devel
-%{_includedir}/sundials/sundials_fnvector.h
-%{_libdir}/libsundials_fnvecserial.so
-%{_libdir}/libsundials_fsunlinsol*.so
-%{_libdir}/libsundials_fsunmatrix*.so
-%{_libdir}/libsundials_*.a
-
-%files threads
-%{!?_licensedir:%global license %doc}
-%license sundials-%{version}/LICENSE
-%doc sundials-%{version}/README sundials-%{version}/src/README-nvec_pthreads
-%{_libdir}/libsundials_nvecpthreads.so.*
-%{_libdir}/libsundials_fnvecpthreads.so.*
-
-%files threads-devel
-%{_libdir}/libsundials_fnvecpthreads.so
-%{_libdir}/libsundials_nvecpthreads.so
-%{_includedir}/nvector/nvector_pthreads.h
-
 %changelog
+* Thu Nov 09 2017 Antonio Trande <sagitterATfedoraproject.org> - 3.0.0-2
+- Remove sub-packages
+- Uninstall static libraries
+
 * Mon Oct 30 2017 Antonio Trande <sagitterATfedoraproject.org> - 3.0.0-1
 - Update to 3.0.0
 - Use cmake3 on epel
