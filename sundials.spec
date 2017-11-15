@@ -431,10 +431,12 @@ cmake \
  -DSUPERLUMT_LIBRARY_DIR:PATH=%{_libdir} \
  -DSUPERLUMT_THREAD_TYPE:STRING=OpenMP \
 %endif
+%ifnarch s390x
 %if 0%{?with_hypre}
  -DHYPRE_ENABLE:BOOL=ON \
  -DHYPRE_INCLUDE_DIR:PATH=$MPI_INCLUDE/hypre \
  -DHYPRE_LIBRARY_DIR:PATH=$MPI_LIB \
+%endif
 %endif
  -DKLU_ENABLE=ON -DKLU_LIBRARY_DIR:PATH=%{_libdir} -DKLU_INCLUDE_DIR:PATH=%{_includedir}/suitesparse \
  -DEXAMPLES_INSTALL:BOOL=OFF -Wno-dev ..
@@ -555,10 +557,23 @@ cmake \
  -DSUPERLUMT_LIBRARY_DIR:PATH=%{_libdir} \
  -DSUPERLUMT_THREAD_TYPE:STRING=OpenMP \
 %endif
+%if 0%{?fedora}
+%ifnarch s390x
 %if 0%{?with_hypre}
  -DHYPRE_ENABLE:BOOL=ON \
  -DHYPRE_INCLUDE_DIR:PATH=$MPI_INCLUDE/hypre \
  -DHYPRE_LIBRARY_DIR:PATH=$MPI_LIB \
+%endif
+%endif
+%endif
+%if 0%{?el6}
+%ifnarch ppc64
+%if 0%{?with_hypre}
+ -DHYPRE_ENABLE:BOOL=ON \
+ -DHYPRE_INCLUDE_DIR:PATH=$MPI_INCLUDE/hypre \
+ -DHYPRE_LIBRARY_DIR:PATH=$MPI_LIB \
+%endif
+%endif
 %endif
  -DKLU_ENABLE=ON -DKLU_LIBRARY_DIR:PATH=%{_libdir} -DKLU_INCLUDE_DIR:PATH=%{_includedir}/suitesparse \
  -DEXAMPLES_INSTALL:BOOL=OFF -Wno-dev ..
