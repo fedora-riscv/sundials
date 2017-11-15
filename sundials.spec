@@ -492,15 +492,18 @@ export LIBSUPERLUMTLINK=-lsuperlumt_d
 export LIBSUPERLUMTLINK=
 %endif
 ## Hypre
+%if 0%{?fedora}
+%ifnarch s390x
 %if 0%{?with_hypre}
-%if 0%{?el6}
-%ifarch ppc64
-export LIBHYPRELINK=
-%else
 export LIBHYPRELINK="-L$MPI_LIB -lHYPRE"
 %endif
-%else
+%endif
+%endif
+%if 0%{?el6}
+%ifnarch ppc64
+%if 0%{?with_hypre}
 export LIBHYPRELINK="-L$MPI_LIB -lHYPRE"
+%endif
 %endif
 %endif
 ##
