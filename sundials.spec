@@ -58,7 +58,7 @@
 Summary:    Suite of nonlinear solvers
 Name:       sundials
 Version:    3.0.0
-Release:    2%{?dist}
+Release:    3%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -291,17 +291,18 @@ export CFLAGS=""
 cmake \
  -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
  -DCMAKE_BUILD_TYPE:STRING=Debug \
- -DCMAKE_C_FLAGS_DEBUG:STRING="-O0 -g -Wl,-z,relro -Wl,-z,now" \
- -DCMAKE_Fortran_FLAGS_DEBUG:STRING="-O0 -g -Wl,-z,relro -Wl,-z,now" \
+ -DCMAKE_C_FLAGS_DEBUG:STRING="-O0 -g -Wl,-z,relro -Wl,-z,now -Wl,--as-needed" \
+ -DCMAKE_Fortran_FLAGS_DEBUG:STRING="-O0 -g -Wl,-z,relro -Wl,-z,now -Wl,--as-needed" \
+ -DCMAKE_SHARED_LINKER_FLAGS_DEBUG:STRING="%{__global_ldflags} -Wl,-z,now -Wl,--as-needed -lklu $LIBBLASLINK $LIBLAPACKLINK $LIBSUPERLUMTLINK" \
 %else
 %{cmake3} \
  -DSUNDIALS_INDEX_TYPE:STRING=int64_t \
  -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
  -DCMAKE_BUILD_TYPE:STRING=Release \
- -DCMAKE_C_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now" \
- -DCMAKE_Fortran_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now" \
+ -DCMAKE_C_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now -Wl,--as-needed" \
+ -DCMAKE_Fortran_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now -Wl,--as-needed" \
+ -DCMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING="%{__global_ldflags} -Wl,-z,now -Wl,--as-needed -lklu $LIBBLASLINK $LIBLAPACKLINK $LIBSUPERLUMTLINK" \
 %endif
- -DCMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING="%{__global_ldflags} -Wl,-z,now -lklu $LIBBLASLINK $LIBLAPACKLINK $LIBSUPERLUMTLINK" \
 %ifnarch %{power64} aarch64 s390x
  -DLAPACK_ENABLE:BOOL=OFF \
  -DBLAS_ENABLE:BOOL=ON \
@@ -312,7 +313,7 @@ cmake \
  -DBLAS_LIBRARIES:STRING=%{_libdir}/$LIBBLAS.so \
  -DLAPACK_LIBRARIES:STRING=%{_libdir}/$LIBLAPACK.so \
 %endif
- -DCMAKE_MODULE_LINKER_FLAGS:STRING="%{__global_ldflags} -Wl,-z,now" \
+ -DCMAKE_MODULE_LINKER_FLAGS:STRING="%{__global_ldflags} -Wl,-z,now -Wl,--as-needed" \
  -DCMAKE_INSTALL_PREFIX=%{_prefix} \
  -DEXAMPLES_ENABLE_CXX:BOOL=ON -DEXAMPLES_ENABLE_C:BOOL=ON -DEXAMPLES_ENABLE_F77:BOOL=ON \
  -DCMAKE_SKIP_RPATH:BOOL=YES -DCMAKE_SKIP_INSTALL_RPATH:BOOL=YES \
@@ -389,17 +390,18 @@ export CFLAGS=""
 cmake \
  -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
  -DCMAKE_BUILD_TYPE:STRING=Debug \
- -DCMAKE_C_FLAGS_DEBUG:STRING="-O0 -g -Wl,-z,relro -Wl,-z,now" \
- -DCMAKE_Fortran_FLAGS_DEBUG:STRING="-O0 -g -Wl,-z,relro -Wl,-z,now" \
+ -DCMAKE_C_FLAGS_DEBUG:STRING="-O0 -g -Wl,-z,relro -Wl,-z,now -Wl,--as-needed" \
+ -DCMAKE_Fortran_FLAGS_DEBUG:STRING="-O0 -g -Wl,-z,relro -Wl,-z,now -Wl,--as-needed" \
+ -DCMAKE_SHARED_LINKER_FLAGS_DEBUG:STRING="%{__global_ldflags} -Wl,-z,now -Wl,--as-needed -lklu $LIBLAPACKLINK $LIBBLASLINK $LIBSUPERLUMTLINK $LIBHYPRELINK" \
 %else
 %{cmake3} \
  -DSUNDIALS_INDEX_TYPE:STRING=int64_t \
  -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
  -DCMAKE_BUILD_TYPE:STRING=Release \
- -DCMAKE_C_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now" \
- -DCMAKE_Fortran_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now" \
+ -DCMAKE_C_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now -Wl,--as-needed" \
+ -DCMAKE_Fortran_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now -Wl,--as-needed" \
+ -DCMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING="%{__global_ldflags} -Wl,-z,now -Wl,--as-needed -lklu $LIBLAPACKLINK $LIBBLASLINK $LIBSUPERLUMTLINK $LIBHYPRELINK" \
 %endif
- -DCMAKE_SHARED_LINKER_FLAGS_DEBUG:STRING="%{__global_ldflags} -Wl,-z,now -lklu $LIBLAPACKLINK $LIBBLASLINK $LIBSUPERLUMTLINK $LIBHYPRELINK" \
 %ifnarch %{power64} aarch64 s390x
  -DLAPACK_ENABLE:BOOL=OFF \
  -DBLAS_ENABLE:BOOL=ON \
@@ -506,17 +508,18 @@ export CFLAGS=""
 cmake \
  -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
  -DCMAKE_BUILD_TYPE:STRING=Debug \
- -DCMAKE_C_FLAGS_DEBUG:STRING="-O0 -g -Wl,-z,relro -Wl,-z,now" \
- -DCMAKE_Fortran_FLAGS_DEBUG:STRING="-O0 -g -Wl,-z,relro -Wl,-z,now" \
+ -DCMAKE_C_FLAGS_DEBUG:STRING="-O0 -g -Wl,-z,relro -Wl,-z,now -Wl,--as-needed" \
+ -DCMAKE_Fortran_FLAGS_DEBUG:STRING="-O0 -g -Wl,-z,relro -Wl,-z,now -Wl,--as-needed" \
+ -DCMAKE_SHARED_LINKER_FLAGS_DEBUG:STRING="%{__global_ldflags} -Wl,-z,now -Wl,--as-needed -lklu $LIBLAPACKLINK $LIBBLASLINK $LIBSUPERLUMTLINK $LIBHYPRELINK" \
 %else
 %{cmake3} \
  -DSUNDIALS_INDEX_TYPE:STRING=int64_t \
  -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
  -DCMAKE_BUILD_TYPE:STRING=Release \
- -DCMAKE_C_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now" \
- -DCMAKE_Fortran_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now" \
+ -DCMAKE_C_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now -Wl,--as-needed" \
+ -DCMAKE_Fortran_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now -Wl,--as-needed" \
+ -DCMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING="%{__global_ldflags} -Wl,-z,now -Wl,--as-needed -lklu $LIBLAPACKLINK $LIBBLASLINK $LIBSUPERLUMTLINK $LIBHYPRELINK" \
 %endif
- -DCMAKE_SHARED_LINKER_FLAGS_DEBUG:STRING="%{__global_ldflags} -Wl,-z,now -lklu $LIBLAPACKLINK $LIBBLASLINK $LIBSUPERLUMTLINK $LIBHYPRELINK" \
 %ifnarch %{power64} aarch64 s390x
  -DLAPACK_ENABLE:BOOL=OFF \
  -DBLAS_ENABLE:BOOL=ON \
@@ -857,6 +860,10 @@ popd
 %endif
 
 %changelog
+* Wed Nov 15 2017 Antonio Trande <sagitterATfedoraproject.org> - 3.0.0-3
+- Use -Wl,--as-needed flag
+- Fix shared-linker flags
+
 * Thu Nov 09 2017 Antonio Trande <sagitterATfedoraproject.org> - 3.0.0-2
 - Remove sub-packages
 - Uninstall static libraries
