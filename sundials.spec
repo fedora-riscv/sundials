@@ -57,8 +57,8 @@
 
 Summary:    Suite of nonlinear solvers
 Name:       sundials
-Version:    3.0.0
-Release:    3%{?dist}
+Version:    3.1.0
+Release:    1%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -67,7 +67,7 @@ URL:        http://www.llnl.gov/casc/sundials/
 Source0:    https://computation.llnl.gov/projects/sundials/download/sundials-%{version}.tar.gz
 
 # This patch rename superLUMT library
-Patch0:     %{name}-%{version}-set_superlumt_name.patch
+Patch0:     %{name}-3.0.0-set_superlumt_name.patch
 
 BuildRequires: gcc-gfortran
 BuildRequires: suitesparse-devel
@@ -631,6 +631,9 @@ for i in `find %{buildroot}%{_libexecdir}/sundials-%{version}/examples -perm /64
  rm -rf $i
 done
 
+# Remove file in a bad position
+rm -f %{buildroot}%{_prefix}/LICENSE
+
 %post -p /sbin/ldconfig
 %postun -p /sbin/ldconfig
 
@@ -878,6 +881,9 @@ popd
 %endif
 
 %changelog
+* Fri Dec 22 2017 Antonio Trande <sagitterATfedoraproject.org> - 3.1.0-1
+- Update to 3.1.0
+
 * Wed Nov 15 2017 Antonio Trande <sagitterATfedoraproject.org> - 3.0.0-3
 - Use -Wl,--as-needed flag
 - Fix shared-linker flags
