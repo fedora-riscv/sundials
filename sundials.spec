@@ -58,7 +58,7 @@
 Summary:    Suite of nonlinear solvers
 Name:       sundials
 Version:    3.1.0
-Release:    1%{?dist}
+Release:    2%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -881,6 +881,9 @@ popd
 %endif
 
 %changelog
+* Wed Jan 31 2018 Antonio Trande <sagitterATfedoraproject.org> - 3.1.0-2
+- Rebuild for GCC-8
+
 * Fri Dec 22 2017 Antonio Trande <sagitterATfedoraproject.org> - 3.1.0-1
 - Update to 3.1.0
 
