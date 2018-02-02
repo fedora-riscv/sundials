@@ -58,7 +58,7 @@
 Summary:    Suite of nonlinear solvers
 Name:       sundials
 Version:    3.1.0
-Release:    2%{?dist}
+Release:    3%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -634,8 +634,7 @@ done
 # Remove file in a bad position
 rm -f %{buildroot}%{_prefix}/LICENSE
 
-%post -p /sbin/ldconfig
-%postun -p /sbin/ldconfig
+%ldconfig_scriptlets
 
 %check
 
@@ -881,6 +880,9 @@ popd
 %endif
 
 %changelog
+* Fri Feb 02 2018 Antonio Trande <sagitterATfedoraproject.org> - 3.1.0-3
+- Use %%ldconfig_scriptlets
+
 * Wed Jan 31 2018 Antonio Trande <sagitterATfedoraproject.org> - 3.1.0-2
 - Rebuild for GCC-8
 
