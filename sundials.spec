@@ -17,17 +17,18 @@
 %endif
 
 ## Define if use openmpi or not
+%if 0%{?fedora} < 28
+## Exclude MPI builds on s390x
 %ifarch s390x
-%if 0%{?fedora} >= 26
-%global with_mpich 1
-%global with_openmpi 1
+%global with_mpich 0
+%global with_openmpi 0
 %else
 %global with_mpich 1
-%global with_openmpi 0
+%global with_openmpi 1
 %endif
 %endif
 
-%if 0%{?fedora}
+%if 0%{?fedora} >= 28
 %global with_mpich 1
 %global with_openmpi 1
 %endif
@@ -58,7 +59,7 @@
 Summary:    Suite of nonlinear solvers
 Name:       sundials
 Version:    3.1.0
-Release:    4%{?dist}
+Release:    5%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -880,6 +881,9 @@ popd
 %endif
 
 %changelog
+* Fri May 04 2018 Antonio Trande <sagitterATfedoraproject.org> - 3.1.0-5
+- Rebuild for hypre-2.14.0
+
 * Fri Feb 09 2018 Fedora Release Engineering <releng@fedoraproject.org> - 3.1.0-4
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_28_Mass_Rebuild
 
