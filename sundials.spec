@@ -6,16 +6,6 @@
 %{!?__global_ldflags: %global __global_ldflags -Wl,-z,relro}
 %endif
 
-# openblas available on these architectures.
-%if 0%{?fedora} && 0%{?fedora} > 26
-%{!?openblas_arches:%global openblas_arches x86_64 %{ix86} armv7hl %{power64} aarch64 s390x}
-%else
-%{!?openblas_arches:%global openblas_arches x86_64 %{ix86} armv7hl %{power64} aarch64}
-%endif
-%if 0%{?rhel}
-%{!?openblas_arches:%global openblas_arches x86_64 %{ix86} armv7hl %{power64} aarch64}
-%endif
-
 ## Define if use openmpi or not
 %if 0%{?fedora} < 28
 ## Exclude MPI builds on s390x
@@ -58,8 +48,8 @@
 
 Summary:    Suite of nonlinear solvers
 Name:       sundials
-Version:    3.1.0
-Release:    5%{?dist}
+Version:    3.1.1
+Release:    1%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -68,7 +58,7 @@ URL:        http://www.llnl.gov/casc/sundials/
 Source0:    https://computation.llnl.gov/projects/sundials/download/sundials-%{version}.tar.gz
 
 # This patch rename superLUMT library
-Patch0:     %{name}-3.0.0-set_superlumt_name.patch
+Patch0:     %{name}-%{version}-set_superlumt_name.patch
 
 BuildRequires: gcc-gfortran
 BuildRequires: suitesparse-devel
@@ -128,9 +118,14 @@ This package contains the C, CXX, F77 example files.
 Summary:    Suite of nonlinear solvers
 Group:      Development/Libraries
 BuildRequires: openmpi-devel
+%if 0%{?rhel} || 0%{?fedora} > 28
+BuildRequires: hypre-openmpi-devel
+%else
 %ifnarch s390x
 BuildRequires: hypre-openmpi-devel
 %endif
+%endif
+
 Requires: openmpi
 Requires: gcc-gfortran%{?_isa}
 %description openmpi
@@ -165,8 +160,12 @@ This package contains the C, CXX, F77 example files.
 Summary:    Suite of nonlinear solvers
 Group:      Development/Libraries
 BuildRequires: mpich-devel
+%if 0%{?rhel} || 0%{?fedora} > 28
+BuildRequires: hypre-mpich-devel
+%else
 %ifnarch s390x
 BuildRequires: hypre-mpich-devel
+%endif
 %endif
 Requires: mpich
 Requires: gcc-gfortran%{?_isa}
@@ -378,9 +377,17 @@ export LIBSUPERLUMTLINK=
 %endif
 ## Hypre
 %if 0%{?with_hypre}
+%if 0%{?fedora} <= 28
 %ifarch s390x
 export LIBHYPRELINK=
 %else
+export LIBHYPRELINK="-L$MPI_LIB -lHYPRE"
+%endif
+%endif
+%endif
+
+%if 0%{?with_hypre}
+%if 0%{?rhel} || 0%{?fedora} > 28
 export LIBHYPRELINK="-L$MPI_LIB -lHYPRE"
 %endif
 %endif
@@ -432,8 +439,17 @@ cmake \
  -DSUPERLUMT_LIBRARY_DIR:PATH=%{_libdir} \
  -DSUPERLUMT_THREAD_TYPE:STRING=OpenMP \
 %endif
-%ifnarch s390x
 %if 0%{?with_hypre}
+%if 0%{?fedora} <= 28
+%ifarch s390x
+ -DHYPRE_ENABLE:BOOL=OFF \
+%else
+ -DHYPRE_ENABLE:BOOL=ON \
+ -DHYPRE_INCLUDE_DIR:PATH=$MPI_INCLUDE/hypre \
+ -DHYPRE_LIBRARY_DIR:PATH=$MPI_LIB \
+%endif
+%endif
+%if 0%{?rhel} || 0%{?fedora} > 28
  -DHYPRE_ENABLE:BOOL=ON \
  -DHYPRE_INCLUDE_DIR:PATH=$MPI_INCLUDE/hypre \
  -DHYPRE_LIBRARY_DIR:PATH=$MPI_LIB \
@@ -493,18 +509,19 @@ export LIBSUPERLUMTLINK=-lsuperlumt_d
 export LIBSUPERLUMTLINK=
 %endif
 ## Hypre
-%if 0%{?fedora}
-%ifnarch s390x
 %if 0%{?with_hypre}
+%if 0%{?fedora} <= 28
+%ifarch s390x
+export LIBHYPRELINK=
+%else
 export LIBHYPRELINK="-L$MPI_LIB -lHYPRE"
 %endif
 %endif
 %endif
-%if 0%{?el6}
-%ifnarch ppc64
+
 %if 0%{?with_hypre}
+%if 0%{?rhel} || 0%{?fedora} > 28
 export LIBHYPRELINK="-L$MPI_LIB -lHYPRE"
-%endif
 %endif
 %endif
 ##
@@ -561,22 +578,20 @@ cmake \
  -DSUPERLUMT_LIBRARY_DIR:PATH=%{_libdir} \
  -DSUPERLUMT_THREAD_TYPE:STRING=OpenMP \
 %endif
-%if 0%{?fedora}
-%ifnarch s390x
 %if 0%{?with_hypre}
+%if 0%{?fedora} <= 28
+%ifarch s390x
+ -DHYPRE_ENABLE:BOOL=OFF \
+%else
  -DHYPRE_ENABLE:BOOL=ON \
  -DHYPRE_INCLUDE_DIR:PATH=$MPI_INCLUDE/hypre \
  -DHYPRE_LIBRARY_DIR:PATH=$MPI_LIB \
 %endif
 %endif
-%endif
-%if 0%{?el6}
-%ifnarch ppc64
-%if 0%{?with_hypre}
+%if 0%{?rhel} || 0%{?fedora} > 28
  -DHYPRE_ENABLE:BOOL=ON \
  -DHYPRE_INCLUDE_DIR:PATH=$MPI_INCLUDE/hypre \
  -DHYPRE_LIBRARY_DIR:PATH=$MPI_LIB \
-%endif
 %endif
 %endif
  -DKLU_ENABLE=ON -DKLU_LIBRARY_DIR:PATH=%{_libdir} -DKLU_INCLUDE_DIR:PATH=%{_includedir}/suitesparse \
@@ -773,9 +788,8 @@ popd
 %endif ##if with_sercheck
 
 %files
-%{!?_licensedir:%global license %doc}
 %license sundials-%{version}/LICENSE
-%doc sundials-%{version}/README sundials-%{version}/src/README-*
+%doc sundials-%{version}/README.md sundials-%{version}/src/README-*
 %{_libdir}/libsundials_nvecserial.so.*
 %{_libdir}/libsundials_cvode.so.*
 %{_libdir}/libsundials_cvodes.so.*
@@ -794,9 +808,8 @@ popd
 %{_libdir}/libsundials_nvecopenmp.so.*
 
 %files doc
-%{!?_licensedir:%global license %doc}
 %license sundials-%{version}/LICENSE
-%doc sundials-%{version}/README
+%doc sundials-%{version}/README.md
 %doc sundials-%{version}/doc/cvode/cv_guide.pdf
 %doc sundials-%{version}/doc/kinsol/kin_guide.pdf
 %doc sundials-%{version}/doc/cvodes/cvs_guide.pdf
@@ -837,19 +850,27 @@ popd
 %if 0%{?with_openmpi}
 %files openmpi
 %license sundials-%{version}/LICENSE
-%doc sundials-%{version}/README sundials-%{version}/src/README-*
+%doc sundials-%{version}/README.md sundials-%{version}/src/README-*
 %{_libdir}/openmpi/lib/libsundials_nvecparallel.so.*
 %{_libdir}/openmpi/lib/libsundials_fnvecparallel.so.*
+%if 0%{?rhel} || 0%{?fedora} > 28
+%{_libdir}/openmpi/lib/libsundials_nvecparhyp.so.*
+%else
 %ifnarch s390x
 %{_libdir}/openmpi/lib/libsundials_nvecparhyp.so.*
+%endif
 %endif
 
 %files openmpi-devel
 %{_includedir}/openmpi-%{_arch}/nvector/nvector_parallel.h
 %{_libdir}/openmpi/lib/libsundials_nvecparallel.so
 %{_libdir}/openmpi/lib/libsundials_fnvecparallel.so
+%if 0%{?rhel} || 0%{?fedora} > 28
+%{_libdir}/openmpi/lib/libsundials_nvecparhyp.so
+%else
 %ifnarch s390x
 %{_libdir}/openmpi/lib/libsundials_nvecparhyp.so
+%endif
 %endif
 
 %files openmpi-samples
@@ -858,13 +879,16 @@ popd
 
 %if 0%{?with_mpich}
 %files mpich
-%{!?_licensedir:%global license %doc}
 %license sundials-%{version}/LICENSE
-%doc sundials-%{version}/README sundials-%{version}/src/README-*
+%doc sundials-%{version}/README.md sundials-%{version}/src/README-*
 %{_libdir}/mpich/lib/libsundials_nvecparallel.so.*
 %{_libdir}/mpich/lib/libsundials_fnvecparallel.so.*
+%if 0%{?rhel} || 0%{?fedora} > 28
+%{_libdir}/mpich/lib/libsundials_nvecparhyp.so.*
+%else
 %ifnarch s390x
 %{_libdir}/mpich/lib/libsundials_nvecparhyp.so.*
+%endif
 %endif
 %{_libdir}/mpich/lib/sundials-%{version}/
 
@@ -872,8 +896,12 @@ popd
 %{_includedir}/mpich-%{_arch}/nvector/nvector_parallel.h
 %{_libdir}/mpich/lib/libsundials_nvecparallel.so
 %{_libdir}/mpich/lib/libsundials_fnvecparallel.so
+%if 0%{?rhel} || 0%{?fedora} > 28
+%{_libdir}/mpich/lib/libsundials_nvecparhyp.so
+%else
 %ifnarch s390x
 %{_libdir}/mpich/lib/libsundials_nvecparhyp.so
+%endif
 %endif
 
 %files mpich-samples
@@ -881,6 +909,9 @@ popd
 %endif
 
 %changelog
+* Sun May 13 2018 Antonio Trande <sagitterATfedoraproject.org> - 3.1.1-1
+- Update to 3.1.1
+
 * Fri May 04 2018 Antonio Trande <sagitterATfedoraproject.org> - 3.1.0-5
 - Rebuild for hypre-2.14.0
 
