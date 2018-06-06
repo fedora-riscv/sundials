@@ -89,7 +89,7 @@ BuildRequires: SuperLUMT-devel
 BuildRequires: rsh
 %endif
 Requires: gcc-gfortran%{?_isa}
-Obsoletes: %{name}-samples%{?_isa} < 3.1.1
+Obsoletes: %{name}-samples%{?_isa} < 3.1.1-2
 
 %description
 SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
@@ -127,7 +127,7 @@ BuildRequires: hypre-openmpi-devel
 
 Requires: openmpi
 Requires: gcc-gfortran%{?_isa}
-Obsoletes: %{name}-openmpi-samples%{?_isa} < 3.1.1
+Obsoletes: %{name}-openmpi-samples%{?_isa} < 3.1.1-2
 
 %description openmpi
 SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
@@ -161,7 +161,7 @@ BuildRequires: hypre-mpich-devel
 %endif
 Requires: mpich
 Requires: gcc-gfortran%{?_isa}
-Obsoletes: %{name}-mpich-samples%{?_isa} < 3.1.1
+Obsoletes: %{name}-mpich-samples%{?_isa} < 3.1.1-2
 
 %description mpich
 SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
