@@ -49,7 +49,7 @@
 Summary:    Suite of nonlinear solvers
 Name:       sundials
 Version:    3.1.1
-Release:    1%{?dist}
+Release:    2%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -58,15 +58,20 @@ URL:        http://www.llnl.gov/casc/sundials/
 Source0:    https://computation.llnl.gov/projects/sundials/download/sundials-%{version}.tar.gz
 
 # This patch rename superLUMT library
-Patch0:     %{name}-%{version}-set_superlumt_name.patch
+Patch0:     %{name}-3.1.1-set_superlumt_name.patch
 
-BuildRequires: gcc-gfortran
+# This patch rename superLUMT64 library
+Patch1:     %{name}-3.1.1-set_superlumt64_name.patch
+
+BuildRequires: gcc-gfortran, python2-devel
 BuildRequires: suitesparse-devel
 %if 0%{?rhel}
-BuildRequires: cmake3, epel-rpm-macros
+BuildRequires:          cmake3, epel-rpm-macros
+%global ctest3 ctest3
 %else
-BuildRequires: cmake
-%global cmake3 %{cmake}
+BuildRequires:          cmake
+%global cmake3 %cmake
+%global ctest3 ctest
 %endif
 %ifarch %{openblas_arches}
 BuildRequires: openblas-devel, openblas-srpm-macros
@@ -74,14 +79,17 @@ BuildRequires: openblas-devel, openblas-srpm-macros
 BuildRequires: blas-devel, lapack-devel
 %endif
 
-# SuperLUMT is unavailable on following architectures
-%ifnarch %{power64} aarch64
+%ifarch s390x x86_64
+BuildRequires: SuperLUMT64-devel
+%endif
+%ifarch %{arm} %{ix86}
 BuildRequires: SuperLUMT-devel
 %endif
 %if 0%{?rhel}
 BuildRequires: rsh
 %endif
 Requires: gcc-gfortran%{?_isa}
+Obsoletes: %{name}-samples%{?_isa} < 3.1.1
 
 %description
 SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
@@ -102,15 +110,6 @@ Requires:   %{name}%{?_isa} = %{version}-%{release}
 SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
 for use in writing mathematical software.
 This package contains the developer files (.so file, header files).
-
-%package samples
-Summary:    Suite of nonlinear solvers (example files)
-Group:      Development/Libraries
-Requires:   %{name}%{?_isa} = %{version}-%{release}
-%description samples
-SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
-for use in writing mathematical software.
-This package contains the C, CXX, F77 example files.
 #############################################################################
 #########
 %if 0%{?with_openmpi}
@@ -128,6 +127,8 @@ BuildRequires: hypre-openmpi-devel
 
 Requires: openmpi
 Requires: gcc-gfortran%{?_isa}
+Obsoletes: %{name}-openmpi-samples%{?_isa} < 3.1.1
+
 %description openmpi
 SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
 for use in writing mathematical software.
@@ -142,15 +143,6 @@ SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
 for use in writing mathematical software.
 This package contains the Sundials parallel OpenMPI devel libraries and
 header files.
-
-%package openmpi-samples
-Summary:    Suite of nonlinear solvers (example files)
-Group:      Development/Libraries
-Requires:   %{name}-openmpi%{?_isa} = %{version}-%{release}
-%description openmpi-samples
-SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
-for use in writing mathematical software.
-This package contains the C, CXX, F77 example files.
 %endif
 ######
 ###############################################################################
@@ -169,6 +161,8 @@ BuildRequires: hypre-mpich-devel
 %endif
 Requires: mpich
 Requires: gcc-gfortran%{?_isa}
+Obsoletes: %{name}-mpich-samples%{?_isa} < 3.1.1
+
 %description mpich
 SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
 for use in writing mathematical software.
@@ -183,15 +177,6 @@ SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
 for use in writing mathematical software.
 This package contains the Sundials parallel MPICH devel libraries and
 header files.
-
-%package mpich-samples
-Summary:    Suite of nonlinear solvers (example files)
-Group:      Development/Libraries
-Requires:   %{name}-mpich%{?_isa} = %{version}-%{release}
-%description mpich-samples
-SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
-for use in writing mathematical software.
-This package contains the C, CXX, F77 example files.
 %endif
 ######
 #############################################################################
@@ -210,7 +195,10 @@ This package contains the documentation files.
 
 pushd sundials-%{version}
 
-%ifnarch %{power64} aarch64
+%ifarch s390x x86_64
+%patch1 -p0
+%endif
+%ifarch %{arm} %{ix86}
 %patch0 -p0
 %endif
 
@@ -280,9 +268,14 @@ export LIBLAPACKLINK=-llapack
 export LIBLAPACK=liblapack
 export INCBLAS=-I%{_includedir}
 %endif
-%ifnarch %{power64} aarch64
+
+%ifarch s390x x86_64
+export LIBSUPERLUMTLINK=-lsuperlumt64_d
+%endif
+%ifarch %{arm} %{ix86}
 export LIBSUPERLUMTLINK=-lsuperlumt_d
-%else
+%endif
+%ifnarch s390x x86_64 %{arm} %{ix86}
 export LIBSUPERLUMTLINK=
 %endif
 
@@ -296,7 +289,11 @@ cmake \
  -DCMAKE_SHARED_LINKER_FLAGS_DEBUG:STRING="%{__global_ldflags} -Wl,-z,now -Wl,--as-needed -lklu $LIBBLASLINK $LIBLAPACKLINK $LIBSUPERLUMTLINK" \
 %else
 %{cmake3} \
+%if %{?__isa_bits:%{__isa_bits}}%{!?__isa_bits:32} == 64
  -DSUNDIALS_INDEX_TYPE:STRING=int64_t \
+%else
+ -DSUNDIALS_INDEX_TYPE:STRING=int32_t \
+%endif
  -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
  -DCMAKE_BUILD_TYPE:STRING=Release \
  -DCMAKE_C_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now -Wl,--as-needed" \
@@ -315,6 +312,7 @@ cmake \
 %endif
  -DCMAKE_MODULE_LINKER_FLAGS:STRING="%{__global_ldflags} -Wl,-z,now -Wl,--as-needed" \
  -DCMAKE_INSTALL_PREFIX=%{_prefix} \
+ -DPYTHON_EXECUTABLE:FILEPATH=%{__python2} \
  -DEXAMPLES_ENABLE_CXX:BOOL=ON -DEXAMPLES_ENABLE_C:BOOL=ON -DEXAMPLES_ENABLE_F77:BOOL=ON \
  -DCMAKE_SKIP_RPATH:BOOL=YES -DCMAKE_SKIP_INSTALL_RPATH:BOOL=YES \
  -DBUILD_SHARED_LIBS:BOOL=ON -DBUILD_STATIC_LIBS:BOOL=OFF \
@@ -370,9 +368,13 @@ export INCBLAS=-I%{_includedir}
 %endif
 ##
 ## SuperLUMT
-%ifnarch %{power64} aarch64
+%ifarch s390x x86_64
+export LIBSUPERLUMTLINK=-lsuperlumt64_d
+%endif
+%ifarch %{arm} %{ix86}
 export LIBSUPERLUMTLINK=-lsuperlumt_d
-%else
+%endif
+%ifnarch s390x x86_64 %{arm} %{ix86}
 export LIBSUPERLUMTLINK=
 %endif
 ## Hypre
@@ -403,7 +405,11 @@ cmake \
  -DCMAKE_SHARED_LINKER_FLAGS_DEBUG:STRING="%{__global_ldflags} -Wl,-z,now -Wl,--as-needed -lklu $LIBLAPACKLINK $LIBBLASLINK $LIBSUPERLUMTLINK $LIBHYPRELINK" \
 %else
 %{cmake3} \
+%if %{?__isa_bits:%{__isa_bits}}%{!?__isa_bits:32} == 64
  -DSUNDIALS_INDEX_TYPE:STRING=int64_t \
+%else
+ -DSUNDIALS_INDEX_TYPE:STRING=int32_t \
+%endif
  -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
  -DCMAKE_BUILD_TYPE:STRING=Release \
  -DCMAKE_C_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now -Wl,--as-needed" \
@@ -421,6 +427,7 @@ cmake \
  -DLAPACK_LIBRARIES:STRING=%{_libdir}/$LIBLAPACK.so \
 %endif
  -DCMAKE_INSTALL_PREFIX=%{_prefix} \
+ -DPYTHON_EXECUTABLE:FILEPATH=%{__python2} \
  -DEXAMPLES_ENABLE_CXX:BOOL=ON -DEXAMPLES_ENABLE_C:BOOL=ON -DEXAMPLES_ENABLE_F77:BOOL=ON \
  -DBUILD_SHARED_LIBS:BOOL=ON -DBUILD_STATIC_LIBS:BOOL=OFF \
  -DCMAKE_SKIP_RPATH:BOOL=YES -DCMAKE_SKIP_INSTALL_RPATH:BOOL=YES \
@@ -503,9 +510,13 @@ export INCBLAS=-I%{_includedir}
 %endif
 ##
 ## SuperLUMT
-%ifnarch %{power64} aarch64
+%ifarch s390x x86_64
+export LIBSUPERLUMTLINK=-lsuperlumt64_d
+%endif
+%ifarch %{arm} %{ix86}
 export LIBSUPERLUMTLINK=-lsuperlumt_d
-%else
+%endif
+%ifnarch s390x x86_64 %{arm} %{ix86}
 export LIBSUPERLUMTLINK=
 %endif
 ## Hypre
@@ -536,7 +547,11 @@ cmake \
  -DCMAKE_SHARED_LINKER_FLAGS_DEBUG:STRING="%{__global_ldflags} -Wl,-z,now -Wl,--as-needed -lklu $LIBLAPACKLINK $LIBBLASLINK $LIBSUPERLUMTLINK $LIBHYPRELINK" \
 %else
 %{cmake3} \
+%if %{?__isa_bits:%{__isa_bits}}%{!?__isa_bits:32} == 64
  -DSUNDIALS_INDEX_TYPE:STRING=int64_t \
+%else
+ -DSUNDIALS_INDEX_TYPE:STRING=int32_t \
+%endif
  -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
  -DCMAKE_BUILD_TYPE:STRING=Release \
  -DCMAKE_C_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now -Wl,--as-needed" \
@@ -554,6 +569,7 @@ cmake \
  -DLAPACK_LIBRARIES:STRING=%{_libdir}/$LIBLAPACK.so \
 %endif
  -DCMAKE_INSTALL_PREFIX=%{_prefix} \
+ -DPYTHON_EXECUTABLE:FILEPATH=%{__python2} \
  -DEXAMPLES_ENABLE_CXX:BOOL=ON -DEXAMPLES_ENABLE_C:BOOL=ON -DEXAMPLES_ENABLE_F77:BOOL=ON \
  -DBUILD_SHARED_LIBS:BOOL=ON -DBUILD_STATIC_LIBS:BOOL=OFF \
  -DCMAKE_SKIP_RPATH:BOOL=YES -DCMAKE_SKIP_INSTALL_RPATH:BOOL=YES \
@@ -609,28 +625,12 @@ popd
 %if 0%{?with_openmpi}
 %{_openmpi_load}
 %make_install -C buildopenmpi_dir/build
-
-mkdir -p %{buildroot}$MPI_LIB/sundials-%{version}
-cp -a buildopenmpi_dir/build/examples %{buildroot}$MPI_LIB/sundials-%{version}/
-
-## Remove CMake files
-for i in `find %{buildroot}$MPI_LIB/sundials-%{version}/examples -perm /644 -type f \( -name "*Makefile*" \)`; do
- rm -rf $i
-done
 %{_openmpi_unload}
 %endif
 
 %if 0%{?with_mpich}
 %{_mpich_load}
 %make_install -C buildmpich_dir/build
-
-mkdir -p %{buildroot}$MPI_LIB/sundials-%{version}
-cp -a buildmpich_dir/build/examples %{buildroot}$MPI_LIB/sundials-%{version}/
-
-## Remove CMake files
-for i in `find %{buildroot}$MPI_LIB/sundials-%{version}/examples -perm /644 -type f \( -name "*Makefile*" \)`; do
- rm -rf $i
-done
 %{_mpich_unload}
 %endif
 
@@ -639,151 +639,36 @@ done
 # Remove static libraries
 rm -f %{buildroot}%{_libdir}/*.a
 
-mkdir -p %{buildroot}%{_libexecdir}/sundials-%{version}
-cp -a sundials-%{version}/build/examples %{buildroot}%{_libexecdir}/sundials-%{version}/
-
-## Remove CMake files
-for i in `find %{buildroot}%{_libexecdir}/sundials-%{version}/examples -perm /644 -type f \( -name "*Makefile*" \)`; do
- rm -rf $i
-done
-
 # Remove file in a bad position
 rm -f %{buildroot}%{_prefix}/LICENSE
 
 %ldconfig_scriptlets
 
 %check
-
 %if 0%{?with_parcheck}
 %if 0%{?with_openmpi}
 %{_openmpi_load}
+pushd buildopenmpi_dir/build
 export LD_LIBRARY_PATH=%{buildroot}$MPI_LIB:%{buildroot}%{_libdir}
-##cvode
-buildopenmpi_dir/build/examples/cvode/parallel/cvAdvDiff_diag_p
-
-##cvodes
-mpirun -np 2 buildopenmpi_dir/build/examples/cvodes/parallel/cvsAdvDiff_ASAp_non_p
-
-#ida
-mpirun -np 4 buildopenmpi_dir/build/examples/ida/parallel/idaFoodWeb_kry_bbd_p
-
-#idas
-mpirun -np 4 buildopenmpi_dir/build/examples/idas/parallel/idasBruss_ASAp_kry_bbd_p
-
-#kinsol
-mpirun -np 4 buildopenmpi_dir/build/examples/kinsol/parallel/kinFoodWeb_kry_bbd_p
-
-#nvector
-mpirun buildopenmpi_dir/build/examples/nvector/parallel/test_nvector_mpi
+%ctest3 --force-new-ctest-process -VV
+popd
 %{_openmpi_unload}
 %endif ##if openmpi
 
 %if 0%{?with_mpich}
-## Tests not perfomred due to 'gethostname' failure on koji
+%{_mpich_load}
+pushd buildmpich_dir/build
+export LD_LIBRARY_PATH=%{buildroot}$MPI_LIB:%{buildroot}%{_libdir}
+%ctest3 --force-new-ctest-process -VV
+popd
+%{_mpich_unload}
 %endif ##if openmpi
 %endif ## if with_parcheck
 
 %if 0%{?with_sercheck}
-pushd sundials-%{version}/build/examples
-export LD_LIBRARY_PATH=%{buildroot}%{_libdir}
-##arkode
-cd arkode/C_serial
-./ark_analytic
-./ark_analytic_nonlin
-./ark_brusselator
-./ark_brusselator1D
-./ark_brusselator_fp
-./ark_heat1D
-./ark_KrylovDemo_prec
-./ark_robertson
-./ark_robertson_root
-
-cd ../F77_serial
-./fark_diurnal_kry_bp
-cd ../..
-##cvode
-cd cvode/fcmix_serial
-%ifnarch s390 s390x ppc64 ppc64le
-./fcvAdvDiff_bnd
-./fcvDiurnal_kry
-./fcvDiurnal_kry_bp
-./fcvRoberts_dns
-%endif
-
-cd ../serial
-./cvAdvDiff_bnd
-./cvDirectDemo_ls
-./cvDiurnal_kry
-./cvDiurnal_kry_bp
-./cvKrylovDemo_ls
-./cvKrylovDemo_prec
-./cvRoberts_dns
-./cvRoberts_dns_uw
-cd ../..
-##cvodes
-cd cvodes/serial
-./cvsAdvDiff_ASAi_bnd
-./cvsAdvDiff_bnd
-./cvsAdvDiff_FSA_non
-./cvsDirectDemo_ls
-./cvsDiurnal_FSA_kry
-./cvsDiurnal_kry
-./cvsDiurnal_kry_bp
-./cvsFoodWeb_ASAi_kry
-./cvsFoodWeb_ASAp_kry
-./cvsHessian_ASA_FSA
-./cvsKrylovDemo_ls
-./cvsKrylovDemo_prec
-./cvsRoberts_ASAi_dns
-./cvsRoberts_dns
-./cvsRoberts_dns_uw
-./cvsRoberts_FSA_dns
-cd ../..
-##ida
-cd ida/fcmix_pthreads
-%ifnarch s390 s390x ppc64 ppc64le
-./fidaRoberts_dns_pthreads
-cd ../fcmix_serial
-./fidaRoberts_dns
-%endif
-cd ../serial
-./idaFoodWeb_bnd
-./idaHeat2D_bnd
-./idaHeat2D_kry
-./idaKrylovDemo_ls
-./idaRoberts_dns
-./idaSlCrank_dns
-cd ../..
-##idas
-cd idas/serial
-./idasAkzoNob_ASAi_dns
-./idasAkzoNob_dns
-./idasFoodWeb_bnd
-./idasHeat2D_bnd
-./idasHeat2D_kry
-./idasHessian_ASA_FSA
-./idasKrylovDemo_ls
-./idasRoberts_ASAi_dns
-./idasRoberts_dns
-./idasRoberts_FSA_dns
-./idasSlCrank_dns
-./idasSlCrank_FSA_dns
-cd ../..
-##kinsol
-cd kinsol/fcmix_serial
-cd ../serial
-./kinFerTron_dns
-./kinFoodWeb_kry
-./kinLaplace_bnd
-./kinLaplace_picard_bnd
-./kinRoberts_fp
-./kinRoboKin_dns
-cd ../..
-##nvector
-cd nvector/pthreads
-./test_nvector_pthreads 5000 4 1
-cd ../serial
-./test_nvector_serial 5000 4 1
+pushd sundials-%{version}/build
+export LD_LIBRARY_PATH=%{buildroot}%{_libdir} 
+%ctest3 --force-new-ctest-process -VV
 popd
 %endif ##if with_sercheck
 
@@ -844,9 +729,6 @@ popd
 %{_includedir}/sunlinsol/
 %{_includedir}/sunmatrix/
 
-%files samples
-%{_libexecdir}/sundials-%{version}/
-
 %if 0%{?with_openmpi}
 %files openmpi
 %license sundials-%{version}/LICENSE
@@ -872,9 +754,6 @@ popd
 %{_libdir}/openmpi/lib/libsundials_nvecparhyp.so
 %endif
 %endif
-
-%files openmpi-samples
-%{_libdir}/openmpi/lib/sundials-%{version}/
 %endif
 
 %if 0%{?with_mpich}
@@ -890,7 +769,6 @@ popd
 %{_libdir}/mpich/lib/libsundials_nvecparhyp.so.*
 %endif
 %endif
-%{_libdir}/mpich/lib/sundials-%{version}/
 
 %files mpich-devel
 %{_includedir}/mpich-%{_arch}/nvector/nvector_parallel.h
@@ -903,12 +781,13 @@ popd
 %{_libdir}/mpich/lib/libsundials_nvecparhyp.so
 %endif
 %endif
-
-%files mpich-samples
-%{_libdir}/mpich/lib/sundials-%{version}/
 %endif
 
 %changelog
+* Wed Jun 06 2018 Antonio Trande <sagitterATfedoraproject.org> - 3.1.1-2
+- Do not pack examples
+- Use SuperLUMT64 on 64bit systems
+
 * Sun May 13 2018 Antonio Trande <sagitterATfedoraproject.org> - 3.1.1-1
 - Update to 3.1.1
 
