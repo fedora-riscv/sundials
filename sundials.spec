@@ -64,6 +64,7 @@ Patch0:     %{name}-3.1.1-set_superlumt_name.patch
 Patch1:     %{name}-3.1.1-set_superlumt64_name.patch
 
 BuildRequires: gcc-gfortran, python2-devel
+BuildRequires: gcc, gcc-c++
 BuildRequires: suitesparse-devel
 %if 0%{?rhel}
 BuildRequires:          cmake3, epel-rpm-macros
