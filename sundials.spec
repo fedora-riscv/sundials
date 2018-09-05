@@ -68,7 +68,7 @@
 Summary:    Suite of nonlinear solvers
 Name:       sundials
 Version:    3.1.2
-Release:    1%{?dist}
+Release:    2%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -81,7 +81,7 @@ Patch0:     %{name}-3.1.1-set_superlumt_name.patch
 # This patch rename superLUMT64 library
 Patch1:     %{name}-3.1.1-set_superlumt64_name.patch
 
-BuildRequires: gcc-gfortran, python2-devel
+BuildRequires: gcc-gfortran, python3-devel
 BuildRequires: gcc, gcc-c++
 BuildRequires: suitesparse-devel
 %if 0%{?rhel}
@@ -307,7 +307,7 @@ cmake \
  -DBLAS_LIBRARIES:STRING=%{_libdir}/$LIBBLAS.so \
  -DCMAKE_MODULE_LINKER_FLAGS:STRING="%{__global_ldflags} -Wl,-z,now -Wl,--as-needed" \
  -DCMAKE_INSTALL_PREFIX=%{_prefix} \
- -DPYTHON_EXECUTABLE:FILEPATH=%{__python2} \
+ -DPYTHON_EXECUTABLE:FILEPATH=%{__python3} \
  -DEXAMPLES_ENABLE_CXX:BOOL=ON -DEXAMPLES_ENABLE_C:BOOL=ON -DEXAMPLES_ENABLE_F77:BOOL=ON \
  -DCMAKE_SKIP_RPATH:BOOL=YES -DCMAKE_SKIP_INSTALL_RPATH:BOOL=YES \
  -DBUILD_SHARED_LIBS:BOOL=ON -DBUILD_STATIC_LIBS:BOOL=OFF \
@@ -415,7 +415,7 @@ cmake \
  -DPETSC_LIBRARY_DIR:PATH=$MPI_LIB \
 %endif
  -DCMAKE_INSTALL_PREFIX=%{_prefix} \
- -DPYTHON_EXECUTABLE:FILEPATH=%{__python2} \
+ -DPYTHON_EXECUTABLE:FILEPATH=%{__python3} \
  -DEXAMPLES_ENABLE_CXX:BOOL=ON -DEXAMPLES_ENABLE_C:BOOL=ON -DEXAMPLES_ENABLE_F77:BOOL=ON \
  -DBUILD_SHARED_LIBS:BOOL=ON -DBUILD_STATIC_LIBS:BOOL=OFF \
  -DCMAKE_SKIP_RPATH:BOOL=YES -DCMAKE_SKIP_INSTALL_RPATH:BOOL=YES \
@@ -550,7 +550,7 @@ cmake \
  -DPETSC_LIBRARY_DIR:PATH=$MPI_LIB \
 %endif
  -DCMAKE_INSTALL_PREFIX=%{_prefix} \
- -DPYTHON_EXECUTABLE:FILEPATH=%{__python2} \
+ -DPYTHON_EXECUTABLE:FILEPATH=%{__python3} \
  -DEXAMPLES_ENABLE_CXX:BOOL=ON -DEXAMPLES_ENABLE_C:BOOL=ON -DEXAMPLES_ENABLE_F77:BOOL=ON \
  -DBUILD_SHARED_LIBS:BOOL=ON -DBUILD_STATIC_LIBS:BOOL=OFF \
  -DCMAKE_SKIP_RPATH:BOOL=YES -DCMAKE_SKIP_INSTALL_RPATH:BOOL=YES \
@@ -794,6 +794,9 @@ popd
 %endif
 
 %changelog
+* Wed Sep 05 2018 Antonio Trande <sagitterATfedoraproject.org> - 3.1.2-2
+- Switch to python3
+
 * Wed Aug 01 2018 Antonio Trande <sagitterATfedoraproject.org> - 3.1.2-1
 - Update to 3.1.2
 - Enable PETSC support
