@@ -633,7 +633,7 @@ rm -f %{buildroot}%{_includedir}/sundials/LICENSE
 pushd buildopenmpi_dir/build
 export LD_LIBRARY_PATH=%{buildroot}$MPI_LIB:%{buildroot}%{_libdir}
 %ifarch %{power64} %{arm} aarch64 s390x
-%ctest3 --force-new-ctest-process -VV -j 1 --output-on-failure -E 'test_sunmatrix_sparse_400_400_0_0'
+%ctest3 --force-new-ctest-process -VV -j 1 --output-on-failure -E 'test_sunmatrix_sparse_400_400_0_0|test_nvector_mpi_4'
 %else
 %ctest3 --force-new-ctest-process -VV -j 1 --output-on-failure
 %endif
@@ -646,7 +646,7 @@ popd
 pushd buildmpich_dir/build
 export LD_LIBRARY_PATH=%{buildroot}$MPI_LIB:%{buildroot}%{_libdir}
 %ifarch %{power64} %{arm} aarch64 s390x
-%ctest3 --force-new-ctest-process -VV -j 1 --output-on-failure -E 'test_sunmatrix_sparse_400_400_0_0'
+%ctest3 --force-new-ctest-process -VV -j 1 --output-on-failure -E 'test_sunmatrix_sparse_400_400_0_0|test_nvector_mpi_4'
 %else
 %ctest3 --force-new-ctest-process -VV -j 1 --output-on-failure
 %endif
