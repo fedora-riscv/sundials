@@ -43,17 +43,35 @@
 
 %global with_hypre 1
 
+## PETSc ##
+%if 0%{?fedora} && 0%{?fedora} < 29
+## Exclude MPI builds on s390x
+%ifarch s390x
+%global with_petsc 0
+%endif
+%ifnarch s390x
+%global with_petsc 1
+%endif
+%endif
+
+%if 0%{?fedora} && 0%{?fedora} >= 29
+%global with_petsc 1
+%endif
+%if 0%{?rhel} && 0%{?rhel} >= 7
+%global with_petsc 1
+%endif
+###########
+
 %global with_parcheck 1
 %global with_sercheck 1
 
 Summary:    Suite of nonlinear solvers
 Name:       sundials
-Version:    3.1.1
-Release:    3%{?dist}
+Version:    3.1.2
+Release:    1%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
-Group:      Development/Libraries
 URL:        http://www.llnl.gov/casc/sundials/
 Source0:    https://computation.llnl.gov/projects/sundials/download/sundials-%{version}.tar.gz
 
@@ -74,12 +92,7 @@ BuildRequires:          cmake
 %global cmake3 %cmake
 %global ctest3 ctest
 %endif
-%ifarch %{openblas_arches}
 BuildRequires: openblas-devel, openblas-srpm-macros
-%else
-BuildRequires: blas-devel, lapack-devel
-%endif
-
 %ifarch s390x x86_64
 BuildRequires: SuperLUMT64-devel
 %endif
@@ -105,7 +118,6 @@ preconditioners.
 
 %package devel
 Summary:    Suite of nonlinear solvers (developer files)
-Group:      Development/Libraries
 Requires:   %{name}%{?_isa} = %{version}-%{release}
 %description devel
 SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
@@ -116,7 +128,6 @@ This package contains the developer files (.so file, header files).
 %if 0%{?with_openmpi}
 %package openmpi
 Summary:    Suite of nonlinear solvers
-Group:      Development/Libraries
 BuildRequires: openmpi-devel
 %if 0%{?rhel} || 0%{?fedora} > 28
 BuildRequires: hypre-openmpi-devel
@@ -125,8 +136,11 @@ BuildRequires: hypre-openmpi-devel
 BuildRequires: hypre-openmpi-devel
 %endif
 %endif
+%if 0%{?with_petsc}
+BuildRequires: petsc-openmpi-devel
+%endif
 
-Requires: openmpi
+Requires: openmpi%{?_isa}
 Requires: gcc-gfortran%{?_isa}
 Obsoletes: %{name}-openmpi-samples%{?_isa} < 3.1.1-2
 
@@ -137,7 +151,6 @@ This package contains the Sundials Fortran parallel OpenMPI libraries.
 
 %package openmpi-devel
 Summary:    Suite of nonlinear solvers
-Group:      Development/Libraries
 Requires:   %{name}-openmpi%{?_isa} = %{version}-%{release}
 %description openmpi-devel
 SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
@@ -151,7 +164,6 @@ header files.
 %if 0%{?with_mpich}
 %package mpich
 Summary:    Suite of nonlinear solvers
-Group:      Development/Libraries
 BuildRequires: mpich-devel
 %if 0%{?rhel} || 0%{?fedora} > 28
 BuildRequires: hypre-mpich-devel
@@ -160,7 +172,10 @@ BuildRequires: hypre-mpich-devel
 BuildRequires: hypre-mpich-devel
 %endif
 %endif
-Requires: mpich
+%if 0%{?with_petsc}
+BuildRequires: petsc-mpich-devel
+%endif
+Requires: mpich%{?_isa}
 Requires: gcc-gfortran%{?_isa}
 Obsoletes: %{name}-mpich-samples%{?_isa} < 3.1.1-2
 
@@ -171,7 +186,6 @@ This package contains the Sundials parallel MPICH libraries.
 
 %package mpich-devel
 Summary:    Suite of nonlinear solvers
-Group:      Development/Libraries
 Requires:   %{name}-mpich%{?_isa} = %{version}-%{release}
 %description mpich-devel
 SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
@@ -184,7 +198,6 @@ header files.
 
 %package doc
 Summary:    Suite of nonlinear solvers (documentation)
-Group:      Documentation
 BuildArch: noarch
 %description doc
 SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
@@ -240,9 +253,6 @@ mv src/cvodes/README src/README-cvodes
 mv src/ida/README src/README-ida
 mv src/idas/README src/README.idas
 mv src/kinsol/README src/README-kinsol
-mv src/nvec_ser/README src/README-nvec_ser
-mv src/nvec_par/README src/README-nvec_par
-mv src/nvec_pthreads/README src/README-nvec_pthreads
 popd
 
 %if 0%{?with_openmpi}
@@ -254,21 +264,12 @@ cp -a sundials-%{version} buildmpich_dir
 
 %build
 pushd sundials-%{version}
-# LAPACK is not compatible with INT64_T integers
+
 mkdir -p build && cd build
 
-%ifarch %{openblas_arches}
 export LIBBLASLINK=-lopenblas
 export LIBBLAS=libopenblas
-export LIBLAPACKLINK=
 export INCBLAS=-I%{_includedir}/openblas
-%else
-export LIBBLASLINK=-lblas
-export LIBBLAS=libblas
-export LIBLAPACKLINK=-llapack
-export LIBLAPACK=liblapack
-export INCBLAS=-I%{_includedir}
-%endif
 
 %ifarch s390x x86_64
 export LIBSUPERLUMTLINK=-lsuperlumt64_d
@@ -285,9 +286,9 @@ export CFLAGS=""
 cmake \
  -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
  -DCMAKE_BUILD_TYPE:STRING=Debug \
- -DCMAKE_C_FLAGS_DEBUG:STRING="-O0 -g -Wl,-z,relro -Wl,-z,now -Wl,--as-needed" \
- -DCMAKE_Fortran_FLAGS_DEBUG:STRING="-O0 -g -Wl,-z,relro -Wl,-z,now -Wl,--as-needed" \
- -DCMAKE_SHARED_LINKER_FLAGS_DEBUG:STRING="%{__global_ldflags} -Wl,-z,now -Wl,--as-needed -lklu $LIBBLASLINK $LIBLAPACKLINK $LIBSUPERLUMTLINK" \
+ -DCMAKE_C_FLAGS_DEBUG:STRING="-O0 -g -Wl,-z,relro -Wl,-z,now -Wl,--as-needed -I$INCBLAS" \
+ -DCMAKE_Fortran_FLAGS_DEBUG:STRING="-O0 -g -Wl,-z,relro -Wl,-z,now -Wl,--as-needed -I$INCBLAS" \
+ -DCMAKE_SHARED_LINKER_FLAGS_DEBUG:STRING="%{__global_ldflags} -Wl,-z,now -Wl,--as-needed -lklu $LIBBLASLINK $LIBSUPERLUMTLINK" \
 %else
 %{cmake3} \
 %if %{?__isa_bits:%{__isa_bits}}%{!?__isa_bits:32} == 64
@@ -297,20 +298,13 @@ cmake \
 %endif
  -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
  -DCMAKE_BUILD_TYPE:STRING=Release \
- -DCMAKE_C_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now -Wl,--as-needed" \
- -DCMAKE_Fortran_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now -Wl,--as-needed" \
- -DCMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING="%{__global_ldflags} -Wl,-z,now -Wl,--as-needed -lklu $LIBBLASLINK $LIBLAPACKLINK $LIBSUPERLUMTLINK" \
+ -DCMAKE_C_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now -Wl,--as-needed -I$INCBLAS" \
+ -DCMAKE_Fortran_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now -Wl,--as-needed -I$INCBLAS" \
+ -DCMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING="%{__global_ldflags} -Wl,-z,now -Wl,--as-needed -lklu $LIBBLASLINK $LIBSUPERLUMTLINK" \
 %endif
-%ifnarch %{power64} aarch64 s390x
  -DLAPACK_ENABLE:BOOL=OFF \
  -DBLAS_ENABLE:BOOL=ON \
  -DBLAS_LIBRARIES:STRING=%{_libdir}/$LIBBLAS.so \
-%else
- -DLAPACK_ENABLE:BOOL=ON \
- -DBLAS_ENABLE:BOOL=ON \
- -DBLAS_LIBRARIES:STRING=%{_libdir}/$LIBBLAS.so \
- -DLAPACK_LIBRARIES:STRING=%{_libdir}/$LIBLAPACK.so \
-%endif
  -DCMAKE_MODULE_LINKER_FLAGS:STRING="%{__global_ldflags} -Wl,-z,now -Wl,--as-needed" \
  -DCMAKE_INSTALL_PREFIX=%{_prefix} \
  -DPYTHON_EXECUTABLE:FILEPATH=%{__python2} \
@@ -347,6 +341,10 @@ sed -i 's|TARGETS sundials_nvecparallel_shared DESTINATION lib|TARGETS sundials_
 sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/openmpi-%{_arch}/nvector|g' src/nvec_par/CMakeLists.txt
 sed -i 's|TARGETS sundials_fnvecparallel_shared DESTINATION lib|TARGETS sundials_fnvecparallel_shared DESTINATION %{_libdir}/openmpi/lib|g' src/nvec_par/CMakeLists.txt
 sed -i 's|TARGETS sundials_nvecparhyp_shared DESTINATION lib|TARGETS sundials_nvecparhyp_shared DESTINATION %{_libdir}/openmpi/lib|g' src/nvec_parhyp/CMakeLists.txt
+%if 0%{?with_petsc}
+sed -i 's|TARGETS sundials_nvecpetsc_shared DESTINATION lib|TARGETS sundials_nvecpetsc_shared DESTINATION %{_libdir}/openmpi/lib|g' src/nvec_petsc/CMakeLists.txt
+sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/openmpi-%{_arch}/nvector|g' src/nvec_petsc/CMakeLists.txt
+%endif
 
 mkdir -p build && cd build
 %{_openmpi_load}
@@ -355,18 +353,9 @@ export CXX=mpicxx
 export FC=mpif77
 
 ## Blas
-%ifarch %{openblas_arches}
 export LIBBLASLINK=-lopenblas
 export LIBBLAS=libopenblas
-export LIBLAPACKLINK=
 export INCBLAS=-I%{_includedir}/openblas
-%else
-export LIBBLASLINK=-lblas
-export LIBBLAS=libblas
-export LIBLAPACKLINK=-llapack
-export LIBLAPACK=liblapack
-export INCBLAS=-I%{_includedir}
-%endif
 ##
 ## SuperLUMT
 %ifarch s390x x86_64
@@ -401,9 +390,9 @@ export CFLAGS=""
 cmake \
  -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
  -DCMAKE_BUILD_TYPE:STRING=Debug \
- -DCMAKE_C_FLAGS_DEBUG:STRING="-O0 -g -Wl,-z,relro -Wl,-z,now -Wl,--as-needed" \
- -DCMAKE_Fortran_FLAGS_DEBUG:STRING="-O0 -g -Wl,-z,relro -Wl,-z,now -Wl,--as-needed" \
- -DCMAKE_SHARED_LINKER_FLAGS_DEBUG:STRING="%{__global_ldflags} -Wl,-z,now -Wl,--as-needed -lklu $LIBLAPACKLINK $LIBBLASLINK $LIBSUPERLUMTLINK $LIBHYPRELINK" \
+ -DCMAKE_C_FLAGS_DEBUG:STRING="-O0 -g -Wl,-z,relro -Wl,-z,now -Wl,--as-needed -I$INCBLAS" \
+ -DCMAKE_Fortran_FLAGS_DEBUG:STRING="-O0 -g -Wl,-z,relro -Wl,-z,now -Wl,--as-needed -I$INCBLAS" \
+ -DCMAKE_SHARED_LINKER_FLAGS_DEBUG:STRING="%{__global_ldflags} -Wl,-z,now -Wl,--as-needed -lklu $LIBBLASLINK $LIBSUPERLUMTLINK $LIBHYPRELINK" \
 %else
 %{cmake3} \
 %if %{?__isa_bits:%{__isa_bits}}%{!?__isa_bits:32} == 64
@@ -413,19 +402,17 @@ cmake \
 %endif
  -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
  -DCMAKE_BUILD_TYPE:STRING=Release \
- -DCMAKE_C_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now -Wl,--as-needed" \
- -DCMAKE_Fortran_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now -Wl,--as-needed" \
- -DCMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING="%{__global_ldflags} -Wl,-z,now -Wl,--as-needed -lklu $LIBLAPACKLINK $LIBBLASLINK $LIBSUPERLUMTLINK $LIBHYPRELINK" \
+ -DCMAKE_C_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now -Wl,--as-needed -I$INCBLAS" \
+ -DCMAKE_Fortran_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now -Wl,--as-needed -I$INCBLAS" \
+ -DCMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING="%{__global_ldflags} -Wl,-z,now -Wl,--as-needed -lklu $LIBBLASLINK $LIBSUPERLUMTLINK $LIBHYPRELINK" \
 %endif
-%ifnarch %{power64} aarch64 s390x
  -DLAPACK_ENABLE:BOOL=OFF \
  -DBLAS_ENABLE:BOOL=ON \
  -DBLAS_LIBRARIES:STRING=%{_libdir}/$LIBBLAS.so \
-%else
- -DLAPACK_ENABLE:BOOL=ON \
- -DBLAS_ENABLE:BOOL=ON \
- -DBLAS_LIBRARIES:STRING=%{_libdir}/$LIBBLAS.so \
- -DLAPACK_LIBRARIES:STRING=%{_libdir}/$LIBLAPACK.so \
+%if 0%{?with_petsc}
+ -DPETSC_ENABLE:BOOL=ON \
+ -DPETSC_INCLUDE_DIR:PATH=$MPI_INCLUDE/petsc \
+ -DPETSC_LIBRARY_DIR:PATH=$MPI_LIB \
 %endif
  -DCMAKE_INSTALL_PREFIX=%{_prefix} \
  -DPYTHON_EXECUTABLE:FILEPATH=%{__python2} \
@@ -481,6 +468,10 @@ sed -i 's|TARGETS sundials_nvecparallel_shared DESTINATION lib|TARGETS sundials_
 sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/mpich-%{_arch}/nvector|g' src/nvec_par/CMakeLists.txt
 sed -i 's|TARGETS sundials_fnvecparallel_shared DESTINATION lib|TARGETS sundials_fnvecparallel_shared DESTINATION %{_libdir}/mpich/lib|g' src/nvec_par/CMakeLists.txt
 sed -i 's|TARGETS sundials_nvecparhyp_shared DESTINATION lib|TARGETS sundials_nvecparhyp_shared DESTINATION %{_libdir}/mpich/lib|g' src/nvec_parhyp/CMakeLists.txt
+%if 0%{?with_petsc}
+sed -i 's|TARGETS sundials_nvecpetsc_shared DESTINATION lib|TARGETS sundials_nvecpetsc_shared DESTINATION %{_libdir}/mpich/lib|g' src/nvec_petsc/CMakeLists.txt
+sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/mpich-%{_arch}/nvector|g' src/nvec_petsc/CMakeLists.txt
+%endif
 
 mkdir -p build && cd build
 %{_mpich_load}
@@ -497,18 +488,9 @@ export F77=mpifort
 export FC=mpifort
 %endif
 ## Blas
-%ifarch %{openblas_arches}
 export LIBBLASLINK=-lopenblas
 export LIBBLAS=libopenblas
-export LIBLAPACKLINK=
 export INCBLAS=-I%{_includedir}/openblas
-%else
-export LIBBLASLINK=-lblas
-export LIBBLAS=libblas
-export LIBLAPACKLINK=-llapack
-export LIBLAPACK=liblapack
-export INCBLAS=-I%{_includedir}
-%endif
 ##
 ## SuperLUMT
 %ifarch s390x x86_64
@@ -543,9 +525,9 @@ export CFLAGS=""
 cmake \
  -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
  -DCMAKE_BUILD_TYPE:STRING=Debug \
- -DCMAKE_C_FLAGS_DEBUG:STRING="-O0 -g -Wl,-z,relro -Wl,-z,now -Wl,--as-needed" \
- -DCMAKE_Fortran_FLAGS_DEBUG:STRING="-O0 -g -Wl,-z,relro -Wl,-z,now -Wl,--as-needed" \
- -DCMAKE_SHARED_LINKER_FLAGS_DEBUG:STRING="%{__global_ldflags} -Wl,-z,now -Wl,--as-needed -lklu $LIBLAPACKLINK $LIBBLASLINK $LIBSUPERLUMTLINK $LIBHYPRELINK" \
+ -DCMAKE_C_FLAGS_DEBUG:STRING="-O0 -g -Wl,-z,relro -Wl,-z,now -Wl,--as-needed -I$INCBLAS" \
+ -DCMAKE_Fortran_FLAGS_DEBUG:STRING="-O0 -g -Wl,-z,relro -Wl,-z,now -Wl,--as-needed -I$INCBLAS" \
+ -DCMAKE_SHARED_LINKER_FLAGS_DEBUG:STRING="%{__global_ldflags} -Wl,-z,now -Wl,--as-needed -lklu $LIBBLASLINK $LIBSUPERLUMTLINK $LIBHYPRELINK" \
 %else
 %{cmake3} \
 %if %{?__isa_bits:%{__isa_bits}}%{!?__isa_bits:32} == 64
@@ -555,19 +537,17 @@ cmake \
 %endif
  -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
  -DCMAKE_BUILD_TYPE:STRING=Release \
- -DCMAKE_C_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now -Wl,--as-needed" \
- -DCMAKE_Fortran_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now -Wl,--as-needed" \
- -DCMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING="%{__global_ldflags} -Wl,-z,now -Wl,--as-needed -lklu $LIBLAPACKLINK $LIBBLASLINK $LIBSUPERLUMTLINK $LIBHYPRELINK" \
+ -DCMAKE_C_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now -Wl,--as-needed -I$INCBLAS" \
+ -DCMAKE_Fortran_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now -Wl,--as-needed -I$INCBLAS" \
+ -DCMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING="%{__global_ldflags} -Wl,-z,now -Wl,--as-needed -lklu $LIBBLASLINK $LIBSUPERLUMTLINK $LIBHYPRELINK" \
 %endif
-%ifnarch %{power64} aarch64 s390x
  -DLAPACK_ENABLE:BOOL=OFF \
  -DBLAS_ENABLE:BOOL=ON \
  -DBLAS_LIBRARIES:STRING=%{_libdir}/$LIBBLAS.so \
-%else
- -DLAPACK_ENABLE:BOOL=ON \
- -DBLAS_ENABLE:BOOL=ON \
- -DBLAS_LIBRARIES:STRING=%{_libdir}/$LIBBLAS.so \
- -DLAPACK_LIBRARIES:STRING=%{_libdir}/$LIBLAPACK.so \
+%if 0%{?with_petsc}
+ -DPETSC_ENABLE:BOOL=ON \
+ -DPETSC_INCLUDE_DIR:PATH=$MPI_INCLUDE/petsc \
+ -DPETSC_LIBRARY_DIR:PATH=$MPI_LIB \
 %endif
  -DCMAKE_INSTALL_PREFIX=%{_prefix} \
  -DPYTHON_EXECUTABLE:FILEPATH=%{__python2} \
@@ -640,8 +620,9 @@ popd
 # Remove static libraries
 rm -f %{buildroot}%{_libdir}/*.a
 
-# Remove file in a bad position
+# Remove files in bad position
 rm -f %{buildroot}%{_prefix}/LICENSE
+rm -f %{buildroot}%{_includedir}/sundials/LICENSE
 
 %ldconfig_scriptlets
 
@@ -651,7 +632,11 @@ rm -f %{buildroot}%{_prefix}/LICENSE
 %{_openmpi_load}
 pushd buildopenmpi_dir/build
 export LD_LIBRARY_PATH=%{buildroot}$MPI_LIB:%{buildroot}%{_libdir}
-%ctest3 --force-new-ctest-process -VV
+%ifarch %{power64} %{arm} aarch64 s390x
+%ctest3 --force-new-ctest-process -VV -j 1 --output-on-failure -E 'test_sunmatrix_sparse_400_400_0_0'
+%else
+%ctest3 --force-new-ctest-process -VV -j 1 --output-on-failure
+%endif
 popd
 %{_openmpi_unload}
 %endif ##if openmpi
@@ -660,7 +645,11 @@ popd
 %{_mpich_load}
 pushd buildmpich_dir/build
 export LD_LIBRARY_PATH=%{buildroot}$MPI_LIB:%{buildroot}%{_libdir}
-%ctest3 --force-new-ctest-process -VV
+%ifarch %{power64} %{arm} aarch64 s390x
+%ctest3 --force-new-ctest-process -VV -j 1 --output-on-failure -E 'test_sunmatrix_sparse_400_400_0_0'
+%else
+%ctest3 --force-new-ctest-process -VV -j 1 --output-on-failure
+%endif
 popd
 %{_mpich_unload}
 %endif ##if openmpi
@@ -669,7 +658,11 @@ popd
 %if 0%{?with_sercheck}
 pushd sundials-%{version}/build
 export LD_LIBRARY_PATH=%{buildroot}%{_libdir} 
-%ctest3 --force-new-ctest-process -VV
+%ifarch %{power64} %{arm} aarch64 s390x
+%ctest3 --force-new-ctest-process -VV -j 1 --output-on-failure -E 'test_sunmatrix_sparse_400_400_0_0'
+%else
+%ctest3 --force-new-ctest-process -VV -j 1 --output-on-failure
+%endif
 popd
 %endif ##if with_sercheck
 
@@ -736,6 +729,9 @@ popd
 %doc sundials-%{version}/README.md sundials-%{version}/src/README-*
 %{_libdir}/openmpi/lib/libsundials_nvecparallel.so.*
 %{_libdir}/openmpi/lib/libsundials_fnvecparallel.so.*
+%if 0%{?with_petsc}
+%{_libdir}/openmpi/lib/libsundials_nvecpetsc.so.*
+%endif
 %if 0%{?rhel} || 0%{?fedora} > 28
 %{_libdir}/openmpi/lib/libsundials_nvecparhyp.so.*
 %else
@@ -745,9 +741,14 @@ popd
 %endif
 
 %files openmpi-devel
+%dir %{_includedir}/openmpi-%{_arch}/nvector
 %{_includedir}/openmpi-%{_arch}/nvector/nvector_parallel.h
 %{_libdir}/openmpi/lib/libsundials_nvecparallel.so
 %{_libdir}/openmpi/lib/libsundials_fnvecparallel.so
+%if 0%{?with_petsc}
+%{_libdir}/openmpi/lib/libsundials_nvecpetsc.so
+%{_includedir}/openmpi-%{_arch}/nvector/nvector_petsc.h
+%endif
 %if 0%{?rhel} || 0%{?fedora} > 28
 %{_libdir}/openmpi/lib/libsundials_nvecparhyp.so
 %else
@@ -763,6 +764,9 @@ popd
 %doc sundials-%{version}/README.md sundials-%{version}/src/README-*
 %{_libdir}/mpich/lib/libsundials_nvecparallel.so.*
 %{_libdir}/mpich/lib/libsundials_fnvecparallel.so.*
+%if 0%{?with_petsc}
+%{_libdir}/mpich/lib/libsundials_nvecpetsc.so.*
+%endif
 %if 0%{?rhel} || 0%{?fedora} > 28
 %{_libdir}/mpich/lib/libsundials_nvecparhyp.so.*
 %else
@@ -772,9 +776,14 @@ popd
 %endif
 
 %files mpich-devel
+%dir %{_includedir}/mpich-%{_arch}/nvector
 %{_includedir}/mpich-%{_arch}/nvector/nvector_parallel.h
 %{_libdir}/mpich/lib/libsundials_nvecparallel.so
 %{_libdir}/mpich/lib/libsundials_fnvecparallel.so
+%if 0%{?with_petsc}
+%{_libdir}/mpich/lib/libsundials_nvecpetsc.so
+%{_includedir}/mpich-%{_arch}/nvector/nvector_petsc.h
+%endif
 %if 0%{?rhel} || 0%{?fedora} > 28
 %{_libdir}/mpich/lib/libsundials_nvecparhyp.so
 %else
@@ -785,6 +794,10 @@ popd
 %endif
 
 %changelog
+* Wed Aug 01 2018 Antonio Trande <sagitterATfedoraproject.org> - 3.1.2-1
+- Update to 3.1.2
+- Enable PETSC support
+
 * Sat Jul 14 2018 Fedora Release Engineering <releng@fedoraproject.org> - 3.1.1-3
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_29_Mass_Rebuild
 
