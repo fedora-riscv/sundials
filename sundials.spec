@@ -6,19 +6,7 @@
 %{!?__global_ldflags: %global __global_ldflags -Wl,-z,relro}
 %endif
 
-## Define if use openmpi or not
-%if 0%{?fedora} < 28
-## Exclude MPI builds on s390x
-%ifarch s390x
-%global with_mpich 0
-%global with_openmpi 0
-%else
-%global with_mpich 1
-%global with_openmpi 1
-%endif
-%endif
-
-%if 0%{?fedora} >= 28
+%if 0%{?fedora}
 %global with_mpich 1
 %global with_openmpi 1
 %endif
@@ -67,8 +55,8 @@
 
 Summary:    Suite of nonlinear solvers
 Name:       sundials
-Version:    3.1.2
-Release:    2%{?dist}
+Version:    3.2.0
+Release:    1%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -87,13 +75,9 @@ BuildRequires: python2-devel
 BuildRequires: gcc, gcc-c++
 BuildRequires: suitesparse-devel
 %if 0%{?rhel}
-BuildRequires:          cmake3, epel-rpm-macros
-%global ctest3 ctest3
-%else
-BuildRequires:          cmake
-%global cmake3 %cmake
-%global ctest3 ctest
+BuildRequires: epel-rpm-macros
 %endif
+BuildRequires: cmake3
 BuildRequires: openblas-devel, openblas-srpm-macros
 %ifarch s390x x86_64
 BuildRequires: SuperLUMT64-devel
@@ -244,11 +228,6 @@ sed -i 's|TARGETS sundials_nvecserial_shared DESTINATION lib|TARGETS sundials_nv
 sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/nvector|g' src/nvec_ser/CMakeLists.txt
 sed -i 's|TARGETS sundials_fnvecserial_shared DESTINATION lib|TARGETS sundials_fnvecserial_shared DESTINATION %{_libdir}|g' src/nvec_ser/CMakeLists.txt
 
-## mpif77 test fails
-## Hardened flags break cmake's MPI Fortran compiler test
-sed -i 's|set(MPIF_PERFORM_TEST TRUE)|set(MPIF_PERFORM_TEST FALSE)|g' config/SundialsMPIF.cmake
-sed -i 's|set(MPIF_FOUND FALSE)|set(MPIF_FOUND TRUE)|g' config/SundialsMPIF.cmake
-
 mv src/arkode/README src/README-arkode
 mv src/cvode/README src/README-cvode
 mv src/cvodes/README src/README-cvodes
@@ -290,24 +269,24 @@ cmake \
  -DCMAKE_BUILD_TYPE:STRING=Debug \
  -DCMAKE_C_FLAGS_DEBUG:STRING="-O0 -g -Wl,-z,relro -Wl,-z,now -Wl,--as-needed -I$INCBLAS" \
  -DCMAKE_Fortran_FLAGS_DEBUG:STRING="-O0 -g -Wl,-z,relro -Wl,-z,now -Wl,--as-needed -I$INCBLAS" \
- -DCMAKE_SHARED_LINKER_FLAGS_DEBUG:STRING="%{__global_ldflags} -Wl,-z,now -Wl,--as-needed -lklu $LIBBLASLINK $LIBSUPERLUMTLINK" \
+ -DCMAKE_SHARED_LINKER_FLAGS_DEBUG:STRING="%{__global_ldflags} -lklu $LIBBLASLINK $LIBSUPERLUMTLINK" \
 %else
 %{cmake3} \
 %if %{?__isa_bits:%{__isa_bits}}%{!?__isa_bits:32} == 64
- -DSUNDIALS_INDEX_TYPE:STRING=int64_t \
+ -DSUNDIALS_INDEX_SIZE:STRING=64 \
 %else
- -DSUNDIALS_INDEX_TYPE:STRING=int32_t \
+ -DSUNDIALS_INDEX_SIZE:STRING=32 \
 %endif
  -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
  -DCMAKE_BUILD_TYPE:STRING=Release \
- -DCMAKE_C_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now -Wl,--as-needed -I$INCBLAS" \
- -DCMAKE_Fortran_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now -Wl,--as-needed -I$INCBLAS" \
- -DCMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING="%{__global_ldflags} -Wl,-z,now -Wl,--as-needed -lklu $LIBBLASLINK $LIBSUPERLUMTLINK" \
+ -DCMAKE_C_FLAGS_RELEASE:STRING="%{optflags} -I$INCBLAS" \
+ -DCMAKE_Fortran_FLAGS_RELEASE:STRING="%{optflags} -I$INCBLAS" \
+ -DCMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING="%{__global_ldflags} -lklu $LIBBLASLINK $LIBSUPERLUMTLINK" \
 %endif
  -DLAPACK_ENABLE:BOOL=OFF \
  -DBLAS_ENABLE:BOOL=ON \
  -DBLAS_LIBRARIES:STRING=%{_libdir}/$LIBBLAS.so \
- -DCMAKE_MODULE_LINKER_FLAGS:STRING="%{__global_ldflags} -Wl,-z,now -Wl,--as-needed" \
+ -DCMAKE_MODULE_LINKER_FLAGS:STRING="%{__global_ldflags}" \
  -DCMAKE_INSTALL_PREFIX=%{_prefix} \
  -DPYTHON_EXECUTABLE:FILEPATH=%{__python2} \
  -DEXAMPLES_ENABLE_CXX:BOOL=ON -DEXAMPLES_ENABLE_C:BOOL=ON -DEXAMPLES_ENABLE_F77:BOOL=ON \
@@ -394,19 +373,19 @@ cmake \
  -DCMAKE_BUILD_TYPE:STRING=Debug \
  -DCMAKE_C_FLAGS_DEBUG:STRING="-O0 -g -Wl,-z,relro -Wl,-z,now -Wl,--as-needed -I$INCBLAS" \
  -DCMAKE_Fortran_FLAGS_DEBUG:STRING="-O0 -g -Wl,-z,relro -Wl,-z,now -Wl,--as-needed -I$INCBLAS" \
- -DCMAKE_SHARED_LINKER_FLAGS_DEBUG:STRING="%{__global_ldflags} -Wl,-z,now -Wl,--as-needed -lklu $LIBBLASLINK $LIBSUPERLUMTLINK $LIBHYPRELINK" \
+ -DCMAKE_SHARED_LINKER_FLAGS_DEBUG:STRING="%{__global_ldflags} -lklu $LIBBLASLINK $LIBSUPERLUMTLINK $LIBHYPRELINK" \
 %else
 %{cmake3} \
 %if %{?__isa_bits:%{__isa_bits}}%{!?__isa_bits:32} == 64
- -DSUNDIALS_INDEX_TYPE:STRING=int64_t \
+ -DSUNDIALS_INDEX_SIZE:STRING=64 \
 %else
- -DSUNDIALS_INDEX_TYPE:STRING=int32_t \
+ -DSUNDIALS_INDEX_SIZE:STRING=32 \
 %endif
  -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
  -DCMAKE_BUILD_TYPE:STRING=Release \
- -DCMAKE_C_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now -Wl,--as-needed -I$INCBLAS" \
- -DCMAKE_Fortran_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now -Wl,--as-needed -I$INCBLAS" \
- -DCMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING="%{__global_ldflags} -Wl,-z,now -Wl,--as-needed -lklu $LIBBLASLINK $LIBSUPERLUMTLINK $LIBHYPRELINK" \
+ -DCMAKE_C_FLAGS_RELEASE:STRING="%{optflags} -I$INCBLAS" \
+ -DCMAKE_Fortran_FLAGS_RELEASE:STRING="%{optflags} -I$INCBLAS" \
+ -DCMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING="%{__global_ldflags} -lklu $LIBBLASLINK $LIBSUPERLUMTLINK $LIBHYPRELINK" \
 %endif
  -DLAPACK_ENABLE:BOOL=OFF \
  -DBLAS_ENABLE:BOOL=ON \
@@ -422,13 +401,16 @@ cmake \
  -DBUILD_SHARED_LIBS:BOOL=ON -DBUILD_STATIC_LIBS:BOOL=OFF \
  -DCMAKE_SKIP_RPATH:BOOL=YES -DCMAKE_SKIP_INSTALL_RPATH:BOOL=YES \
  -DMPI_ENABLE:BOOL=ON \
- -DMPI_MPICC:STRING=$MPI_BIN/mpicc \
- -DMPI_RUN_COMMAND=mpirun \
- -DMPI_MPIF77:STRING=$MPI_BIN/mpif77 \
+ -DMPI_C_COMPILER:STRING=$MPI_BIN/mpicc \
+ -DMPIEXEC_EXECUTABLE=$MPI_BIN/mpirun \
+%if 0%{?fedora}
+ -DMPI_Fortran_COMPILER:STRING=$MPI_BIN/mpifort \
+%else
+ -DMPI_Fortran_COMPILER:STRING=$MPI_BIN/mpif77 \
+%endif
  -DFCMIX_ENABLE:BOOL=ON \
  -DUSE_GENERIC_MATH:BOOL=ON \
  -DOPENMP_ENABLE:BOOL=ON \
- -DCMAKE_Fortran_COMPILER:STRING=$MPI_BIN/mpif77 \
  -DPTHREAD_ENABLE:BOOL=ON \
 %ifnarch %{power64} aarch64
  -DSUPERLUMT_ENABLE:BOOL=ON \
@@ -529,19 +511,19 @@ cmake \
  -DCMAKE_BUILD_TYPE:STRING=Debug \
  -DCMAKE_C_FLAGS_DEBUG:STRING="-O0 -g -Wl,-z,relro -Wl,-z,now -Wl,--as-needed -I$INCBLAS" \
  -DCMAKE_Fortran_FLAGS_DEBUG:STRING="-O0 -g -Wl,-z,relro -Wl,-z,now -Wl,--as-needed -I$INCBLAS" \
- -DCMAKE_SHARED_LINKER_FLAGS_DEBUG:STRING="%{__global_ldflags} -Wl,-z,now -Wl,--as-needed -lklu $LIBBLASLINK $LIBSUPERLUMTLINK $LIBHYPRELINK" \
+ -DCMAKE_SHARED_LINKER_FLAGS_DEBUG:STRING="%{__global_ldflags} -lklu $LIBBLASLINK $LIBSUPERLUMTLINK $LIBHYPRELINK" \
 %else
 %{cmake3} \
 %if %{?__isa_bits:%{__isa_bits}}%{!?__isa_bits:32} == 64
- -DSUNDIALS_INDEX_TYPE:STRING=int64_t \
+ -DSUNDIALS_INDEX_SIZE:STRING=64 \
 %else
- -DSUNDIALS_INDEX_TYPE:STRING=int32_t \
+ -DSUNDIALS_INDEX_SIZE:STRING=32 \
 %endif
  -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
  -DCMAKE_BUILD_TYPE:STRING=Release \
- -DCMAKE_C_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now -Wl,--as-needed -I$INCBLAS" \
- -DCMAKE_Fortran_FLAGS_RELEASE:STRING="%{optflags} -Wl,-z,relro -Wl,-z,now -Wl,--as-needed -I$INCBLAS" \
- -DCMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING="%{__global_ldflags} -Wl,-z,now -Wl,--as-needed -lklu $LIBBLASLINK $LIBSUPERLUMTLINK $LIBHYPRELINK" \
+ -DCMAKE_C_FLAGS_RELEASE:STRING="%{optflags} -I$INCBLAS" \
+ -DCMAKE_Fortran_FLAGS_RELEASE:STRING="%{optflags} -I$INCBLAS" \
+ -DCMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING="%{__global_ldflags} -lklu $LIBBLASLINK $LIBSUPERLUMTLINK $LIBHYPRELINK" \
 %endif
  -DLAPACK_ENABLE:BOOL=OFF \
  -DBLAS_ENABLE:BOOL=ON \
@@ -557,19 +539,16 @@ cmake \
  -DBUILD_SHARED_LIBS:BOOL=ON -DBUILD_STATIC_LIBS:BOOL=OFF \
  -DCMAKE_SKIP_RPATH:BOOL=YES -DCMAKE_SKIP_INSTALL_RPATH:BOOL=YES \
  -DMPI_ENABLE:BOOL=ON \
- -DMPI_MPICC:STRING=$MPI_BIN/mpicc \
- -DMPI_RUN_COMMAND=mpirun \
+ -DMPI_C_COMPILER:STRING=$MPI_BIN/mpicc \
+ -DMPIEXEC_EXECUTABLE=$MPI_BIN/mpirun \
 %if 0%{?fedora}
- -DMPI_MPIF77:STRING=$MPI_BIN/mpifort \
- -DMPI_MPIF90:STRING=$MPI_BIN/mpifort \
+ -DMPI_Fortran_COMPILER:STRING=$MPI_BIN/mpifort \
 %else
- -DMPI_MPIF77:STRING=$MPI_BIN/mpif77 \
- -DMPI_MPIF90:STRING=$MPI_BIN/mpif90 \
+ -DMPI_Fortran_COMPILER:STRING=$MPI_BIN/mpif77 \
 %endif
  -DFCMIX_ENABLE:BOOL=ON \
  -DUSE_GENERIC_MATH:BOOL=ON \
  -DOPENMP_ENABLE:BOOL=ON \
- -DCMAKE_Fortran_COMPILER:STRING=$MPI_BIN/mpif77 \
  -DPTHREAD_ENABLE:BOOL=ON \
 %ifnarch %{power64} aarch64
  -DSUPERLUMT_ENABLE:BOOL=ON \
@@ -635,9 +614,9 @@ rm -f %{buildroot}%{_includedir}/sundials/LICENSE
 pushd buildopenmpi_dir/build
 export LD_LIBRARY_PATH=%{buildroot}$MPI_LIB:%{buildroot}%{_libdir}
 %ifarch %{power64} %{arm} aarch64 s390x
-%ctest3 --force-new-ctest-process -VV -j 1 --output-on-failure -E 'test_sunmatrix_sparse_400_400_0_0|test_nvector_mpi_4'
+ctest3 --force-new-ctest-process -VV -j 1 --output-on-failure -E 'test_sunmatrix_sparse_400_400_0_0|test_nvector_mpi_4'
 %else
-%ctest3 --force-new-ctest-process -VV -j 1 --output-on-failure
+ctest3 --force-new-ctest-process -VV -j 1 --output-on-failure
 %endif
 popd
 %{_openmpi_unload}
@@ -648,9 +627,9 @@ popd
 pushd buildmpich_dir/build
 export LD_LIBRARY_PATH=%{buildroot}$MPI_LIB:%{buildroot}%{_libdir}
 %ifarch %{power64} %{arm} aarch64 s390x
-%ctest3 --force-new-ctest-process -VV -j 1 --output-on-failure -E 'test_sunmatrix_sparse_400_400_0_0|test_nvector_mpi_4'
+ctest3 --force-new-ctest-process -VV -j 1 --output-on-failure -E 'test_sunmatrix_sparse_400_400_0_0|test_nvector_mpi_4'
 %else
-%ctest3 --force-new-ctest-process -VV -j 1 --output-on-failure
+ctest3 --force-new-ctest-process -VV -j 1 --output-on-failure
 %endif
 popd
 %{_mpich_unload}
@@ -661,9 +640,9 @@ popd
 pushd sundials-%{version}/build
 export LD_LIBRARY_PATH=%{buildroot}%{_libdir} 
 %ifarch %{power64} %{arm} aarch64 s390x
-%ctest3 --force-new-ctest-process -VV -j 1 --output-on-failure -E 'test_sunmatrix_sparse_400_400_0_0'
+ctest3 --force-new-ctest-process -VV -j 1 --output-on-failure -E 'test_sunmatrix_sparse_400_400_0_0'
 %else
-%ctest3 --force-new-ctest-process -VV -j 1 --output-on-failure
+ctest3 --force-new-ctest-process -VV -j 1 --output-on-failure
 %endif
 popd
 %endif ##if with_sercheck
@@ -796,6 +775,9 @@ popd
 %endif
 
 %changelog
+* Sat Oct 13 2018 Antonio Trande <sagitterATfedoraproject.org> - 3.2.0-1
+- Update to 3.2.0
+
 * Wed Sep 05 2018 Antonio Trande <sagitterATfedoraproject.org> - 3.1.2-2
 - Forced to use python2 (tests work under python2 only)
 
