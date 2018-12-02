@@ -43,26 +43,20 @@
 %endif
 
 %if 0%{?fedora} && 0%{?fedora} >= 29
-%global with_petsc 0
+%global with_petsc 1
 %endif
 %if 0%{?rhel} && 0%{?rhel} >= 7
 %global with_petsc 1
 %endif
 ###########
 
-# rhbz #1639646
-%if 0%{?fedora} && 0%{?fedora} > 29
-%global with_openmpicheck 0
-%else
-%global with_openmpicheck 1
-%endif
 %global with_mpichcheck 1
 %global with_sercheck 1
 
 Summary:    Suite of nonlinear solvers
 Name:       sundials
 Version:    3.2.1
-Release:    1%{?dist}
+Release:    2%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -674,6 +668,9 @@ popd
 %doc sundials-%{version}/doc/arkode/*
 
 %changelog
+* Sun Dec 02 2018 Antonio Trande <sagitterATfedoraproject.org> - 3.2.1-2
+- PETSc support is now re-enabled (rhbz#1639646)
+
 * Sat Oct 20 2018 Antonio Trande <sagitterATfedoraproject.org> - 3.2.1-1
 - Update to 3.2.1
 - Disable PETSc support (rhbz#1639646)
