@@ -50,6 +50,7 @@
 %endif
 ###########
 
+%global with_openmpicheck 1
 %global with_mpichcheck 1
 %global with_sercheck 1
 
