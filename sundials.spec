@@ -1,5 +1,5 @@
 ## Debug builds?
-%bcond_without debug
+%bcond_with debug
 #
 
 %if 0%{?rhel} && 0%{?rhel} < 7
@@ -50,8 +50,12 @@
 %endif
 ###########
 
+# Tests of MPI libraries disabled for
+# "not enough slots available" errors
+%if 0%{?fedora} && 0%{?fedora} < 30
 %global with_openmpicheck 1
 %global with_mpichcheck 1
+%endif
 %global with_sercheck 1
 
 Summary:    Suite of nonlinear solvers
@@ -305,8 +309,12 @@ popd
 pushd buildopenmpi_dir
 ##Set openmpi library's paths
 sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/openmpi-%{_arch}/nvector|g' src/nvec_par/CMakeLists.txt
+sed -i 's|CMAKE_INSTALL_LIBDIR}|CMAKE_INSTALL_LIBDIR}/openmpi/lib|g' src/nvec_par/CMakeLists.txt
+sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/openmpi-%{_arch}/nvector|g' src/nvec_parhyp/CMakeLists.txt
+sed -i 's|CMAKE_INSTALL_LIBDIR}|CMAKE_INSTALL_LIBDIR}/openmpi/lib|g' src/nvec_parhyp/CMakeLists.txt
 %if 0%{?with_petsc}
 sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/openmpi-%{_arch}/nvector|g' src/nvec_petsc/CMakeLists.txt
+sed -i 's|CMAKE_INSTALL_LIBDIR}|CMAKE_INSTALL_LIBDIR}/openmpi/lib|g' src/nvec_petsc/CMakeLists.txt
 %endif
 
 mkdir -p build && cd build
@@ -369,7 +377,7 @@ export CFLAGS=""
  -DPETSC_INCLUDE_DIR:PATH=$MPI_INCLUDE/petsc \
  -DPETSC_LIBRARY_DIR:PATH=$MPI_LIB \
 %endif
- -DCMAKE_INSTALL_PREFIX:PATH=%{_prefix} -DCMAKE_INSTALL_LIBDIR:PATH=%{_lib}/openmpi/lib \
+ -DCMAKE_INSTALL_PREFIX:PATH=%{_prefix} -DCMAKE_INSTALL_LIBDIR:PATH=%{_lib} \
  -DPYTHON_EXECUTABLE:FILEPATH=%{__python2} \
  -DEXAMPLES_ENABLE_CXX:BOOL=ON -DEXAMPLES_ENABLE_C:BOOL=ON -DEXAMPLES_ENABLE_F77:BOOL=ON \
  -DBUILD_SHARED_LIBS:BOOL=ON -DBUILD_STATIC_LIBS:BOOL=OFF \
@@ -412,8 +420,12 @@ popd
 pushd buildmpich_dir
 ##Set mpich library's paths
 sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/mpich-%{_arch}/nvector|g' src/nvec_par/CMakeLists.txt
+sed -i 's|CMAKE_INSTALL_LIBDIR}|CMAKE_INSTALL_LIBDIR}/mpich/lib|g' src/nvec_par/CMakeLists.txt
+sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/mpich-%{_arch}/nvector|g' src/nvec_parhyp/CMakeLists.txt
+sed -i 's|CMAKE_INSTALL_LIBDIR}|CMAKE_INSTALL_LIBDIR}/mpich/lib|g' src/nvec_parhyp/CMakeLists.txt
 %if 0%{?with_petsc}
 sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/mpich-%{_arch}/nvector|g' src/nvec_petsc/CMakeLists.txt
+sed -i 's|CMAKE_INSTALL_LIBDIR}|CMAKE_INSTALL_LIBDIR}/mpich/lib|g' src/nvec_petsc/CMakeLists.txt
 %endif
 
 mkdir -p build && cd build
@@ -484,7 +496,7 @@ export CFLAGS=""
  -DPETSC_INCLUDE_DIR:PATH=$MPI_INCLUDE/petsc \
  -DPETSC_LIBRARY_DIR:PATH=$MPI_LIB \
 %endif
- -DCMAKE_INSTALL_PREFIX:PATH=%{_prefix} -DCMAKE_INSTALL_LIBDIR:PATH=%{_lib}/mpich/lib \
+ -DCMAKE_INSTALL_PREFIX:PATH=%{_prefix} -DCMAKE_INSTALL_LIBDIR:PATH=%{_lib} \
  -DPYTHON_EXECUTABLE:FILEPATH=%{__python2} \
  -DEXAMPLES_ENABLE_CXX:BOOL=ON -DEXAMPLES_ENABLE_C:BOOL=ON -DEXAMPLES_ENABLE_F77:BOOL=ON \
  -DBUILD_SHARED_LIBS:BOOL=ON -DBUILD_STATIC_LIBS:BOOL=OFF \
@@ -558,19 +570,11 @@ rm -f %{buildroot}%{_includedir}/sundials/LICENSE
 %if 0%{?with_openmpicheck}
 pushd buildopenmpi_dir/build
 %{_openmpi_load}
-export LD_LIBRARY_PATH=%{buildroot}$MPI_LIB
+export LD_LIBRARY_PATH=%{buildroot}$MPI_LIB:%{buildroot}%{_libdir}
 %if %{with debug}
-%ifarch %{power64} %{arm} aarch64 s390x
-ctest3 --force-new-ctest-process -VV -j 1 --output-on-failure --debug -E 'test_sunmatrix_sparse_400_400_0_0|test_nvector_mpi_4'
+ctest3 --force-new-ctest-process -VV %{?_smp_mflags} --output-on-failure --debug
 %else
-ctest3 --force-new-ctest-process -VV -j 1 --output-on-failure --debug
-%endif
-%else
-%ifarch %{power64} %{arm} aarch64 s390x
-ctest3 --force-new-ctest-process -j 1 -E 'test_sunmatrix_sparse_400_400_0_0|test_nvector_mpi_4'
-%else
-ctest3 --force-new-ctest-process -j 1
-%endif
+ctest3 --force-new-ctest-process %{?_smp_mflags}
 %endif
 %{_openmpi_unload}
 popd
@@ -581,19 +585,11 @@ popd
 %if 0%{?with_mpichcheck}
 pushd buildmpich_dir/build
 %{_mpich_load}
-export LD_LIBRARY_PATH=%{buildroot}$MPI_LIB
+export LD_LIBRARY_PATH=%{buildroot}$MPI_LIB:%{buildroot}%{_libdir}
 %if %{with debug}
-%ifarch %{power64} %{arm} aarch64 s390x
-ctest3 --force-new-ctest-process -VV -j 1 --output-on-failure --debug -E 'test_sunmatrix_sparse_400_400_0_0|test_nvector_mpi_4'
+ctest3 --force-new-ctest-process -VV %{?_smp_mflags} --output-on-failure --debug
 %else
-ctest3 --force-new-ctest-process -VV -j 1 --output-on-failure --debug
-%endif
-%else
-%ifarch %{power64} %{arm} aarch64 s390x
-ctest3 --force-new-ctest-process -j 1 -E 'test_sunmatrix_sparse_400_400_0_0|test_nvector_mpi_4'
-%else
-ctest3 --force-new-ctest-process -j 1
-%endif
+ctest3 --force-new-ctest-process %{?_smp_mflags}
 %endif
 %{_mpich_unload}
 popd
@@ -604,17 +600,9 @@ popd
 pushd sundials-%{version}/build
 export LD_LIBRARY_PATH=%{buildroot}%{_libdir} 
 %if %{with debug}
-%ifarch %{power64} %{arm} aarch64 s390x
-ctest3 --force-new-ctest-process -VV -j 1 --output-on-failure --debug -E 'test_sunmatrix_sparse_400_400_0_0|test_nvector_mpi_4'
+ctest3 --force-new-ctest-process -VV %{?_smp_mflags} --output-on-failure --debug
 %else
-ctest3 --force-new-ctest-process -VV -j 1 --output-on-failure --debug
-%endif
-%else
-%ifarch %{power64} %{arm} aarch64 s390x
-ctest3 --force-new-ctest-process -j 1 -E 'test_sunmatrix_sparse_400_400_0_0|test_nvector_mpi_4'
-%else
-ctest3 --force-new-ctest-process -j 1
-%endif
+ctest3 --force-new-ctest-process %{?_smp_mflags}
 %endif
 popd
 %endif ## if with_sercheck
@@ -671,6 +659,7 @@ popd
 %changelog
 * Thu Feb 14 2019 Orion Poplawski <orion@nwra.com> - 3.2.1-4
 - Rebuild for openmpi 3.1.3
+- Tests of MPI libraries disabled for "not enough slots available" errors
 
 * Sun Feb 03 2019 Fedora Release Engineering <releng@fedoraproject.org> - 3.2.1-3
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_30_Mass_Rebuild
