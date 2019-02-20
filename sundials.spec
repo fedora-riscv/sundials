@@ -55,8 +55,8 @@
 %if 0%{?fedora} && 0%{?fedora} < 30
 %global with_openmpicheck 1
 %global with_mpichcheck 1
-%endif
 %global with_sercheck 1
+%endif
 
 Summary:    Suite of nonlinear solvers
 Name:       sundials
