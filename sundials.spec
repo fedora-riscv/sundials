@@ -19,8 +19,10 @@
 %global with_petsc 1
 ###########
 
+%ifnarch s390x
 %global with_openmpicheck 1
 %global with_mpichcheck 1
+%endif
 %global with_sercheck 1
 
 ## Fortran ##
