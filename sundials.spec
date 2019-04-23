@@ -2,28 +2,11 @@
 %bcond_with debug
 #
 
-%if 0%{?rhel} && 0%{?rhel} < 7
-%{!?__global_ldflags: %global __global_ldflags -Wl,-z,relro}
-%endif
-
 %if 0%{?fedora}
 %global with_mpich 1
 %global with_openmpi 1
 %endif
 
-# No MPICH support on these arches
-%if 0%{?rhel} && 0%{?rhel} < 7
-%ifarch %{power64}
-%global with_openmpi 1
-%global with_mpich 0
-%endif
-%endif
-%if 0%{?rhel} && 0%{?rhel} < 7
-%ifnarch %{power64}
-%global with_openmpi 1
-%global with_mpich 1
-%endif
-%endif
 %if 0%{?rhel} && 0%{?rhel} >= 7
 %global with_openmpi 1
 %global with_mpich 1
@@ -32,36 +15,26 @@
 %global with_hypre 1
 
 ## PETSc ##
-%if 0%{?fedora} && 0%{?fedora} < 29
-## Exclude MPI builds on s390x
-%ifarch s390x
-%global with_petsc 0
-%endif
-%ifnarch s390x
 %global with_petsc 1
-%endif
-%endif
-
-%if 0%{?fedora} && 0%{?fedora} >= 29
 %global with_petsc 1
-%endif
-%if 0%{?rhel} && 0%{?rhel} >= 7
-%global with_petsc 1
-%endif
 ###########
 
-# Disable tests of MPI libraries for
-# "not enough slots available" errors
-%if 0%{?fedora} && 0%{?fedora} < 30
 %global with_openmpicheck 1
 %global with_mpichcheck 1
 %global with_sercheck 1
+
+## Fortran ##
+%if %{?__isa_bits:%{__isa_bits}}%{!?__isa_bits:32} == 64
+%global with_fortran 1
+%else
+%global with_fortran 0
 %endif
+#############
 
 Summary:    Suite of nonlinear solvers
 Name:       sundials
-Version:    3.2.1
-Release:    4%{?dist}
+Version:    4.1.0
+Release:    1%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -74,9 +47,10 @@ Patch0:     %{name}-3.1.1-set_superlumt_name.patch
 # This patch rename superLUMT64 library
 Patch1:     %{name}-3.1.1-set_superlumt64_name.patch
 
+%if 0%{?with_fortran}
 BuildRequires: gcc-gfortran
-# Tests work under python2 only
-BuildRequires: python2-devel
+%endif
+BuildRequires: python%{python3_pkgversion}-devel
 BuildRequires: gcc, gcc-c++
 BuildRequires: suitesparse-devel
 %if 0%{?rhel}
@@ -93,8 +67,9 @@ BuildRequires: SuperLUMT-devel
 %if 0%{?rhel}
 BuildRequires: rsh
 %endif
+%if 0%{?with_fortran}
 Requires: gcc-gfortran%{?_isa}
-Obsoletes: %{name}-samples%{?_isa} < 3.1.1-2
+%endif
 
 %description
 SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
@@ -120,20 +95,16 @@ This package contains the developer files (.so file, header files).
 %package openmpi
 Summary:    Suite of nonlinear solvers
 BuildRequires: openmpi-devel
-%if 0%{?rhel} || 0%{?fedora} > 28
 BuildRequires: hypre-openmpi-devel
-%else
-%ifnarch s390x
-BuildRequires: hypre-openmpi-devel
-%endif
-%endif
 %if 0%{?with_petsc}
-BuildRequires: petsc-openmpi-devel
+BuildRequires: petsc-openmpi-devel >= 3.10
+BuildRequires: scalapack-openmpi-devel
 %endif
 
 Requires: openmpi%{?_isa}
+%if 0%{?with_fortran}
 Requires: gcc-gfortran%{?_isa}
-Obsoletes: %{name}-openmpi-samples%{?_isa} < 3.1.1-2
+%endif
 
 %description openmpi
 SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
@@ -143,6 +114,7 @@ This package contains the Sundials Fortran parallel OpenMPI libraries.
 %package openmpi-devel
 Summary:    Suite of nonlinear solvers
 Requires:   %{name}-openmpi%{?_isa} = %{version}-%{release}
+Requires:   %{name}-devel%{?_isa} = %{version}-%{release}
 %description openmpi-devel
 SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
 for use in writing mathematical software.
@@ -156,19 +128,15 @@ header files.
 %package mpich
 Summary:    Suite of nonlinear solvers
 BuildRequires: mpich-devel
-%if 0%{?rhel} || 0%{?fedora} > 28
 BuildRequires: hypre-mpich-devel
-%else
-%ifnarch s390x
-BuildRequires: hypre-mpich-devel
-%endif
-%endif
 %if 0%{?with_petsc}
-BuildRequires: petsc-mpich-devel
+BuildRequires: petsc-mpich-devel >= 3.10
+BuildRequires: scalapack-mpich-devel
 %endif
 Requires: mpich%{?_isa}
+%if 0%{?with_fortran}
 Requires: gcc-gfortran%{?_isa}
-Obsoletes: %{name}-mpich-samples%{?_isa} < 3.1.1-2
+%endif
 
 %description mpich
 SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
@@ -178,6 +146,7 @@ This package contains the Sundials parallel MPICH libraries.
 %package mpich-devel
 Summary:    Suite of nonlinear solvers
 Requires:   %{name}-mpich%{?_isa} = %{version}-%{release}
+Requires:   %{name}-devel%{?_isa} = %{version}-%{release}
 %description mpich-devel
 SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
 for use in writing mathematical software.
@@ -200,19 +169,17 @@ This package contains the documentation files.
 
 pushd sundials-%{version}
 
-%ifarch s390x x86_64
+%ifarch s390x x86_64 %{power64}
 %patch1 -p0
 %endif
 %ifarch %{arm} %{ix86}
 %patch0 -p0
 %endif
 
-##Set destination library's paths
-sed -i 's| SOVERSION | %{version} |g' src/sunlinsol_*/CMakeLists.txt
-sed -i 's| SOVERSION | %{version} |g' src/sunmat_*/CMakeLists.txt
-
 ##Set serial library's paths
-sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/nvector|g' src/nvec_ser/CMakeLists.txt
+sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/nvector|g' src/nvector/serial/CMakeLists.txt
+sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/nvector|g' src/nvector/openmp/CMakeLists.txt
+sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/nvector|g' src/nvector/pthreads/CMakeLists.txt
 
 mv src/arkode/README src/README-arkode
 mv src/cvode/README src/README-cvode
@@ -236,7 +203,7 @@ mkdir -p build && cd build
 
 export LIBBLASLINK=-lopenblas
 export LIBBLAS=libopenblas
-export INCBLAS=-I%{_includedir}/openblas
+export INCBLAS=%{_includedir}/openblas
 
 %ifarch s390x x86_64
 export LIBSUPERLUMTLINK=-lsuperlumt64_d
@@ -252,9 +219,12 @@ export LIBSUPERLUMTLINK=
 %undefine _hardened_build
 export CFLAGS=""
 %if 0%{?rhel}
-%global cmake cmake3
+%global _cmake cmake3
 %endif
-%cmake \
+%if 0%{?fedora}
+%global _cmake cmake
+%endif
+%_cmake \
  -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
  -DCMAKE_BUILD_TYPE:STRING=Debug \
  -DCMAKE_C_FLAGS_DEBUG:STRING="-O0 -g -Wl,-z,relro -Wl,-z,now -Wl,--as-needed -I$INCBLAS" \
@@ -278,13 +248,18 @@ export CFLAGS=""
  -DBLAS_LIBRARIES:STRING=%{_libdir}/$LIBBLAS.so \
  -DCMAKE_MODULE_LINKER_FLAGS:STRING="%{__global_ldflags}" \
  -DCMAKE_INSTALL_PREFIX:PATH=%{_prefix} -DCMAKE_INSTALL_LIBDIR:PATH=%{_lib} \
- -DPYTHON_EXECUTABLE:FILEPATH=%{__python2} \
- -DEXAMPLES_ENABLE_CXX:BOOL=ON -DEXAMPLES_ENABLE_C:BOOL=ON -DEXAMPLES_ENABLE_F77:BOOL=ON \
+ -DPYTHON_EXECUTABLE:FILEPATH=%{__python3} \
+ -DEXAMPLES_ENABLE_CXX:BOOL=ON -DEXAMPLES_ENABLE_C:BOOL=ON \
  -DCMAKE_SKIP_RPATH:BOOL=YES -DCMAKE_SKIP_INSTALL_RPATH:BOOL=YES \
  -DBUILD_SHARED_LIBS:BOOL=ON -DBUILD_STATIC_LIBS:BOOL=OFF \
  -DMPI_ENABLE:BOOL=OFF \
- -DCMAKE_Fortran_COMPILER:STRING=gfortran \
- -DFCMIX_ENABLE:BOOL=ON \
+%if 0%{?with_fortran}
+ -DF77_INTERFACE_ENABLE:BOOL=ON \
+ -DEXAMPLES_ENABLE_F77:BOOL=ON \
+ -DF2003_INTERFACE_ENABLE:BOOL=ON \
+ -DEXAMPLES_ENABLE_F90:BOOL=ON \
+ -DFortran_INSTALL_MODDIR:PATH=%{_fmoddir}/%{name} \
+%endif
  -DUSE_GENERIC_MATH:BOOL=ON \
  -DOPENMP_ENABLE:BOOL=ON \
  -DPTHREAD_ENABLE:BOOL=ON \
@@ -308,25 +283,19 @@ popd
 %if 0%{?with_openmpi}
 pushd buildopenmpi_dir
 ##Set openmpi library's paths
-sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/openmpi-%{_arch}/nvector|g' src/nvec_par/CMakeLists.txt
-sed -i 's|CMAKE_INSTALL_LIBDIR}|CMAKE_INSTALL_LIBDIR}/openmpi/lib|g' src/nvec_par/CMakeLists.txt
-sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/openmpi-%{_arch}/nvector|g' src/nvec_parhyp/CMakeLists.txt
-sed -i 's|CMAKE_INSTALL_LIBDIR}|CMAKE_INSTALL_LIBDIR}/openmpi/lib|g' src/nvec_parhyp/CMakeLists.txt
+sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/openmpi-%{_arch}/nvector|g' src/nvector/parallel/CMakeLists.txt
+sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/openmpi-%{_arch}/nvector|g' src/nvector/parhyp/CMakeLists.txt
 %if 0%{?with_petsc}
-sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/openmpi-%{_arch}/nvector|g' src/nvec_petsc/CMakeLists.txt
-sed -i 's|CMAKE_INSTALL_LIBDIR}|CMAKE_INSTALL_LIBDIR}/openmpi/lib|g' src/nvec_petsc/CMakeLists.txt
+sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/openmpi-%{_arch}/nvector|g' src/nvector/petsc/CMakeLists.txt
 %endif
 
 mkdir -p build && cd build
 %{_openmpi_load}
-export CC=mpicc
-export CXX=mpicxx
-export FC=mpif77
 
 ## Blas
 export LIBBLASLINK=-lopenblas
 export LIBBLAS=libopenblas
-export INCBLAS=-I%{_includedir}/openblas
+export INCBLAS=%{_includedir}/openblas
 ##
 ## SuperLUMT
 %ifarch s390x x86_64
@@ -348,9 +317,12 @@ export LIBHYPRELINK="-L$MPI_LIB -lHYPRE"
 %undefine _hardened_build
 export CFLAGS=""
 %if 0%{?rhel}
-%global cmake cmake3
+%global _cmake cmake3
 %endif
-%cmake \
+%if 0%{?fedora}
+%global _cmake cmake
+%endif
+%_cmake \
  -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
  -DCMAKE_BUILD_TYPE:STRING=Debug \
  -DCMAKE_C_FLAGS_DEBUG:STRING="-O0 -g -Wl,-z,relro -Wl,-z,now -Wl,--as-needed -I$INCBLAS" \
@@ -377,20 +349,24 @@ export CFLAGS=""
  -DPETSC_INCLUDE_DIR:PATH=$MPI_INCLUDE/petsc \
  -DPETSC_LIBRARY_DIR:PATH=$MPI_LIB \
 %endif
- -DCMAKE_INSTALL_PREFIX:PATH=%{_prefix} -DCMAKE_INSTALL_LIBDIR:PATH=%{_lib} \
- -DPYTHON_EXECUTABLE:FILEPATH=%{__python2} \
- -DEXAMPLES_ENABLE_CXX:BOOL=ON -DEXAMPLES_ENABLE_C:BOOL=ON -DEXAMPLES_ENABLE_F77:BOOL=ON \
+ -DCMAKE_INSTALL_PREFIX:PATH=%{_prefix} -DCMAKE_INSTALL_LIBDIR:PATH=%{_lib}/openmpi/lib \
+ -DPYTHON_EXECUTABLE:FILEPATH=%{__python3} \
+ -DEXAMPLES_ENABLE_CXX:BOOL=ON -DEXAMPLES_ENABLE_C:BOOL=ON \
  -DBUILD_SHARED_LIBS:BOOL=ON -DBUILD_STATIC_LIBS:BOOL=OFF \
  -DCMAKE_SKIP_RPATH:BOOL=YES -DCMAKE_SKIP_INSTALL_RPATH:BOOL=YES \
  -DMPI_ENABLE:BOOL=ON \
- -DMPI_C_COMPILER:STRING=$MPI_BIN/mpicc \
- -DMPIEXEC_EXECUTABLE=$MPI_BIN/mpirun \
+%if 0%{?with_fortran}
 %if 0%{?fedora}
  -DMPI_Fortran_COMPILER:STRING=$MPI_BIN/mpifort \
 %else
  -DMPI_Fortran_COMPILER:STRING=$MPI_BIN/mpif77 \
 %endif
- -DFCMIX_ENABLE:BOOL=ON \
+ -DF77_INTERFACE_ENABLE:BOOL=ON \
+ -DEXAMPLES_ENABLE_F77:BOOL=ON \
+ -DF2003_INTERFACE_ENABLE:BOOL=ON \
+ -DEXAMPLES_ENABLE_F90:BOOL=ON \
+ -DFortran_INSTALL_MODDIR:PATH=$MPI_FORTRAN_MOD_DIR/%{name} \
+%endif
  -DUSE_GENERIC_MATH:BOOL=ON \
  -DOPENMP_ENABLE:BOOL=ON \
  -DPTHREAD_ENABLE:BOOL=ON \
@@ -419,33 +395,19 @@ popd
 %if 0%{?with_mpich}
 pushd buildmpich_dir
 ##Set mpich library's paths
-sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/mpich-%{_arch}/nvector|g' src/nvec_par/CMakeLists.txt
-sed -i 's|CMAKE_INSTALL_LIBDIR}|CMAKE_INSTALL_LIBDIR}/mpich/lib|g' src/nvec_par/CMakeLists.txt
-sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/mpich-%{_arch}/nvector|g' src/nvec_parhyp/CMakeLists.txt
-sed -i 's|CMAKE_INSTALL_LIBDIR}|CMAKE_INSTALL_LIBDIR}/mpich/lib|g' src/nvec_parhyp/CMakeLists.txt
+sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/mpich-%{_arch}/nvector|g' src/nvector/parallel/CMakeLists.txt
+sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/mpich-%{_arch}/nvector|g' src/nvector/parhyp/CMakeLists.txt
 %if 0%{?with_petsc}
-sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/mpich-%{_arch}/nvector|g' src/nvec_petsc/CMakeLists.txt
-sed -i 's|CMAKE_INSTALL_LIBDIR}|CMAKE_INSTALL_LIBDIR}/mpich/lib|g' src/nvec_petsc/CMakeLists.txt
+sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/mpich-%{_arch}/nvector|g' src/nvector/petsc/CMakeLists.txt
 %endif
 
 mkdir -p build && cd build
 %{_mpich_load}
-%if 0%{?rhel}
-export CC=mpicc
-export CXX=mpicxx
-export F77=mpif77
-export FC=mpif90
-%endif
-%if 0%{?fedora}
-export CC=mpicc
-export CXX=mpicxx
-export F77=mpifort
-export FC=mpifort
-%endif
+
 ## Blas
 export LIBBLASLINK=-lopenblas
 export LIBBLAS=libopenblas
-export INCBLAS=-I%{_includedir}/openblas
+export INCBLAS=%{_includedir}/openblas
 ##
 ## SuperLUMT
 %ifarch s390x x86_64
@@ -467,9 +429,12 @@ export LIBHYPRELINK="-L$MPI_LIB -lHYPRE"
 %undefine _hardened_build
 export CFLAGS=""
 %if 0%{?rhel}
-%global cmake cmake3
+%global _cmake cmake3
 %endif
-%cmake \
+%if 0%{?fedora}
+%global _cmake cmake
+%endif
+%_cmake \
  -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
  -DCMAKE_BUILD_TYPE:STRING=Debug \
  -DCMAKE_C_FLAGS_DEBUG:STRING="-O0 -g -Wl,-z,relro -Wl,-z,now -Wl,--as-needed -I$INCBLAS" \
@@ -496,20 +461,24 @@ export CFLAGS=""
  -DPETSC_INCLUDE_DIR:PATH=$MPI_INCLUDE/petsc \
  -DPETSC_LIBRARY_DIR:PATH=$MPI_LIB \
 %endif
- -DCMAKE_INSTALL_PREFIX:PATH=%{_prefix} -DCMAKE_INSTALL_LIBDIR:PATH=%{_lib} \
- -DPYTHON_EXECUTABLE:FILEPATH=%{__python2} \
- -DEXAMPLES_ENABLE_CXX:BOOL=ON -DEXAMPLES_ENABLE_C:BOOL=ON -DEXAMPLES_ENABLE_F77:BOOL=ON \
+ -DCMAKE_INSTALL_PREFIX:PATH=%{_prefix} -DCMAKE_INSTALL_LIBDIR:PATH=%{_lib}/mpich/lib \
+ -DPYTHON_EXECUTABLE:FILEPATH=%{__python3} \
+ -DEXAMPLES_ENABLE_CXX:BOOL=ON -DEXAMPLES_ENABLE_C:BOOL=ON \
  -DBUILD_SHARED_LIBS:BOOL=ON -DBUILD_STATIC_LIBS:BOOL=OFF \
  -DCMAKE_SKIP_RPATH:BOOL=YES -DCMAKE_SKIP_INSTALL_RPATH:BOOL=YES \
  -DMPI_ENABLE:BOOL=ON \
- -DMPI_C_COMPILER:STRING=$MPI_BIN/mpicc \
- -DMPIEXEC_EXECUTABLE=$MPI_BIN/mpirun \
+%if 0%{?with_fortran}
 %if 0%{?fedora}
  -DMPI_Fortran_COMPILER:STRING=$MPI_BIN/mpifort \
 %else
  -DMPI_Fortran_COMPILER:STRING=$MPI_BIN/mpif77 \
 %endif
- -DFCMIX_ENABLE:BOOL=ON \
+ -DF77_INTERFACE_ENABLE:BOOL=ON \
+ -DEXAMPLES_ENABLE_F77:BOOL=ON \
+ -DF2003_INTERFACE_ENABLE:BOOL=ON \
+ -DEXAMPLES_ENABLE_F90:BOOL=ON \
+ -DFortran_INSTALL_MODDIR:PATH=$MPI_FORTRAN_MOD_DIR/%{name} \
+%endif
  -DUSE_GENERIC_MATH:BOOL=ON \
  -DOPENMP_ENABLE:BOOL=ON \
  -DPTHREAD_ENABLE:BOOL=ON \
@@ -539,29 +508,23 @@ popd
 %if 0%{?with_openmpi}
 %{_openmpi_load}
 %make_install -C buildopenmpi_dir/build
-
-# Remove static libraries
-rm -f %{buildroot}$MPI_LIB/*.a
 %{_openmpi_unload}
 %endif
 
 %if 0%{?with_mpich}
 %{_mpich_load}
 %make_install -C buildmpich_dir/build
-
-# Remove static libraries
-rm -f %{buildroot}$MPI_LIB/*.a
 %{_mpich_unload}
 %endif
 
 %make_install -C sundials-%{version}/build
 
-# Remove static libraries
-rm -f %{buildroot}%{_libdir}/*.a
-
 # Remove files in bad position
 rm -f %{buildroot}%{_prefix}/LICENSE
 rm -f %{buildroot}%{_includedir}/sundials/LICENSE
+
+# Remove static files
+find %{buildroot} -name '*.a' -exec rm -f {} ';'
 
 %ldconfig_scriptlets
 
@@ -570,10 +533,11 @@ rm -f %{buildroot}%{_includedir}/sundials/LICENSE
 %if 0%{?with_openmpicheck}
 pushd buildopenmpi_dir/build
 %{_openmpi_load}
-export LD_LIBRARY_PATH=%{buildroot}$MPI_LIB:%{buildroot}%{_libdir}
 %if %{with debug}
+export LD_LIBRARY_PATH=%{buildroot}$MPI_LIB:$MPI_LIB
 ctest3 --force-new-ctest-process -VV %{?_smp_mflags} --output-on-failure --debug
 %else
+export LD_LIBRARY_PATH=%{buildroot}$MPI_LIB:$MPI_LIB
 ctest3 --force-new-ctest-process %{?_smp_mflags}
 %endif
 %{_openmpi_unload}
@@ -585,10 +549,11 @@ popd
 %if 0%{?with_mpichcheck}
 pushd buildmpich_dir/build
 %{_mpich_load}
-export LD_LIBRARY_PATH=%{buildroot}$MPI_LIB:%{buildroot}%{_libdir}
 %if %{with debug}
+export LD_LIBRARY_PATH=%{buildroot}$MPI_LIB:$MPI_LIB
 ctest3 --force-new-ctest-process -VV %{?_smp_mflags} --output-on-failure --debug
 %else
+export LD_LIBRARY_PATH=%{buildroot}$MPI_LIB:$MPI_LIB
 ctest3 --force-new-ctest-process %{?_smp_mflags}
 %endif
 %{_mpich_unload}
@@ -598,10 +563,11 @@ popd
 
 %if 0%{?with_sercheck}
 pushd sundials-%{version}/build
-export LD_LIBRARY_PATH=%{buildroot}%{_libdir} 
 %if %{with debug}
+export LD_LIBRARY_PATH=%{buildroot}%{_libdir}:%{_libdir}
 ctest3 --force-new-ctest-process -VV %{?_smp_mflags} --output-on-failure --debug
 %else
+export LD_LIBRARY_PATH=%{buildroot}%{_libdir}:%{_libdir}
 ctest3 --force-new-ctest-process %{?_smp_mflags}
 %endif
 popd
@@ -624,6 +590,10 @@ popd
 %{_includedir}/nvector/
 %{_includedir}/sunlinsol/
 %{_includedir}/sunmatrix/
+%{_includedir}/sunnonlinsol/
+%if 0%{?with_fortran}
+%{_fmoddir}/%{name}/
+%endif
 
 %if 0%{?with_openmpi}
 %files openmpi
@@ -633,6 +603,9 @@ popd
 
 %files openmpi-devel
 %{_includedir}/openmpi-%{_arch}/nvector/
+%if 0%{?with_fortran}
+%{_fmoddir}/openmpi%{?el7:-%_arch}/%{name}/
+%endif
 %{_libdir}/openmpi/lib/libsundials*.so
 %endif
 
@@ -644,6 +617,9 @@ popd
 
 %files mpich-devel
 %{_includedir}/mpich-%{_arch}/nvector/
+%if 0%{?with_fortran}
+%{_fmoddir}/mpich%{?el7:-%_arch}/%{name}/
+%endif
 %{_libdir}/mpich/lib/libsundials*.so
 %endif
 
@@ -657,6 +633,12 @@ popd
 %doc sundials-%{version}/doc/arkode/*
 
 %changelog
+* Sun Apr 21 2019 Antonio Trande <sagitterATfedoraproject.org> - 4.1.0-1
+- Release 4.1.0
+- Re-enable OpenMPI tests (rhbz#1639646)
+- Use Python3
+- Compile Fortran libraries
+
 * Thu Feb 14 2019 Orion Poplawski <orion@nwra.com> - 3.2.1-4
 - Rebuild for openmpi 3.1.3
 - Disable tests of MPI libraries for "not enough slots available" errors
