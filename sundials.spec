@@ -51,6 +51,10 @@ Patch0:     %{name}-3.1.1-set_superlumt_name.patch
 # This patch rename superLUMT64 library
 Patch1:     %{name}-3.1.1-set_superlumt64_name.patch
 
+# PETSc libraries unrecognized for unknown reasons
+# This patch disables the PETSc tests of CMake
+Patch2:     %{name}-disable_petsc_tests.patch
+
 %if 0%{?with_fortran}
 BuildRequires: gcc-gfortran
 %endif
@@ -103,6 +107,7 @@ BuildRequires: hypre-openmpi-devel
 %if 0%{?with_petsc}
 BuildRequires: petsc-openmpi-devel >= 3.10
 BuildRequires: scalapack-openmpi-devel
+BuildRequires: hdf5-openmpi-devel
 %endif
 
 Requires: openmpi%{?_isa}
@@ -136,6 +141,7 @@ BuildRequires: hypre-mpich-devel
 %if 0%{?with_petsc}
 BuildRequires: petsc-mpich-devel >= 3.10
 BuildRequires: scalapack-mpich-devel
+BuildRequires: hdf5-mpich-devel
 %endif
 Requires: mpich%{?_isa}
 %if 0%{?with_fortran}
@@ -179,6 +185,8 @@ pushd sundials-%{version}
 %ifarch %{arm} %{ix86}
 %patch0 -p0
 %endif
+
+%patch2 -p1 -b .disable_petsc_tests
 
 ##Set serial library's paths
 sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/nvector|g' src/nvector/serial/CMakeLists.txt
@@ -655,8 +663,7 @@ popd
 %{_libdir}/libsundials_fsunlinsol*.so
 %{_libdir}/libsundials_fsunnonlinsol*.so
 %endif
-%dir %{_includedir}/sundials
-%{_includedir}/sundials/sundials_config.h
+%{_includedir}/sundials/
 %{_includedir}/nvector/
 %{_includedir}/sunmatrix/
 %{_includedir}/sunlinsol/
@@ -807,6 +814,7 @@ popd
 %changelog
 * Wed Jun 26 2019 Antonio Trande <sagitterATfedoraproject.org> - 4.1.0-3
 - Do not use curly brackets under %%files
+- PETSc needs HDF5
 
 * Thu Apr 25 2019 Antonio Trande <sagitterATfedoraproject.org> - 4.1.0-2
 - Reorganization of the files
