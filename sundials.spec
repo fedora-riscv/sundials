@@ -38,7 +38,7 @@
 Summary:    Suite of nonlinear solvers
 Name:       sundials
 Version:    4.1.0
-Release:    2%{?dist}
+Release:    3%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -568,8 +568,10 @@ ctest3 --force-new-ctest-process %{?_smp_mflags}
 %endif
 %{_openmpi_unload}
 popd
-%endif ## if with_openmpicheck
-%endif ## if with_openmpi
+%endif
+## if with_openmpicheck
+%endif
+## if with_openmpi
 
 %if 0%{?with_mpich}
 %if 0%{?with_mpichcheck}
@@ -584,8 +586,10 @@ ctest3 --force-new-ctest-process %{?_smp_mflags}
 %endif
 %{_mpich_unload}
 popd
-%endif ## if with_mpichcheck
-%endif ## if with_mpich
+%endif
+## if with_mpichcheck
+%endif
+## if with_mpich
 
 %if 0%{?with_sercheck}
 pushd sundials-%{version}/build
@@ -597,7 +601,8 @@ export LD_LIBRARY_PATH=%{buildroot}%{_libdir}:%{_libdir}
 ctest3 --force-new-ctest-process %{?_smp_mflags}
 %endif
 popd
-%endif ## if with_sercheck
+%endif
+## if with_sercheck
 
 %files
 %license sundials-%{version}/LICENSE
@@ -639,6 +644,7 @@ popd
 %{_libdir}/libsundials_sunlinsol*.so
 %{_libdir}/libsundials_sunnonlinsol*.so
 %if 0%{?with_fortran}
+%{_includedir}/sundials/sundials_fconfig.h
 %{_fmoddir}/%{name}/
 %{_libdir}/libsundials_fcvode_mod.so
 %{_libdir}/libsundials_fnvecserial.so
@@ -649,7 +655,18 @@ popd
 %{_libdir}/libsundials_fsunlinsol*.so
 %{_libdir}/libsundials_fsunnonlinsol*.so
 %endif
-%{_includedir}/{sundials,nvector,sunmatrix,sunlinsol,sunnonlinsol,arkode,cvode,cvodes,ida,idas,kinsol}
+%dir %{_includedir}/sundials
+%{_includedir}/sundials/sundials_config.h
+%{_includedir}/nvector/
+%{_includedir}/sunmatrix/
+%{_includedir}/sunlinsol/
+%{_includedir}/sunnonlinsol/
+%{_includedir}/arkode/
+%{_includedir}/cvode/
+%{_includedir}/cvodes/
+%{_includedir}/ida/
+%{_includedir}/idas/
+%{_includedir}/kinsol/
 
 %if 0%{?with_openmpi}
 %files openmpi
@@ -788,6 +805,9 @@ popd
 %doc sundials-%{version}/doc/arkode/*
 
 %changelog
+* Wed Jun 26 2019 Antonio Trande <sagitterATfedoraproject.org> - 4.1.0-3
+- Do not use curly brackets under %%files
+
 * Thu Apr 25 2019 Antonio Trande <sagitterATfedoraproject.org> - 4.1.0-2
 - Reorganization of the files
 
