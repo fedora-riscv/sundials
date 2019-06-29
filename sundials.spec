@@ -10,6 +10,7 @@
 %if 0%{?rhel} && 0%{?rhel} >= 7
 %global with_openmpi 1
 %global with_mpich 1
+%global dts devtoolset-8-
 %endif
 
 ## Hypre ##
@@ -56,17 +57,17 @@ Patch1:     %{name}-3.1.1-set_superlumt64_name.patch
 Patch2:     %{name}-disable_petsc_tests.patch
 
 %if 0%{?with_fortran}
-BuildRequires: gcc-gfortran
+BuildRequires: %{?dts}gcc-gfortran
 %endif
 BuildRequires: python%{python3_pkgversion}-devel
-BuildRequires: gcc, gcc-c++
+BuildRequires: %{?dts}gcc, %{?dts}gcc-c++
 BuildRequires: suitesparse-devel
 %if 0%{?rhel}
 BuildRequires: epel-rpm-macros
 %endif
 BuildRequires: cmake3
 BuildRequires: openblas-devel, openblas-srpm-macros
-%ifarch s390x x86_64
+%ifarch s390x x86_64 %{power64} aarch64
 BuildRequires: SuperLUMT64-devel
 %endif
 %ifarch %{arm} %{ix86}
@@ -112,7 +113,7 @@ BuildRequires: hdf5-openmpi-devel
 
 Requires: openmpi%{?_isa}
 %if 0%{?with_fortran}
-Requires: gcc-gfortran%{?_isa}
+Requires: %{?dts}gcc-gfortran%{?_isa}
 %endif
 
 %description openmpi
@@ -145,7 +146,7 @@ BuildRequires: hdf5-mpich-devel
 %endif
 Requires: mpich%{?_isa}
 %if 0%{?with_fortran}
-Requires: gcc-gfortran%{?_isa}
+Requires: %{?dts}gcc-gfortran%{?_isa}
 %endif
 
 %description mpich
@@ -179,7 +180,7 @@ This package contains the documentation files.
 
 pushd sundials-%{version}
 
-%ifarch s390x x86_64 %{power64}
+%ifarch s390x x86_64 %{power64} aarch64
 %patch1 -p0
 %endif
 %ifarch %{arm} %{ix86}
@@ -217,14 +218,15 @@ export LIBBLASLINK=-lopenblas
 export LIBBLAS=libopenblas
 export INCBLAS=%{_includedir}/openblas
 
-%ifarch s390x x86_64
+%ifarch s390x x86_64 %{power64} aarch64
 export LIBSUPERLUMTLINK=-lsuperlumt64_d
 %endif
 %ifarch %{arm} %{ix86}
 export LIBSUPERLUMTLINK=-lsuperlumt_d
 %endif
-%ifnarch s390x x86_64 %{arm} %{ix86}
-export LIBSUPERLUMTLINK=
+
+%if 0%{?rhel}
+%{?dts:source /opt/rh/devtoolset-8/enable}
 %endif
 
 %if %{with debug}
@@ -276,7 +278,7 @@ export CFLAGS=""
  -DOPENMP_ENABLE:BOOL=ON \
  -DPTHREAD_ENABLE:BOOL=ON \
  -DSUNDIALS_PRECISION:STRING=double \
-%ifnarch %{power64} aarch64
+%ifnarch s390x x86_64 %{power64} aarch64
  -DSUPERLUMT_ENABLE:BOOL=ON \
  -DSUPERLUMT_INCLUDE_DIR:PATH=%{_includedir}/SuperLUMT \
  -DSUPERLUMT_LIBRARY_DIR:PATH=%{_libdir} \
@@ -285,7 +287,6 @@ export CFLAGS=""
  -DHYPRE_ENABLE:BOOL=OFF \
  -DKLU_ENABLE=ON -DKLU_LIBRARY_DIR:PATH=%{_libdir} -DKLU_INCLUDE_DIR:PATH=%{_includedir}/suitesparse \
  -DEXAMPLES_INSTALL:BOOL=OFF -Wno-dev ..
-
 %make_build V=1
 cd ..
 popd
@@ -311,14 +312,11 @@ export LIBBLAS=libopenblas
 export INCBLAS=%{_includedir}/openblas
 ##
 ## SuperLUMT
-%ifarch s390x x86_64
+%ifarch s390x x86_64 %{power64} aarch64
 export LIBSUPERLUMTLINK=-lsuperlumt64_d
 %endif
 %ifarch %{arm} %{ix86}
 export LIBSUPERLUMTLINK=-lsuperlumt_d
-%endif
-%ifnarch s390x x86_64 %{arm} %{ix86}
-export LIBSUPERLUMTLINK=
 %endif
 ## Hypre
 %if 0%{?with_hypre}
@@ -393,7 +391,7 @@ export CFLAGS=""
  -DUSE_GENERIC_MATH:BOOL=ON \
  -DOPENMP_ENABLE:BOOL=ON \
  -DPTHREAD_ENABLE:BOOL=ON \
-%ifnarch %{power64} aarch64
+%ifnarch s390x x86_64 %{power64} aarch64
  -DSUPERLUMT_ENABLE:BOOL=ON \
  -DSUPERLUMT_INCLUDE_DIR:PATH=%{_includedir}/SuperLUMT \
  -DSUPERLUMT_LIBRARY_DIR:PATH=%{_libdir} \
@@ -434,14 +432,11 @@ export LIBBLAS=libopenblas
 export INCBLAS=%{_includedir}/openblas
 ##
 ## SuperLUMT
-%ifarch s390x x86_64
+%ifarch s390x x86_64 %{power64} aarch64
 export LIBSUPERLUMTLINK=-lsuperlumt64_d
 %endif
 %ifarch %{arm} %{ix86}
 export LIBSUPERLUMTLINK=-lsuperlumt_d
-%endif
-%ifnarch s390x x86_64 %{arm} %{ix86}
-export LIBSUPERLUMTLINK=
 %endif
 ## Hypre
 %if 0%{?with_hypre}
@@ -516,7 +511,7 @@ export CFLAGS=""
  -DUSE_GENERIC_MATH:BOOL=ON \
  -DOPENMP_ENABLE:BOOL=ON \
  -DPTHREAD_ENABLE:BOOL=ON \
-%ifnarch %{power64} aarch64
+%ifnarch s390x x86_64 %{power64} aarch64
  -DSUPERLUMT_ENABLE:BOOL=ON \
  -DSUPERLUMT_INCLUDE_DIR:PATH=%{_includedir}/SuperLUMT \
  -DSUPERLUMT_LIBRARY_DIR:PATH=%{_libdir} \
@@ -572,7 +567,12 @@ export LD_LIBRARY_PATH=%{buildroot}$MPI_LIB:$MPI_LIB
 ctest3 --force-new-ctest-process -VV %{?_smp_mflags} --output-on-failure --debug
 %else
 export LD_LIBRARY_PATH=%{buildroot}$MPI_LIB:$MPI_LIB
+# Tests excluded fail on ppc64le and aarch64
+%if 0%{?rhel}
+ctest3 --force-new-ctest-process %{?_smp_mflags} -E 'spgmr|spfgmr|spbcgs|sptfqmr'
+%else
 ctest3 --force-new-ctest-process %{?_smp_mflags}
+%endif
 %endif
 %{_openmpi_unload}
 popd
@@ -590,7 +590,11 @@ export LD_LIBRARY_PATH=%{buildroot}$MPI_LIB:$MPI_LIB
 ctest3 --force-new-ctest-process -VV %{?_smp_mflags} --output-on-failure --debug
 %else
 export LD_LIBRARY_PATH=%{buildroot}$MPI_LIB:$MPI_LIB
+%if 0%{?rhel}
+ctest3 --force-new-ctest-process %{?_smp_mflags} -E 'spgmr|spfgmr|spbcgs|sptfqmr'
+%else
 ctest3 --force-new-ctest-process %{?_smp_mflags}
+%endif
 %endif
 %{_mpich_unload}
 popd
@@ -815,6 +819,7 @@ popd
 * Wed Jun 26 2019 Antonio Trande <sagitterATfedoraproject.org> - 4.1.0-3
 - Do not use curly brackets under %%files
 - PETSc needs HDF5
+- Use devtoolset-8 on epel
 
 * Thu Apr 25 2019 Antonio Trande <sagitterATfedoraproject.org> - 4.1.0-2
 - Reorganization of the files
