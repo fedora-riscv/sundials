@@ -39,7 +39,7 @@
 Summary:    Suite of nonlinear solvers
 Name:       sundials
 Version:    4.1.0
-Release:    3%{?dist}
+Release:    4%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -113,7 +113,7 @@ BuildRequires: hdf5-openmpi-devel
 
 Requires: openmpi%{?_isa}
 %if 0%{?with_fortran}
-Requires: %{?dts}gcc-gfortran%{?_isa}
+Requires: gcc-gfortran%{?_isa}
 %endif
 
 %description openmpi
@@ -146,7 +146,7 @@ BuildRequires: hdf5-mpich-devel
 %endif
 Requires: mpich%{?_isa}
 %if 0%{?with_fortran}
-Requires: %{?dts}gcc-gfortran%{?_isa}
+Requires: gcc-gfortran%{?_isa}
 %endif
 
 %description mpich
@@ -816,6 +816,9 @@ popd
 %doc sundials-%{version}/doc/arkode/*
 
 %changelog
+* Sun Jun 30 2019 Antonio Trande <sagitterATfedoraproject.org> - 4.1.0-4
+- Do not use devtoolset as runtime dependence
+
 * Wed Jun 26 2019 Antonio Trande <sagitterATfedoraproject.org> - 4.1.0-3
 - Do not use curly brackets under %%files
 - PETSc needs HDF5
