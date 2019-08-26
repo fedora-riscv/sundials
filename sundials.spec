@@ -39,7 +39,7 @@
 Summary:    Suite of nonlinear solvers
 Name:       sundials
 Version:    4.1.0
-Release:    4%{?dist}
+Release:    5%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -816,6 +816,9 @@ popd
 %doc sundials-%{version}/doc/arkode/*
 
 %changelog
+* Sat Jul 27 2019 Fedora Release Engineering <releng@fedoraproject.org> - 4.1.0-5
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_31_Mass_Rebuild
+
 * Sun Jun 30 2019 Antonio Trande <sagitterATfedoraproject.org> - 4.1.0-4
 - Do not use devtoolset as runtime dependence
 
