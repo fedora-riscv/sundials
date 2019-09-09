@@ -10,6 +10,9 @@
 %if 0%{?rhel} && 0%{?rhel} >= 7
 %global with_openmpi 1
 %global with_mpich 1
+%endif
+
+%if 0%{?rhel} == 7
 %global dts devtoolset-8-
 %endif
 
@@ -72,9 +75,6 @@ BuildRequires: SuperLUMT64-devel
 %endif
 %ifarch %{arm} %{ix86}
 BuildRequires: SuperLUMT-devel
-%endif
-%if 0%{?rhel}
-BuildRequires: rsh
 %endif
 %if 0%{?with_fortran}
 Requires: gcc-gfortran%{?_isa}
@@ -225,7 +225,7 @@ export LIBSUPERLUMTLINK=-lsuperlumt64_d
 export LIBSUPERLUMTLINK=-lsuperlumt_d
 %endif
 
-%if 0%{?rhel}
+%if 0%{?rhel} == 7
 %{?dts:source /opt/rh/devtoolset-8/enable}
 %endif
 
