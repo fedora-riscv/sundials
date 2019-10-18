@@ -42,7 +42,7 @@
 Summary:    Suite of nonlinear solvers
 Name:       sundials
 Version:    4.1.0
-Release:    5%{?dist}
+Release:    6%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -816,21 +816,24 @@ popd
 %doc sundials-%{version}/doc/arkode/*
 
 %changelog
+* Fri Oct 18 2019 Antonio Trande <sagitter@fedoraproject.org> - 4.1.0-6
+- Rebuild for petsc-3.12.0
+
 * Sat Jul 27 2019 Fedora Release Engineering <releng@fedoraproject.org> - 4.1.0-5
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_31_Mass_Rebuild
 
-* Sun Jun 30 2019 Antonio Trande <sagitterATfedoraproject.org> - 4.1.0-4
+* Sun Jun 30 2019 Antonio Trande <sagitter@fedoraproject.org> - 4.1.0-4
 - Do not use devtoolset as runtime dependence
 
-* Wed Jun 26 2019 Antonio Trande <sagitterATfedoraproject.org> - 4.1.0-3
+* Wed Jun 26 2019 Antonio Trande <sagitter@fedoraproject.org> - 4.1.0-3
 - Do not use curly brackets under %%files
 - PETSc needs HDF5
 - Use devtoolset-8 on epel
 
-* Thu Apr 25 2019 Antonio Trande <sagitterATfedoraproject.org> - 4.1.0-2
+* Thu Apr 25 2019 Antonio Trande <sagitter@fedoraproject.org> - 4.1.0-2
 - Reorganization of the files
 
-* Sun Apr 21 2019 Antonio Trande <sagitterATfedoraproject.org> - 4.1.0-1
+* Sun Apr 21 2019 Antonio Trande <sagitter@fedoraproject.org> - 4.1.0-1
 - Release 4.1.0
 - Re-enable OpenMPI tests (rhbz#1639646)
 - Use Python3
@@ -843,58 +846,58 @@ popd
 * Sun Feb 03 2019 Fedora Release Engineering <releng@fedoraproject.org> - 3.2.1-3
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_30_Mass_Rebuild
 
-* Sun Dec 02 2018 Antonio Trande <sagitterATfedoraproject.org> - 3.2.1-2
+* Sun Dec 02 2018 Antonio Trande <sagitter@fedoraproject.org> - 3.2.1-2
 - PETSc support is now re-enabled (rhbz#1639646)
 
-* Sat Oct 20 2018 Antonio Trande <sagitterATfedoraproject.org> - 3.2.1-1
+* Sat Oct 20 2018 Antonio Trande <sagitter@fedoraproject.org> - 3.2.1-1
 - Update to 3.2.1
 - Disable PETSc support (rhbz#1639646)
 - Disable OpenMPI tests (rhbz#1639646)
 
-* Sat Oct 13 2018 Antonio Trande <sagitterATfedoraproject.org> - 3.2.0-1
+* Sat Oct 13 2018 Antonio Trande <sagitter@fedoraproject.org> - 3.2.0-1
 - Update to 3.2.0
 
-* Wed Sep 05 2018 Antonio Trande <sagitterATfedoraproject.org> - 3.1.2-2
+* Wed Sep 05 2018 Antonio Trande <sagitter@fedoraproject.org> - 3.1.2-2
 - Forced to use python2 (tests work under python2 only)
 
-* Wed Aug 01 2018 Antonio Trande <sagitterATfedoraproject.org> - 3.1.2-1
+* Wed Aug 01 2018 Antonio Trande <sagitter@fedoraproject.org> - 3.1.2-1
 - Update to 3.1.2
 - Enable PETSC support
 
 * Sat Jul 14 2018 Fedora Release Engineering <releng@fedoraproject.org> - 3.1.1-3
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_29_Mass_Rebuild
 
-* Wed Jun 06 2018 Antonio Trande <sagitterATfedoraproject.org> - 3.1.1-2
+* Wed Jun 06 2018 Antonio Trande <sagitter@fedoraproject.org> - 3.1.1-2
 - Do not pack examples
 - Use SuperLUMT64 on 64bit systems
 
-* Sun May 13 2018 Antonio Trande <sagitterATfedoraproject.org> - 3.1.1-1
+* Sun May 13 2018 Antonio Trande <sagitter@fedoraproject.org> - 3.1.1-1
 - Update to 3.1.1
 
-* Fri May 04 2018 Antonio Trande <sagitterATfedoraproject.org> - 3.1.0-5
+* Fri May 04 2018 Antonio Trande <sagitter@fedoraproject.org> - 3.1.0-5
 - Rebuild for hypre-2.14.0
 
 * Fri Feb 09 2018 Fedora Release Engineering <releng@fedoraproject.org> - 3.1.0-4
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_28_Mass_Rebuild
 
-* Fri Feb 02 2018 Antonio Trande <sagitterATfedoraproject.org> - 3.1.0-3
+* Fri Feb 02 2018 Antonio Trande <sagitter@fedoraproject.org> - 3.1.0-3
 - Use %%ldconfig_scriptlets
 
-* Wed Jan 31 2018 Antonio Trande <sagitterATfedoraproject.org> - 3.1.0-2
+* Wed Jan 31 2018 Antonio Trande <sagitter@fedoraproject.org> - 3.1.0-2
 - Rebuild for GCC-8
 
-* Fri Dec 22 2017 Antonio Trande <sagitterATfedoraproject.org> - 3.1.0-1
+* Fri Dec 22 2017 Antonio Trande <sagitter@fedoraproject.org> - 3.1.0-1
 - Update to 3.1.0
 
-* Wed Nov 15 2017 Antonio Trande <sagitterATfedoraproject.org> - 3.0.0-3
+* Wed Nov 15 2017 Antonio Trande <sagitter@fedoraproject.org> - 3.0.0-3
 - Use -Wl,--as-needed flag
 - Fix shared-linker flags
 
-* Thu Nov 09 2017 Antonio Trande <sagitterATfedoraproject.org> - 3.0.0-2
+* Thu Nov 09 2017 Antonio Trande <sagitter@fedoraproject.org> - 3.0.0-2
 - Remove sub-packages
 - Uninstall static libraries
 
-* Mon Oct 30 2017 Antonio Trande <sagitterATfedoraproject.org> - 3.0.0-1
+* Mon Oct 30 2017 Antonio Trande <sagitter@fedoraproject.org> - 3.0.0-1
 - Update to 3.0.0
 - Use cmake3 on epel
 - Install examples
@@ -902,41 +905,41 @@ popd
 * Thu Jul 27 2017 Fedora Release Engineering <releng@fedoraproject.org> - 2.7.0-11
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_27_Mass_Rebuild
 
-* Fri Mar 03 2017 Antonio Trande <sagitterATfedoraproject.org> - 2.7.0-10
+* Fri Mar 03 2017 Antonio Trande <sagitter@fedoraproject.org> - 2.7.0-10
 - Build OpenMPI libraries on EPEL
 
-* Fri Mar 03 2017 Antonio Trande <sagitterATfedoraproject.org> - 2.7.0-9
+* Fri Mar 03 2017 Antonio Trande <sagitter@fedoraproject.org> - 2.7.0-9
 - Add KLU support
 
 * Sat Feb 11 2017 Fedora Release Engineering <releng@fedoraproject.org> - 2.7.0-8
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_26_Mass_Rebuild
 
-* Tue Nov 01 2016 Antonio Trande <sagitterATfedoraproject.org> - 2.7.0-7
+* Tue Nov 01 2016 Antonio Trande <sagitter@fedoraproject.org> - 2.7.0-7
 - New architectures
 
-* Mon Oct 24 2016 Antonio Trande <sagitterATfedoraproject.org> - 2.7.0-6
+* Mon Oct 24 2016 Antonio Trande <sagitter@fedoraproject.org> - 2.7.0-6
 - Fix builds of MPICH libraries
 
 * Fri Oct 21 2016 Orion Poplawski <orion@cora.nwra.com> - 2.7.0-5
 - Rebuild for openmpi 2.0
 
-* Mon Oct 17 2016 Antonio Trande <sagitterATfedoraproject.org> - 2.7.0-4
+* Mon Oct 17 2016 Antonio Trande <sagitter@fedoraproject.org> - 2.7.0-4
 - Set debug builds
 
-* Thu Oct 06 2016 Antonio Trande <sagitterATfedoraproject.org> - 2.7.0-3
+* Thu Oct 06 2016 Antonio Trande <sagitter@fedoraproject.org> - 2.7.0-3
 - SuperLUMT support condizionalized
 - Removed pkgconfig files
 
-* Tue Oct 04 2016 Antonio Trande <sagitterATfedoraproject.org> - 2.7.0-2
+* Tue Oct 04 2016 Antonio Trande <sagitter@fedoraproject.org> - 2.7.0-2
 - Enabled SuperLUMT and HYPRE support
 
-* Thu Sep 29 2016 Antonio Trande <sagitterATfedoraproject.org> - 2.7.0-1
+* Thu Sep 29 2016 Antonio Trande <sagitter@fedoraproject.org> - 2.7.0-1
 - Update to 2.7.0
 
-* Sun Mar 27 2016 Antonio Trande <sagitterATfedoraproject.org> - 2.6.2-19
+* Sun Mar 27 2016 Antonio Trande <sagitter@fedoraproject.org> - 2.6.2-19
 - Typos fixed
 
-* Sat Mar 26 2016 Antonio Trande <sagitterATfedoraproject.org> - 2.6.2-18
+* Sat Mar 26 2016 Antonio Trande <sagitter@fedoraproject.org> - 2.6.2-18
 - Enabled OpenMP support
 
 * Sun Mar 20 2016 Mukundan Ragavan <nonamedotc@fedoraproject.org> - 2.6.2-17
@@ -945,41 +948,41 @@ popd
 * Fri Feb 05 2016 Fedora Release Engineering <releng@fedoraproject.org> - 2.6.2-16
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_24_Mass_Rebuild
 
-* Mon Jan 25 2016 Antonio Trande <sagitterATfedoraproject.org> - 2.6.2-15
+* Mon Jan 25 2016 Antonio Trande <sagitter@fedoraproject.org> - 2.6.2-15
 - Fixed pthread flags
 
-* Sun Jan 17 2016 Antonio Trande <sagitterATfedoraproject.org> - 2.6.2-14
+* Sun Jan 17 2016 Antonio Trande <sagitter@fedoraproject.org> - 2.6.2-14
 - Fix OpenMPI compilers
 - MPICH libraries enabled
 - Cmake's MPI Fortran compiler test disabled
 - Included pkgconfig files for MPICH libraries
 
-* Thu Dec 31 2015 Antonio Trande <sagitterATfedoraproject.org> - 2.6.2-13
+* Thu Dec 31 2015 Antonio Trande <sagitter@fedoraproject.org> - 2.6.2-13
 - Exclude pkgconfig for OpenMPI libs on s390
 
-* Sat Dec 26 2015 Antonio Trande <sagitterATfedoraproject.org> - 2.6.2-12
+* Sat Dec 26 2015 Antonio Trande <sagitter@fedoraproject.org> - 2.6.2-12
 - Fixed pkgconfig files
 - Added pkgconfig files for OpenMPI libraries
 - All Fortran libraries moved to default library paths
 
-* Thu Nov 12 2015 Antonio Trande <sagitterATfedoraproject.org> - 2.6.2-11
+* Thu Nov 12 2015 Antonio Trande <sagitter@fedoraproject.org> - 2.6.2-11
 - Fixes for EPEL7
 - Set mpif77 only for OpenMPI < 1.17 (EPEL7)
 - Set mpifort for OpenMPI > 1.17 (Fedora)
 - Set LDFLAGS for EPEL7
 
-* Wed Nov 11 2015 Antonio Trande <sagitterATfedoraproject.org> - 2.6.2-10
+* Wed Nov 11 2015 Antonio Trande <sagitter@fedoraproject.org> - 2.6.2-10
 - OpenMPI Fortran lib tests not compiled on F<23
 
-* Wed Nov 11 2015 Antonio Trande <sagitterATfedoraproject.org> - 2.6.2-9
+* Wed Nov 11 2015 Antonio Trande <sagitter@fedoraproject.org> - 2.6.2-9
 - Hardened builds on <F23
 - openmpi tests still crash/hang on i686 (Fedora 21)
 - Rebuilt on Fedora 21
 
-* Thu Oct 15 2015 Antonio Trande <sagitterATfedoraproject.org> - 2.6.2-8
+* Thu Oct 15 2015 Antonio Trande <sagitter@fedoraproject.org> - 2.6.2-8
 - Rebuilt for cmake 3.4.0
 
-* Sun Sep 20 2015 Antonio Trande <sagitterATfedoraproject.org> - 2.6.2-7
+* Sun Sep 20 2015 Antonio Trande <sagitter@fedoraproject.org> - 2.6.2-7
 - Performed even tests of the parallel-libraries on ix86 arches
 
 * Tue Sep 15 2015 Orion Poplawski <orion@cora.nwra.com> - 2.6.2-6
@@ -994,35 +997,35 @@ popd
 * Mon Aug 10 2015 Sandro Mani <manisandro@gmail.com> - 2.6.2-3
 - Rebuild for RPM MPI Requires Provides Change
 
-* Tue Aug 04 2015 Antonio Trande <sagitterATfedoraproject.org> - 2.6.2-2
+* Tue Aug 04 2015 Antonio Trande <sagitter@fedoraproject.org> - 2.6.2-2
 - Added rsh as BR for EPEL7
 
-* Tue Aug 04 2015 Antonio Trande <sagitterATfedoraproject.org> - 2.6.2-1
+* Tue Aug 04 2015 Antonio Trande <sagitter@fedoraproject.org> - 2.6.2-1
 - Update to 2.6.2
 
 * Fri Jun 19 2015 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 2.6.1-9
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_23_Mass_Rebuild
 
-* Wed Jun 03 2015 Antonio Trande <sagitterATfedoraproject.org> - 2.6.1-8
+* Wed Jun 03 2015 Antonio Trande <sagitter@fedoraproject.org> - 2.6.1-8
 - Excluded some tests for s390 s390x
 - openmpi tests disabled on ix86 %%{arm} (BZ#1201901)
 
-* Sat May 09 2015 Antonio Trande <sagitterATfedoraproject.org> - 2.6.1-7
+* Sat May 09 2015 Antonio Trande <sagitter@fedoraproject.org> - 2.6.1-7
 - Excluded kinKrylovDemo_ls test for aarch64
 
-* Fri Apr 17 2015 Antonio Trande <sagitterATfedoraproject.org> - 2.6.1-6
+* Fri Apr 17 2015 Antonio Trande <sagitter@fedoraproject.org> - 2.6.1-6
 - Performed parallel/serial tests
 
-* Thu Apr 16 2015 Antonio Trande <sagitterATfedoraproject.org> - 2.6.1-5
+* Thu Apr 16 2015 Antonio Trande <sagitter@fedoraproject.org> - 2.6.1-5
 - Fixed ldconfig scriptlets
 
-* Sat Apr 04 2015 Antonio Trande <sagitterATfedoraproject.org> - 2.6.1-4
+* Sat Apr 04 2015 Antonio Trande <sagitter@fedoraproject.org> - 2.6.1-4
 - Packaged static Fortran libraries
 
-* Fri Apr 03 2015 Antonio Trande <sagitterATfedoraproject.org> - 2.6.1-3
+* Fri Apr 03 2015 Antonio Trande <sagitter@fedoraproject.org> - 2.6.1-3
 - Packaged pkg-config files of Serial libraries
 
-* Wed Apr 01 2015 Antonio Trande <sagitterATfedoraproject.org> - 2.6.1-2
+* Wed Apr 01 2015 Antonio Trande <sagitter@fedoraproject.org> - 2.6.1-2
 - Built OpenMPI, libraries with threading support, Fortran libraries
 
 * Mon Mar 30 2015 Mukundan Ragavan <nonamedotc@fedoraproject.org> - 2.6.1-1
