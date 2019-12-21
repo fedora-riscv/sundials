@@ -42,7 +42,7 @@
 Summary:    Suite of nonlinear solvers
 Name:       sundials
 Version:    4.1.0
-Release:    6%{?dist}
+Release:    7%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -816,6 +816,9 @@ popd
 %doc sundials-%{version}/doc/arkode/*
 
 %changelog
+* Sat Dec 21 2019 Antonio Trande <sagitter@fedoraproject.org> - 4.1.0-7
+- Rebuild for petsc-3.11.3 on EPEL7
+
 * Fri Oct 18 2019 Antonio Trande <sagitter@fedoraproject.org> - 4.1.0-6
 - Rebuild for petsc-3.12.0
 
