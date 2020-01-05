@@ -42,7 +42,7 @@
 Summary:    Suite of nonlinear solvers
 Name:       sundials
 Version:    4.1.0
-Release:    7%{?dist}
+Release:    8%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -225,7 +225,7 @@ export LIBSUPERLUMTLINK=-lsuperlumt64_d
 export LIBSUPERLUMTLINK=-lsuperlumt_d
 %endif
 
-%if 0%{?rhel} == 7
+%if 0%{?el7}
 %{?dts:source /opt/rh/devtoolset-8/enable}
 %endif
 
@@ -304,6 +304,11 @@ sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/openmpi-%{_arch
 %endif
 
 mkdir -p build && cd build
+
+%if 0%{?el7}
+%{?dts:source /opt/rh/devtoolset-8/enable}
+%endif
+
 %{_openmpi_load}
 
 ## Blas
@@ -415,6 +420,11 @@ popd
 
 %if 0%{?with_mpich}
 pushd buildmpich_dir
+
+%if 0%{?el7}
+%{?dts:source /opt/rh/devtoolset-8/enable}
+%endif
+
 ##Set mpich library's paths
 sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/mpich-%{_arch}/nvector|g' src/nvector/parallel/CMakeLists.txt
 sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/mpich-%{_arch}/nvector|g' src/nvector/parhyp/CMakeLists.txt
@@ -816,6 +826,9 @@ popd
 %doc sundials-%{version}/doc/arkode/*
 
 %changelog
+* Sun Jan 05 2020 Antonio Trande <sagitter@fedoraproject.org> - 4.1.0-8
+- New rebuild
+
 * Sat Dec 21 2019 Antonio Trande <sagitter@fedoraproject.org> - 4.1.0-7
 - Rebuild for petsc-3.11.3 on EPEL7
 
