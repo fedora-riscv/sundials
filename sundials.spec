@@ -42,7 +42,7 @@
 Summary:    Suite of nonlinear solvers
 Name:       sundials
 Version:    4.1.0
-Release:    8%{?dist}
+Release:    9%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -232,12 +232,7 @@ export LIBSUPERLUMTLINK=-lsuperlumt_d
 %if %{with debug}
 %undefine _hardened_build
 export CFLAGS=""
-%if 0%{?rhel}
 %global _cmake cmake3
-%endif
-%if 0%{?fedora}
-%global _cmake cmake
-%endif
 %_cmake \
  -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
  -DCMAKE_BUILD_TYPE:STRING=Debug \
@@ -245,6 +240,9 @@ export CFLAGS=""
  -DCMAKE_Fortran_FLAGS_DEBUG:STRING="-O0 -g -Wl,-z,relro -Wl,-z,now -Wl,--as-needed -I$INCBLAS" \
  -DCMAKE_SHARED_LINKER_FLAGS_DEBUG:STRING="%{__global_ldflags} -lklu $LIBBLASLINK $LIBSUPERLUMTLINK" \
 %else
+%if 0%{?fedora} && 0%{?fedora} > 31
+export CFLAGS="%{build_cflags} -fcommon"
+%endif
 %cmake3 \
 %if %{?__isa_bits:%{__isa_bits}}%{!?__isa_bits:32} == 64
  -DSUNDIALS_INDEX_SIZE:STRING=64 \
@@ -342,12 +340,7 @@ export FC=$MPI_BIN/mpif77
 %if %{with debug}
 %undefine _hardened_build
 export CFLAGS=""
-%if 0%{?rhel}
 %global _cmake cmake3
-%endif
-%if 0%{?fedora}
-%global _cmake cmake
-%endif
 %_cmake \
  -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
  -DCMAKE_BUILD_TYPE:STRING=Debug \
@@ -355,6 +348,9 @@ export CFLAGS=""
  -DCMAKE_Fortran_FLAGS_DEBUG:STRING="-O0 -g -Wl,-z,relro -Wl,-z,now -Wl,--as-needed -I$INCBLAS" \
  -DCMAKE_SHARED_LINKER_FLAGS_DEBUG:STRING="%{__global_ldflags} -lklu $LIBBLASLINK $LIBSUPERLUMTLINK $LIBHYPRELINK" \
 %else
+%if 0%{?fedora} && 0%{?fedora} > 31
+export CFLAGS="%{build_cflags} -fcommon"
+%endif
 %cmake3 \
 %if %{?__isa_bits:%{__isa_bits}}%{!?__isa_bits:32} == 64
  -DSUNDIALS_INDEX_SIZE:STRING=64 \
@@ -467,12 +463,7 @@ export FC=$MPI_BIN/mpif77
 %if %{with debug}
 %undefine _hardened_build
 export CFLAGS=""
-%if 0%{?rhel}
 %global _cmake cmake3
-%endif
-%if 0%{?fedora}
-%global _cmake cmake
-%endif
 %_cmake \
  -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
  -DCMAKE_BUILD_TYPE:STRING=Debug \
@@ -480,6 +471,9 @@ export CFLAGS=""
  -DCMAKE_Fortran_FLAGS_DEBUG:STRING="-O0 -g -Wl,-z,relro -Wl,-z,now -Wl,--as-needed -I$INCBLAS" \
  -DCMAKE_SHARED_LINKER_FLAGS_DEBUG:STRING="%{__global_ldflags} -lklu $LIBBLASLINK $LIBSUPERLUMTLINK $LIBHYPRELINK" \
 %else
+%if 0%{?fedora} && 0%{?fedora} > 31
+export CFLAGS="%{build_cflags} -fcommon"
+%endif
 %cmake3 \
 %if %{?__isa_bits:%{__isa_bits}}%{!?__isa_bits:32} == 64
  -DSUNDIALS_INDEX_SIZE:STRING=64 \
@@ -826,6 +820,9 @@ popd
 %doc sundials-%{version}/doc/arkode/*
 
 %changelog
+* Sat Jan 25 2020 Antonio Trande <sagitter@fedoraproject.org> - 4.1.0-9
+- Workaround for GCC-10 (-fcommon)
+
 * Sun Jan 05 2020 Antonio Trande <sagitter@fedoraproject.org> - 4.1.0-8
 - New rebuild
 
