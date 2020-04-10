@@ -651,7 +651,7 @@ export LD_LIBRARY_PATH=%{buildroot}$MPI_LIB:$MPI_LIB
 ctest3 --force-new-ctest-process -VV -j1 --output-on-failure --debug
 %else
 export LD_LIBRARY_PATH=%{buildroot}$MPI_LIB:$MPI_LIB
-ctest3 --force-new-ctest-process %{?_smp_mflags}
+ctest3 --force-new-ctest-process -j1
 %endif
 %{_openmpi_unload}
 popd
@@ -669,7 +669,7 @@ export LD_LIBRARY_PATH=%{buildroot}$MPI_LIB:$MPI_LIB
 ctest3 --force-new-ctest-process -VV -j1 --output-on-failure --debug
 %else
 export LD_LIBRARY_PATH=%{buildroot}$MPI_LIB:$MPI_LIB
-ctest3 --force-new-ctest-process %{?_smp_mflags}
+ctest3 --force-new-ctest-process -j1
 %endif
 %{_mpich_unload}
 popd
@@ -685,7 +685,7 @@ export LD_LIBRARY_PATH=%{buildroot}%{_libdir}:%{_libdir}
 ctest3 --force-new-ctest-process -VV -j1 --output-on-failure --debug
 %else
 export LD_LIBRARY_PATH=%{buildroot}%{_libdir}:%{_libdir}
-ctest3 --force-new-ctest-process %{?_smp_mflags}
+ctest3 --force-new-ctest-process -j1
 %endif
 popd
 %endif
