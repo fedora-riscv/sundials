@@ -2,17 +2,23 @@
 %bcond_with debug
 #
 
+# Enable pthread support
+%bcond_with pthread
+#
+
+%undefine _ld_as_needed
+%define _legacy_common_support 1
+
 %if 0%{?fedora}
 %global with_mpich 1
 %global with_openmpi 1
 %endif
 
-%if 0%{?rhel} && 0%{?rhel} >= 7
+%if 0%{?rhel} && 0%{?rhel} == 7
 %global with_openmpi 1
 %global with_mpich 1
-%endif
 
-%if 0%{?rhel} == 7
+# Use devtoolset 8
 %global dts devtoolset-8-
 %endif
 
@@ -21,8 +27,15 @@
 ###########
 
 ## PETSc ##
-%global with_petsc 1
-%global with_petsc 1
+%global with_petsc 0
+###########
+
+## SuperLUMT ##
+%global with_superlumt 0
+###########
+
+## superlu_dist is not compiled with index_size64 enabled ##
+%global with_superludist 0
 ###########
 
 %ifnarch s390x
@@ -41,13 +54,13 @@
 
 Summary:    Suite of nonlinear solvers
 Name:       sundials
-Version:    4.1.0
-Release:    10%{?dist}
+Version:    5.2.0
+Release:    1%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
-URL:        https://computation.llnl.gov/projects/sundials
-Source0:    %{url}/download/sundials-%{version}.tar.gz
+URL:        https://computation.llnl.gov/projects/%{name}
+Source0:    https://github.com/LLNL/%{name}/archive/v%{version}/%{name}-%{version}.tar.gz
 
 # This patch rename superLUMT library
 Patch0:     %{name}-3.1.1-set_superlumt_name.patch
@@ -55,26 +68,37 @@ Patch0:     %{name}-3.1.1-set_superlumt_name.patch
 # This patch rename superLUMT64 library
 Patch1:     %{name}-3.1.1-set_superlumt64_name.patch
 
-# PETSc libraries unrecognized for unknown reasons
-# This patch disables the PETSc tests of CMake
-Patch2:     %{name}-disable_petsc_tests.patch
+Patch2:     sundials-change_petsc_variable.patch
 
 %if 0%{?with_fortran}
-BuildRequires: %{?dts}gcc-gfortran
+BuildRequires: gcc-gfortran
 %endif
 BuildRequires: python%{python3_pkgversion}-devel
 BuildRequires: %{?dts}gcc, %{?dts}gcc-c++
-BuildRequires: suitesparse-devel
 %if 0%{?rhel}
 BuildRequires: epel-rpm-macros
 %endif
-BuildRequires: cmake3
+BuildRequires: cmake3 >= 3.10
 BuildRequires: openblas-devel, openblas-srpm-macros
+%if 0%{?with_superlumt}
 %ifarch s390x x86_64 %{power64} aarch64
 BuildRequires: SuperLUMT64-devel
 %endif
 %ifarch %{arm} %{ix86}
 BuildRequires: SuperLUMT-devel
+%endif
+%endif
+
+# KLU support
+%ifarch s390x x86_64 %{power64} aarch64
+BuildRequires: suitesparse64-devel
+%endif
+%ifarch %{arm} %{ix86}
+BuildRequires: suitesparse-devel
+%endif
+
+%if 0%{?rhel}
+BuildRequires: rsh
 %endif
 %if 0%{?with_fortran}
 Requires: gcc-gfortran%{?_isa}
@@ -110,6 +134,9 @@ BuildRequires: petsc-openmpi-devel >= 3.10
 BuildRequires: scalapack-openmpi-devel
 BuildRequires: hdf5-openmpi-devel
 %endif
+%if 0%{?with_superludist}
+BuildRequires: superlu_dist-openmpi-devel
+%endif
 
 Requires: openmpi%{?_isa}
 %if 0%{?with_fortran}
@@ -144,6 +171,10 @@ BuildRequires: petsc-mpich-devel >= 3.10
 BuildRequires: scalapack-mpich-devel
 BuildRequires: hdf5-mpich-devel
 %endif
+%if 0%{?with_superludist}
+BuildRequires: superlu_dist-mpich-devel
+%endif
+
 Requires: mpich%{?_isa}
 %if 0%{?with_fortran}
 Requires: gcc-gfortran%{?_isa}
@@ -178,28 +209,26 @@ This package contains the documentation files.
 %prep
 %setup -qc
 
-pushd sundials-%{version}
+pushd %{name}-%{version}
 
 %ifarch s390x x86_64 %{power64} aarch64
-%patch1 -p0
+%patch1 -p0 -b .set_superlumt64_name
 %endif
 %ifarch %{arm} %{ix86}
-%patch0 -p0
+%patch0 -p0 -b .set_superlumt_name
 %endif
-
-%patch2 -p1 -b .disable_petsc_tests
 
 ##Set serial library's paths
 sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/nvector|g' src/nvector/serial/CMakeLists.txt
 sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/nvector|g' src/nvector/openmp/CMakeLists.txt
 sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/nvector|g' src/nvector/pthreads/CMakeLists.txt
 
-mv src/arkode/README src/README-arkode
-mv src/cvode/README src/README-cvode
-mv src/cvodes/README src/README-cvodes
-mv src/ida/README src/README-ida
-mv src/idas/README src/README.idas
-mv src/kinsol/README src/README-kinsol
+mv src/arkode/README.md src/README-arkode.md
+mv src/cvode/README.md src/README-cvode.md
+mv src/cvodes/README.md src/README-cvodes.md
+mv src/ida/README.md src/README-ida.md
+mv src/idas/README.md src/README.idas.md
+mv src/kinsol/README.md src/README-kinsol.md
 popd
 
 %if 0%{?with_openmpi}
@@ -218,11 +247,13 @@ export LIBBLASLINK=-lopenblas
 export LIBBLAS=libopenblas
 export INCBLAS=%{_includedir}/openblas
 
+%if 0%{?with_superlumt}
 %ifarch s390x x86_64 %{power64} aarch64
 export LIBSUPERLUMTLINK=-lsuperlumt64_d
 %endif
 %ifarch %{arm} %{ix86}
 export LIBSUPERLUMTLINK=-lsuperlumt_d
+%endif
 %endif
 
 %if 0%{?el7}
@@ -231,7 +262,8 @@ export LIBSUPERLUMTLINK=-lsuperlumt_d
 
 %if %{with debug}
 %undefine _hardened_build
-export CFLAGS=""
+export CFLAGS=" "
+export FFLAGS=" "
 %global _cmake cmake3
 %_cmake \
  -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
@@ -240,24 +272,31 @@ export CFLAGS=""
  -DCMAKE_Fortran_FLAGS_DEBUG:STRING="-O0 -g -Wl,-z,relro -Wl,-z,now -Wl,--as-needed -I$INCBLAS" \
  -DCMAKE_SHARED_LINKER_FLAGS_DEBUG:STRING="%{__global_ldflags} -lklu $LIBBLASLINK $LIBSUPERLUMTLINK" \
 %else
-%if 0%{?fedora} && 0%{?fedora} > 31
-export CFLAGS="%{build_cflags} -fcommon"
-%endif
+export CFLAGS="%{build_cflags}"
+export CFLAGS="%{build_fflags}"
 %cmake3 \
+%endif
 %if %{?__isa_bits:%{__isa_bits}}%{!?__isa_bits:32} == 64
  -DSUNDIALS_INDEX_SIZE:STRING=64 \
+ -DKLU_ENABLE=ON -DKLU_LIBRARY_DIR:PATH=%{_libdir} -DKLU_LIBRARY=%{_libdir}/libklu64.so \
+ -DAMD_LIBRARY=%{_libdir}/libamd64.so -DAMD_LIBRARY_DIR:PATH=%{_libdir} \
+ -DBTF_LIBRARY=%{_libdir}/libbtf64.so -DBTF_LIBRARY_DIR:PATH=%{_libdir} \
+ -DCOLAMD_LIBRARY=%{_libdir}/libcolamd64.so -DCOLAMD_LIBRARY_DIR:PATH=%{_libdir} \
+ -DKLU_INCLUDE_DIR:PATH=%{_includedir}/suitesparse \
 %else
  -DSUNDIALS_INDEX_SIZE:STRING=32 \
+ -DKLU_ENABLE=ON -DKLU_LIBRARY_DIR:PATH=%{_libdir} -DKLU_LIBRARY=%{_libdir}/libklu.so \
+ -DAMD_LIBRARY=%{_libdir}/libamd.so -DAMD_LIBRARY_DIR:PATH=%{_libdir} \
+ -DBTF_LIBRARY=%{_libdir}/libbtf.so -DBTF_LIBRARY_DIR:PATH=%{_libdir} \
+ -DCOLAMD_LIBRARY=%{_libdir}/libcolamd.so -DCOLAMD_LIBRARY_DIR:PATH=%{_libdir} \
+ -DKLU_INCLUDE_DIR:PATH=%{_includedir}/suitesparse \
 %endif
  -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
  -DCMAKE_BUILD_TYPE:STRING=Release \
  -DCMAKE_C_FLAGS_RELEASE:STRING="%{optflags} -I$INCBLAS" \
  -DCMAKE_Fortran_FLAGS_RELEASE:STRING="%{optflags} -I$INCBLAS" \
  -DCMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING="%{__global_ldflags} -lklu $LIBBLASLINK $LIBSUPERLUMTLINK" \
-%endif
  -DLAPACK_ENABLE:BOOL=OFF \
- -DBLAS_ENABLE:BOOL=ON \
- -DBLAS_LIBRARIES:STRING=%{_libdir}/$LIBBLAS.so \
  -DCMAKE_MODULE_LINKER_FLAGS:STRING="%{__global_ldflags}" \
  -DCMAKE_INSTALL_PREFIX:PATH=%{_prefix} -DCMAKE_INSTALL_LIBDIR:PATH=%{_lib} \
  -DPYTHON_EXECUTABLE:FILEPATH=%{__python3} \
@@ -274,17 +313,20 @@ export CFLAGS="%{build_cflags} -fcommon"
 %endif
  -DUSE_GENERIC_MATH:BOOL=ON \
  -DOPENMP_ENABLE:BOOL=ON \
+%if %{with pthread}
  -DPTHREAD_ENABLE:BOOL=ON \
+%endif
  -DSUNDIALS_PRECISION:STRING=double \
-%ifnarch s390x x86_64 %{power64} aarch64
+%if 0%{?with_superlumt}
  -DSUPERLUMT_ENABLE:BOOL=ON \
  -DSUPERLUMT_INCLUDE_DIR:PATH=%{_includedir}/SuperLUMT \
  -DSUPERLUMT_LIBRARY_DIR:PATH=%{_libdir} \
  -DSUPERLUMT_THREAD_TYPE:STRING=OpenMP \
 %endif
+ -DSUPERLUDIST_ENABLE:BOOL=OFF \
  -DHYPRE_ENABLE:BOOL=OFF \
- -DKLU_ENABLE=ON -DKLU_LIBRARY_DIR:PATH=%{_libdir} -DKLU_INCLUDE_DIR:PATH=%{_includedir}/suitesparse \
  -DEXAMPLES_INSTALL:BOOL=OFF -Wno-dev ..
+
 %make_build V=1
 cd ..
 popd
@@ -302,11 +344,6 @@ sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/openmpi-%{_arch
 %endif
 
 mkdir -p build && cd build
-
-%if 0%{?el7}
-%{?dts:source /opt/rh/devtoolset-8/enable}
-%endif
-
 %{_openmpi_load}
 
 ## Blas
@@ -314,13 +351,17 @@ export LIBBLASLINK=-lopenblas
 export LIBBLAS=libopenblas
 export INCBLAS=%{_includedir}/openblas
 ##
+
 ## SuperLUMT
+%if 0%{?with_superlumt}
 %ifarch s390x x86_64 %{power64} aarch64
 export LIBSUPERLUMTLINK=-lsuperlumt64_d
 %endif
 %ifarch %{arm} %{ix86}
 export LIBSUPERLUMTLINK=-lsuperlumt_d
 %endif
+%endif
+
 ## Hypre
 %if 0%{?with_hypre}
 export LIBHYPRELINK="-L$MPI_LIB -lHYPRE"
@@ -337,9 +378,14 @@ export FC=$MPI_BIN/mpif77
 %endif
 ##
 
+%if 0%{?el7}
+%{?dts:source /opt/rh/devtoolset-8/enable}
+%endif
+
 %if %{with debug}
 %undefine _hardened_build
-export CFLAGS=""
+export CFLAGS=" "
+export FFLAGS=" "
 %global _cmake cmake3
 %_cmake \
  -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
@@ -348,28 +394,36 @@ export CFLAGS=""
  -DCMAKE_Fortran_FLAGS_DEBUG:STRING="-O0 -g -Wl,-z,relro -Wl,-z,now -Wl,--as-needed -I$INCBLAS" \
  -DCMAKE_SHARED_LINKER_FLAGS_DEBUG:STRING="%{__global_ldflags} -lklu $LIBBLASLINK $LIBSUPERLUMTLINK $LIBHYPRELINK" \
 %else
-%if 0%{?fedora} && 0%{?fedora} > 31
-export CFLAGS="%{build_cflags} -fcommon"
-%endif
+export CFLAGS="%{build_cflags}"
+export CFLAGS="%{build_fflags}"
 %cmake3 \
+%endif
 %if %{?__isa_bits:%{__isa_bits}}%{!?__isa_bits:32} == 64
  -DSUNDIALS_INDEX_SIZE:STRING=64 \
+ -DKLU_ENABLE=ON -DKLU_LIBRARY_DIR:PATH=%{_libdir} -DKLU_LIBRARY=%{_libdir}/libklu64.so \
+ -DAMD_LIBRARY=%{_libdir}/libamd64.so -DAMD_LIBRARY_DIR:PATH=%{_libdir} \
+ -DBTF_LIBRARY=%{_libdir}/libbtf64.so -DBTF_LIBRARY_DIR:PATH=%{_libdir} \
+ -DCOLAMD_LIBRARY=%{_libdir}/libcolamd64.so -DCOLAMD_LIBRARY_DIR:PATH=%{_libdir} \
+ -DKLU_INCLUDE_DIR:PATH=%{_includedir}/suitesparse \
 %else
  -DSUNDIALS_INDEX_SIZE:STRING=32 \
+ -DKLU_ENABLE=ON -DKLU_LIBRARY_DIR:PATH=%{_libdir} -DKLU_LIBRARY=%{_libdir}/libklu.so \
+ -DAMD_LIBRARY=%{_libdir}/libamd.so -DAMD_LIBRARY_DIR:PATH=%{_libdir} \
+ -DBTF_LIBRARY=%{_libdir}/libbtf.so -DBTF_LIBRARY_DIR:PATH=%{_libdir} \
+ -DCOLAMD_LIBRARY=%{_libdir}/libcolamd.so -DCOLAMD_LIBRARY_DIR:PATH=%{_libdir} \
+ -DKLU_INCLUDE_DIR:PATH=%{_includedir}/suitesparse \
 %endif
  -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
  -DCMAKE_BUILD_TYPE:STRING=Release \
  -DCMAKE_C_FLAGS_RELEASE:STRING="%{optflags} -I$INCBLAS" \
  -DCMAKE_Fortran_FLAGS_RELEASE:STRING="%{optflags} -I$INCBLAS" \
  -DCMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING="%{__global_ldflags} -lklu $LIBBLASLINK $LIBSUPERLUMTLINK $LIBHYPRELINK" \
-%endif
  -DLAPACK_ENABLE:BOOL=OFF \
- -DBLAS_ENABLE:BOOL=ON \
- -DBLAS_LIBRARIES:STRING=%{_libdir}/$LIBBLAS.so \
 %if 0%{?with_petsc}
  -DPETSC_ENABLE:BOOL=ON \
- -DPETSC_INCLUDE_DIR:PATH=$MPI_INCLUDE/petsc \
- -DPETSC_LIBRARY_DIR:PATH=$MPI_LIB \
+ -DPETSC_INCLUDES:PATH=$MPI_INCLUDE/petsc \
+ -DPETSC_LIBRARIES:PATH=$MPI_LIB/libpetsc.so \
+ -DPETSC_EXECUTABLE_RUNS=YES \
 %endif
  -DCMAKE_INSTALL_PREFIX:PATH=%{_prefix} -DCMAKE_INSTALL_LIBDIR:PATH=%{_lib}/openmpi/lib \
  -DPYTHON_EXECUTABLE:FILEPATH=%{__python3} \
@@ -391,19 +445,26 @@ export CFLAGS="%{build_cflags} -fcommon"
 %endif
  -DUSE_GENERIC_MATH:BOOL=ON \
  -DOPENMP_ENABLE:BOOL=ON \
+%if %{with pthread}
  -DPTHREAD_ENABLE:BOOL=ON \
-%ifnarch s390x x86_64 %{power64} aarch64
+%endif
+%if 0%{?with_superlumt}
  -DSUPERLUMT_ENABLE:BOOL=ON \
  -DSUPERLUMT_INCLUDE_DIR:PATH=%{_includedir}/SuperLUMT \
  -DSUPERLUMT_LIBRARY_DIR:PATH=%{_libdir} \
  -DSUPERLUMT_THREAD_TYPE:STRING=OpenMP \
+%endif
+%if 0%{?with_superludist}
+ -DSUPERLUDIST_ENABLE:BOOL=ON \
+ -DSUPERLUDIST_INCLUDE_DIR:PATH=$MPI_INCLUDE/superlu_dist \
+ -DSUPERLUDIST_LIBRARY_DIR:PATH=$MPI_LIB \
+ -DSUPERLUDIST_LIBRARIES:STRING=libsuperlu_dist.so \
 %endif
 %if 0%{?with_hypre}
  -DHYPRE_ENABLE:BOOL=ON \
  -DHYPRE_INCLUDE_DIR:PATH=$MPI_INCLUDE/hypre \
  -DHYPRE_LIBRARY_DIR:PATH=$MPI_LIB \
 %endif
- -DKLU_ENABLE=ON -DKLU_LIBRARY_DIR:PATH=%{_libdir} -DKLU_INCLUDE_DIR:PATH=%{_includedir}/suitesparse \
  -DEXAMPLES_INSTALL:BOOL=OFF -Wno-dev ..
 
 %make_build V=1
@@ -416,11 +477,6 @@ popd
 
 %if 0%{?with_mpich}
 pushd buildmpich_dir
-
-%if 0%{?el7}
-%{?dts:source /opt/rh/devtoolset-8/enable}
-%endif
-
 ##Set mpich library's paths
 sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/mpich-%{_arch}/nvector|g' src/nvector/parallel/CMakeLists.txt
 sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/mpich-%{_arch}/nvector|g' src/nvector/parhyp/CMakeLists.txt
@@ -437,13 +493,17 @@ export LIBBLASLINK=-lopenblas
 export LIBBLAS=libopenblas
 export INCBLAS=%{_includedir}/openblas
 ##
+
 ## SuperLUMT
+%if 0%{?with_superlumt}
 %ifarch s390x x86_64 %{power64} aarch64
 export LIBSUPERLUMTLINK=-lsuperlumt64_d
 %endif
 %ifarch %{arm} %{ix86}
 export LIBSUPERLUMTLINK=-lsuperlumt_d
 %endif
+%endif
+
 ## Hypre
 %if 0%{?with_hypre}
 export LIBHYPRELINK="-L$MPI_LIB -lHYPRE"
@@ -460,9 +520,14 @@ export FC=$MPI_BIN/mpif77
 %endif
 ##
 
+%if 0%{?el7}
+%{?dts:source /opt/rh/devtoolset-8/enable}
+%endif
+
 %if %{with debug}
 %undefine _hardened_build
-export CFLAGS=""
+export CFLAGS=" "
+export FFLAGS=" "
 %global _cmake cmake3
 %_cmake \
  -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
@@ -471,28 +536,36 @@ export CFLAGS=""
  -DCMAKE_Fortran_FLAGS_DEBUG:STRING="-O0 -g -Wl,-z,relro -Wl,-z,now -Wl,--as-needed -I$INCBLAS" \
  -DCMAKE_SHARED_LINKER_FLAGS_DEBUG:STRING="%{__global_ldflags} -lklu $LIBBLASLINK $LIBSUPERLUMTLINK $LIBHYPRELINK" \
 %else
-%if 0%{?fedora} && 0%{?fedora} > 31
-export CFLAGS="%{build_cflags} -fcommon"
-%endif
+export CFLAGS="%{build_cflags}"
+export CFLAGS="%{build_fflags}"
 %cmake3 \
+%endif
 %if %{?__isa_bits:%{__isa_bits}}%{!?__isa_bits:32} == 64
  -DSUNDIALS_INDEX_SIZE:STRING=64 \
+ -DKLU_ENABLE=ON -DKLU_LIBRARY_DIR:PATH=%{_libdir} -DKLU_LIBRARY=%{_libdir}/libklu64.so \
+ -DAMD_LIBRARY=%{_libdir}/libamd64.so -DAMD_LIBRARY_DIR:PATH=%{_libdir} \
+ -DBTF_LIBRARY=%{_libdir}/libbtf64.so -DBTF_LIBRARY_DIR:PATH=%{_libdir} \
+ -DCOLAMD_LIBRARY=%{_libdir}/libcolamd64.so -DCOLAMD_LIBRARY_DIR:PATH=%{_libdir} \
+ -DKLU_INCLUDE_DIR:PATH=%{_includedir}/suitesparse \
 %else
  -DSUNDIALS_INDEX_SIZE:STRING=32 \
+ -DKLU_ENABLE=ON -DKLU_LIBRARY_DIR:PATH=%{_libdir} -DKLU_LIBRARY=%{_libdir}/libklu.so \
+ -DAMD_LIBRARY=%{_libdir}/libamd.so -DAMD_LIBRARY_DIR:PATH=%{_libdir} \
+ -DBTF_LIBRARY=%{_libdir}/libbtf.so -DBTF_LIBRARY_DIR:PATH=%{_libdir} \
+ -DCOLAMD_LIBRARY=%{_libdir}/libcolamd.so -DCOLAMD_LIBRARY_DIR:PATH=%{_libdir} \
+ -DKLU_INCLUDE_DIR:PATH=%{_includedir}/suitesparse \
 %endif
  -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
  -DCMAKE_BUILD_TYPE:STRING=Release \
  -DCMAKE_C_FLAGS_RELEASE:STRING="%{optflags} -I$INCBLAS" \
  -DCMAKE_Fortran_FLAGS_RELEASE:STRING="%{optflags} -I$INCBLAS" \
  -DCMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING="%{__global_ldflags} -lklu $LIBBLASLINK $LIBSUPERLUMTLINK $LIBHYPRELINK" \
-%endif
  -DLAPACK_ENABLE:BOOL=OFF \
- -DBLAS_ENABLE:BOOL=ON \
- -DBLAS_LIBRARIES:STRING=%{_libdir}/$LIBBLAS.so \
 %if 0%{?with_petsc}
  -DPETSC_ENABLE:BOOL=ON \
- -DPETSC_INCLUDE_DIR:PATH=$MPI_INCLUDE/petsc \
- -DPETSC_LIBRARY_DIR:PATH=$MPI_LIB \
+ -DPETSC_INCLUDES:PATH=$MPI_INCLUDE/petsc \
+ -DPETSC_LIBRARIES:PATH=$MPI_LIB/libpetsc.so \
+ -DPETSC_EXECUTABLE_RUNS=YES \
 %endif
  -DCMAKE_INSTALL_PREFIX:PATH=%{_prefix} -DCMAKE_INSTALL_LIBDIR:PATH=%{_lib}/mpich/lib \
  -DPYTHON_EXECUTABLE:FILEPATH=%{__python3} \
@@ -514,19 +587,26 @@ export CFLAGS="%{build_cflags} -fcommon"
 %endif
  -DUSE_GENERIC_MATH:BOOL=ON \
  -DOPENMP_ENABLE:BOOL=ON \
+%if %{with pthread}
  -DPTHREAD_ENABLE:BOOL=ON \
-%ifnarch s390x x86_64 %{power64} aarch64
+%endif
+%if 0%{?with_superlumt}
  -DSUPERLUMT_ENABLE:BOOL=ON \
  -DSUPERLUMT_INCLUDE_DIR:PATH=%{_includedir}/SuperLUMT \
  -DSUPERLUMT_LIBRARY_DIR:PATH=%{_libdir} \
  -DSUPERLUMT_THREAD_TYPE:STRING=OpenMP \
+%endif
+%if 0%{?with_superludist}
+ -DSUPERLUDIST_ENABLE:BOOL=ON \
+ -DSUPERLUDIST_INCLUDE_DIR:PATH=$MPI_INCLUDE/superlu_dist \
+ -DSUPERLUDIST_LIBRARY_DIR:PATH=$MPI_LIB \
+ -DSUPERLUDIST_LIBRARIES:STRING=libsuperlu_dist.so \
 %endif
 %if 0%{?with_hypre}
  -DHYPRE_ENABLE:BOOL=ON \
  -DHYPRE_INCLUDE_DIR:PATH=$MPI_INCLUDE/hypre \
  -DHYPRE_LIBRARY_DIR:PATH=$MPI_LIB \
 %endif
- -DKLU_ENABLE=ON -DKLU_LIBRARY_DIR:PATH=%{_libdir} -DKLU_INCLUDE_DIR:PATH=%{_includedir}/suitesparse \
  -DEXAMPLES_INSTALL:BOOL=OFF -Wno-dev ..
 
 %make_build V=1
@@ -568,15 +648,10 @@ pushd buildopenmpi_dir/build
 %{_openmpi_load}
 %if %{with debug}
 export LD_LIBRARY_PATH=%{buildroot}$MPI_LIB:$MPI_LIB
-ctest3 --force-new-ctest-process -VV %{?_smp_mflags} --output-on-failure --debug
+ctest3 --force-new-ctest-process -VV -j1 --output-on-failure --debug
 %else
 export LD_LIBRARY_PATH=%{buildroot}$MPI_LIB:$MPI_LIB
-# Tests excluded fail on ppc64le and aarch64
-%if 0%{?rhel}
-ctest3 --force-new-ctest-process %{?_smp_mflags} -E 'spgmr|spfgmr|spbcgs|sptfqmr'
-%else
 ctest3 --force-new-ctest-process %{?_smp_mflags}
-%endif
 %endif
 %{_openmpi_unload}
 popd
@@ -591,14 +666,10 @@ pushd buildmpich_dir/build
 %{_mpich_load}
 %if %{with debug}
 export LD_LIBRARY_PATH=%{buildroot}$MPI_LIB:$MPI_LIB
-ctest3 --force-new-ctest-process -VV %{?_smp_mflags} --output-on-failure --debug
+ctest3 --force-new-ctest-process -VV -j1 --output-on-failure --debug
 %else
 export LD_LIBRARY_PATH=%{buildroot}$MPI_LIB:$MPI_LIB
-%if 0%{?rhel}
-ctest3 --force-new-ctest-process %{?_smp_mflags} -E 'spgmr|spfgmr|spbcgs|sptfqmr'
-%else
 ctest3 --force-new-ctest-process %{?_smp_mflags}
-%endif
 %endif
 %{_mpich_unload}
 popd
@@ -611,7 +682,7 @@ popd
 pushd sundials-%{version}/build
 %if %{with debug}
 export LD_LIBRARY_PATH=%{buildroot}%{_libdir}:%{_libdir}
-ctest3 --force-new-ctest-process -VV %{?_smp_mflags} --output-on-failure --debug
+ctest3 --force-new-ctest-process -VV -j1 --output-on-failure --debug
 %else
 export LD_LIBRARY_PATH=%{buildroot}%{_libdir}:%{_libdir}
 ctest3 --force-new-ctest-process %{?_smp_mflags}
@@ -623,12 +694,12 @@ popd
 %files
 %license sundials-%{version}/LICENSE
 %doc sundials-%{version}/README.md
-%doc sundials-%{version}/src/README-arkode
-%doc sundials-%{version}/src/README-cvode
-%doc sundials-%{version}/src/README-cvodes
-%doc sundials-%{version}/src/README-ida
-%doc sundials-%{version}/src/README.idas
-%doc sundials-%{version}/src/README-kinsol
+%doc sundials-%{version}/src/README-arkode.md
+%doc sundials-%{version}/src/README-cvode.md
+%doc sundials-%{version}/src/README-cvodes.md
+%doc sundials-%{version}/src/README-ida.md
+%doc sundials-%{version}/src/README.idas.md
+%doc sundials-%{version}/src/README-kinsol.md
 %doc sundials-%{version}/NOTICE
 %{_libdir}/libsundials_ida*.so.*
 %{_libdir}/libsundials_cvode*.so.*
@@ -636,17 +707,36 @@ popd
 %{_libdir}/libsundials_kinsol.so.*
 %{_libdir}/libsundials_nvecserial.so.*
 %{_libdir}/libsundials_nvecopenmp.so.*
+%{_libdir}/libsundials_nvecmanyvector.so.*
+%if %{with pthread}
+%{_libdir}/libsundials_nvecpthreads.so.*
+%endif
 %{_libdir}/libsundials_sunmatrix*.so.*
 %{_libdir}/libsundials_sunlinsol*.so.*
 %{_libdir}/libsundials_sunnonlinsol*.so.*
 %if 0%{?with_fortran}
+%{_libdir}/libsundials_*_mod.so.*
 %{_libdir}/libsundials_fnvecserial.so.*
-%{_libdir}/libsundials_fnvecserial_mod.so.*
 %{_libdir}/libsundials_fnvecopenmp.so.*
-%{_libdir}/libsundials_fnvecopenmp_mod.so.*
-%{_libdir}/libsundials_fsunmatrix*.so.*
-%{_libdir}/libsundials_fsunlinsol*.so.*
-%{_libdir}/libsundials_fsunnonlinsol*.so.*
+%if %{with pthread}
+%{_libdir}/libsundials_fnvecpthreads.so.*
+%endif
+%{_libdir}/libsundials_fsunlinsolband.so.*
+%{_libdir}/libsundials_fsunlinsoldense.so.*
+%{_libdir}/libsundials_fsunlinsolklu.so.*
+%{_libdir}/libsundials_fsunlinsolpcg.so.*
+%{_libdir}/libsundials_fsunlinsolspbcgs.so.*
+%{_libdir}/libsundials_fsunlinsolspfgmr.so.*
+%{_libdir}/libsundials_fsunlinsolspgmr.so.*
+%{_libdir}/libsundials_fsunlinsolsptfqmr.so.*
+%if 0%{?with_superlumt}
+%{_libdir}/libsundials_fsunlinsolsuperlumt.so.*
+%endif
+%{_libdir}/libsundials_fsunmatrixband.so.*
+%{_libdir}/libsundials_fsunmatrixdense.so.*
+%{_libdir}/libsundials_fsunmatrixsparse.so.*
+%{_libdir}/libsundials_fsunnonlinsolfixedpoint.so.*
+%{_libdir}/libsundials_fsunnonlinsolnewton.so.*
 %endif
 
 %files devel
@@ -656,22 +746,40 @@ popd
 %{_libdir}/libsundials_kinsol.so
 %{_libdir}/libsundials_nvecserial.so
 %{_libdir}/libsundials_nvecopenmp.so
+%{_libdir}/libsundials_nvecmanyvector.so
+%if %{with pthread}
+%{_libdir}/libsundials_nvecpthreads.so
+%endif
 %{_libdir}/libsundials_sunmatrix*.so
 %{_libdir}/libsundials_sunlinsol*.so
 %{_libdir}/libsundials_sunnonlinsol*.so
 %if 0%{?with_fortran}
 %{_includedir}/sundials/sundials_fconfig.h
+%{_libdir}/libsundials_*_mod.so
 %{_fmoddir}/%{name}/
 %{_libdir}/libsundials_fcvode_mod.so
 %{_libdir}/libsundials_fnvecserial.so
-%{_libdir}/libsundials_fnvecserial_mod.so
 %{_libdir}/libsundials_fnvecopenmp.so
-%{_libdir}/libsundials_fnvecopenmp_mod.so
-%{_libdir}/libsundials_fsunmatrix*.so
-%{_libdir}/libsundials_fsunlinsol*.so
-%{_libdir}/libsundials_fsunnonlinsol*.so
+%if %{with pthread}
+%{_libdir}/libsundials_fnvecpthreads.so
 %endif
-%{_includedir}/sundials/
+%{_libdir}/libsundials_fsunlinsolband.so
+%{_libdir}/libsundials_fsunlinsoldense.so
+%{_libdir}/libsundials_fsunlinsolklu.so
+%{_libdir}/libsundials_fsunlinsolpcg.so
+%{_libdir}/libsundials_fsunlinsolspbcgs.so
+%{_libdir}/libsundials_fsunlinsolspfgmr.so
+%{_libdir}/libsundials_fsunlinsolspgmr.so
+%{_libdir}/libsundials_fsunlinsolsptfqmr.so
+%if 0%{?with_superlumt}
+%{_libdir}/libsundials_fsunlinsolsuperlumt.so
+%endif
+%{_libdir}/libsundials_fsunmatrixband.so
+%{_libdir}/libsundials_fsunmatrixdense.so
+%{_libdir}/libsundials_fsunmatrixsparse.so
+%{_libdir}/libsundials_fsunnonlinsolfixedpoint.so
+%{_libdir}/libsundials_fsunnonlinsolnewton.so
+%endif
 %{_includedir}/nvector/
 %{_includedir}/sunmatrix/
 %{_includedir}/sunlinsol/
@@ -682,21 +790,29 @@ popd
 %{_includedir}/ida/
 %{_includedir}/idas/
 %{_includedir}/kinsol/
+%{_includedir}/sundials/
 
 %if 0%{?with_openmpi}
 %files openmpi
 %license sundials-%{version}/LICENSE
 %doc sundials-%{version}/README.md
-%doc sundials-%{version}/src/README-arkode
-%doc sundials-%{version}/src/README-cvode
-%doc sundials-%{version}/src/README-cvodes
-%doc sundials-%{version}/src/README-ida
-%doc sundials-%{version}/src/README.idas
-%doc sundials-%{version}/src/README-kinsol
+%doc sundials-%{version}/src/README-arkode.md
+%doc sundials-%{version}/src/README-cvode.md
+%doc sundials-%{version}/src/README-cvodes.md
+%doc sundials-%{version}/src/README-ida.md
+%doc sundials-%{version}/src/README.idas.md
+%doc sundials-%{version}/src/README-kinsol.md
 %doc sundials-%{version}/NOTICE
 %{_libdir}/openmpi/lib/libsundials_nvecparallel.so.*
 %{_libdir}/openmpi/lib/libsundials_nvecparhyp.so.*
+%if 0%{?with_petsc}
 %{_libdir}/openmpi/lib/libsundials_nvecpetsc.so.*
+%endif
+%{_libdir}/openmpi/lib/libsundials_nvecmpimanyvector.so.*
+%if %{with pthread}
+%{_libdir}/openmpi/lib/libsundials_nvecmpipthreads.so.*
+%endif
+%{_libdir}/openmpi/lib/libsundials_nvecmpiplusx.so.*
 %exclude %{_libdir}/openmpi/lib/libsundials_kinsol.so.*
 %exclude %{_libdir}/openmpi/lib/libsundials_ida*.so.*
 %exclude %{_libdir}/openmpi/lib/libsundials_cvode*.so.*
@@ -706,12 +822,15 @@ popd
 %exclude %{_libdir}/openmpi/lib/libsundials_sunmatrix*.so.*
 %exclude %{_libdir}/openmpi/lib/libsundials_sunlinsol*.so.*
 %exclude %{_libdir}/openmpi/lib/libsundials_sunnonlinsol*.so.*
+%exclude %{_libdir}/openmpi/lib/libsundials_nvecmanyvector.so.*
+%if %{with pthread}
+%exclude %{_libdir}/openmpi/lib/libsundials_nvecpthreads.so.*
+%endif
 %if 0%{?with_fortran}
 %{_libdir}/openmpi/lib/libsundials_fnvecparallel.so.*
+%{_libdir}/openmpi/lib/libsundials_*_mod.so.*
 %exclude %{_libdir}/openmpi/lib/libsundials_fnvecserial.so.*
-%exclude %{_libdir}/openmpi/lib/libsundials_fnvecserial_mod.so.*
 %exclude %{_libdir}/openmpi/lib/libsundials_fnvecopenmp.so.*
-%exclude %{_libdir}/openmpi/lib/libsundials_fnvecopenmp_mod.so.*
 %exclude %{_libdir}/openmpi/lib/libsundials_fsunmatrix*.so.*
 %exclude %{_libdir}/openmpi/lib/libsundials_fsunlinsol*.so.*
 %exclude %{_libdir}/openmpi/lib/libsundials_fsunnonlinsol*.so.*
@@ -723,18 +842,24 @@ popd
 %if 0%{?with_fortran}
 %{_fmoddir}/openmpi%{?el7:-%_arch}/%{name}/
 %{_libdir}/openmpi/lib/libsundials_fnvecparallel.so
+%{_libdir}/openmpi/lib/libsundials_*_mod.so
 %exclude %{_libdir}/openmpi/lib/libsundials_fcvode_mod.so
 %exclude %{_libdir}/openmpi/lib/libsundials_fnvecserial.so
-%exclude %{_libdir}/openmpi/lib/libsundials_fnvecserial_mod.so
 %exclude %{_libdir}/openmpi/lib/libsundials_fnvecopenmp.so
-%exclude %{_libdir}/openmpi/lib/libsundials_fnvecopenmp_mod.so
 %exclude %{_libdir}/openmpi/lib/libsundials_fsunmatrix*.so
 %exclude %{_libdir}/openmpi/lib/libsundials_fsunlinsol*.so
 %exclude %{_libdir}/openmpi/lib/libsundials_fsunnonlinsol*.so
 %endif
 %{_libdir}/openmpi/lib/libsundials_nvecparallel.so
 %{_libdir}/openmpi/lib/libsundials_nvecparhyp.so
+%if 0%{?with_petsc}
 %{_libdir}/openmpi/lib/libsundials_nvecpetsc.so
+%endif
+%{_libdir}/openmpi/lib/libsundials_nvecmpimanyvector.so
+%if %{with pthread}
+%{_libdir}/openmpi/lib/libsundials_nvecmpipthreads.so
+%endif
+%{_libdir}/openmpi/lib/libsundials_nvecmpiplusx.so
 %exclude %{_libdir}/openmpi/lib/libsundials_kinsol.so
 %exclude %{_libdir}/openmpi/lib/libsundials_ida*.so
 %exclude %{_libdir}/openmpi/lib/libsundials_cvode*.so
@@ -744,22 +869,33 @@ popd
 %exclude %{_libdir}/openmpi/lib/libsundials_sunmatrix*.so
 %exclude %{_libdir}/openmpi/lib/libsundials_sunlinsol*.so
 %exclude %{_libdir}/openmpi/lib/libsundials_sunnonlinsol*.so
+%exclude %{_libdir}/openmpi/lib/libsundials_nvecmanyvector.so
+%if %{with pthread}
+%exclude %{_libdir}/openmpi/lib/libsundials_nvecpthreads.so
+%endif
 %endif
 
 %if 0%{?with_mpich}
 %files mpich
 %license sundials-%{version}/LICENSE
 %doc sundials-%{version}/README.md
-%doc sundials-%{version}/src/README-arkode
-%doc sundials-%{version}/src/README-cvode
-%doc sundials-%{version}/src/README-cvodes
-%doc sundials-%{version}/src/README-ida
-%doc sundials-%{version}/src/README.idas
-%doc sundials-%{version}/src/README-kinsol
+%doc sundials-%{version}/src/README-arkode.md
+%doc sundials-%{version}/src/README-cvode.md
+%doc sundials-%{version}/src/README-cvodes.md
+%doc sundials-%{version}/src/README-ida.md
+%doc sundials-%{version}/src/README.idas.md
+%doc sundials-%{version}/src/README-kinsol.md
 %doc sundials-%{version}/NOTICE
 %{_libdir}/mpich/lib/libsundials_nvecparallel.so.*
 %{_libdir}/mpich/lib/libsundials_nvecparhyp.so.*
+%if 0%{?with_petsc}
 %{_libdir}/mpich/lib/libsundials_nvecpetsc.so.*
+%endif
+%{_libdir}/mpich/lib/libsundials_nvecmpimanyvector.so.*
+%if %{with pthread}
+%{_libdir}/mpich/lib/libsundials_nvecmpipthreads.so.*
+%endif
+%{_libdir}/mpich/lib/libsundials_nvecmpiplusx.so.*
 %exclude %{_libdir}/mpich/lib/libsundials_kinsol.so.*
 %exclude %{_libdir}/mpich/lib/libsundials_ida*.so.*
 %exclude %{_libdir}/mpich/lib/libsundials_cvode*.so.*
@@ -769,12 +905,15 @@ popd
 %exclude %{_libdir}/mpich/lib/libsundials_sunmatrix*.so.*
 %exclude %{_libdir}/mpich/lib/libsundials_sunlinsol*.so.*
 %exclude %{_libdir}/mpich/lib/libsundials_sunnonlinsol*.so.*
+%exclude %{_libdir}/mpich/lib/libsundials_nvecmanyvector.so.*
+%if %{with pthread}
+%exclude %{_libdir}/mpich/lib/libsundials_nvecpthreads.so.*
+%endif
 %if 0%{?with_fortran}
 %{_libdir}/mpich/lib/libsundials_fnvecparallel.so.*
+%{_libdir}/mpich/lib/libsundials_*_mod.so.*
 %exclude %{_libdir}/mpich/lib/libsundials_fnvecserial.so.*
-%exclude %{_libdir}/mpich/lib/libsundials_fnvecserial_mod.so.*
 %exclude %{_libdir}/mpich/lib/libsundials_fnvecopenmp.so.*
-%exclude %{_libdir}/mpich/lib/libsundials_fnvecopenmp_mod.so.*
 %exclude %{_libdir}/mpich/lib/libsundials_fsunmatrix*.so.*
 %exclude %{_libdir}/mpich/lib/libsundials_fsunlinsol*.so.*
 %exclude %{_libdir}/mpich/lib/libsundials_fsunnonlinsol*.so.*
@@ -787,18 +926,24 @@ popd
 %if 0%{?with_fortran}
 %{_fmoddir}/mpich%{?el7:-%_arch}/%{name}/
 %{_libdir}/mpich/lib/libsundials_fnvecparallel.so
+%{_libdir}/mpich/lib/libsundials_*_mod.so
 %exclude %{_libdir}/mpich/lib/libsundials_fcvode_mod.so
 %exclude %{_libdir}/mpich/lib/libsundials_fnvecserial.so
-%exclude %{_libdir}/mpich/lib/libsundials_fnvecserial_mod.so
 %exclude %{_libdir}/mpich/lib/libsundials_fnvecopenmp.so
-%exclude %{_libdir}/mpich/lib/libsundials_fnvecopenmp_mod.so
 %exclude %{_libdir}/mpich/lib/libsundials_fsunmatrix*.so
 %exclude %{_libdir}/mpich/lib/libsundials_fsunlinsol*.so
 %exclude %{_libdir}/mpich/lib/libsundials_fsunnonlinsol*.so
 %endif
 %{_libdir}/mpich/lib/libsundials_nvecparallel.so
 %{_libdir}/mpich/lib/libsundials_nvecparhyp.so
+%if 0%{?with_petsc}
 %{_libdir}/mpich/lib/libsundials_nvecpetsc.so
+%endif
+%{_libdir}/mpich/lib/libsundials_nvecmpimanyvector.so
+%if %{with pthread}
+%{_libdir}/mpich/lib/libsundials_nvecmpipthreads.so
+%endif
+%{_libdir}/mpich/lib/libsundials_nvecmpiplusx.so
 %exclude %{_libdir}/mpich/lib/libsundials_kinsol.so
 %exclude %{_libdir}/mpich/lib/libsundials_ida*.so
 %exclude %{_libdir}/mpich/lib/libsundials_cvode*.so
@@ -808,11 +953,16 @@ popd
 %exclude %{_libdir}/mpich/lib/libsundials_sunmatrix*.so
 %exclude %{_libdir}/mpich/lib/libsundials_sunlinsol*.so
 %exclude %{_libdir}/mpich/lib/libsundials_sunnonlinsol*.so
+%exclude %{_libdir}/mpich/lib/libsundials_nvecmanyvector.so
+%if %{with pthread}
+%exclude %{_libdir}/mpich/lib/libsundials_nvecpthreads.so
+%endif
 %endif
 
 %files doc
 %license sundials-%{version}/LICENSE
 %doc sundials-%{version}/README.md
+%doc sundials-%{version}/NOTICE
 %doc sundials-%{version}/doc/cvode/cv_guide.pdf
 %doc sundials-%{version}/doc/kinsol/kin_guide.pdf
 %doc sundials-%{version}/doc/cvodes/cvs_guide.pdf
@@ -820,6 +970,14 @@ popd
 %doc sundials-%{version}/doc/arkode/*
 
 %changelog
+* Fri Apr 10 2020 Antonio Trande <sagitter@fedoraproject.org> - 5.2.0-1
+- Release 5.2.0
+
+* Sat Mar 21 2020 Antonio Trande <sagitter@fedoraproject.org> - 5.1.0-1
+- Release 5.1.0
+- Use -fcommon flag workaround for GCC-10
+- Disable pthread support (do not mix-up openmp and pthread)
+
 * Fri Jan 31 2020 Fedora Release Engineering <releng@fedoraproject.org> - 4.1.0-10
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_32_Mass_Rebuild
 
@@ -843,8 +1001,6 @@ popd
 
 * Wed Jun 26 2019 Antonio Trande <sagitter@fedoraproject.org> - 4.1.0-3
 - Do not use curly brackets under %%files
-- PETSc needs HDF5
-- Use devtoolset-8 on epel
 
 * Thu Apr 25 2019 Antonio Trande <sagitter@fedoraproject.org> - 4.1.0-2
 - Reorganization of the files
