@@ -972,9 +972,6 @@ popd
 %changelog
 * Fri Apr 10 2020 Antonio Trande <sagitter@fedoraproject.org> - 5.2.0-1
 - Release 5.2.0
-
-* Sat Mar 21 2020 Antonio Trande <sagitter@fedoraproject.org> - 5.1.0-1
-- Release 5.1.0
 - Use -fcommon flag workaround for GCC-10
 - Disable pthread support (do not mix-up openmp and pthread)
 
