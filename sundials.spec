@@ -55,7 +55,7 @@
 Summary:    Suite of nonlinear solvers
 Name:       sundials
 Version:    5.2.0
-Release:    1%{?dist}
+Release:    2%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -151,7 +151,6 @@ This package contains the Sundials Fortran parallel OpenMPI libraries.
 %package openmpi-devel
 Summary:    Suite of nonlinear solvers
 Requires:   %{name}-openmpi%{?_isa} = %{version}-%{release}
-Requires:   %{name}-devel%{?_isa} = %{version}-%{release}
 %description openmpi-devel
 SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
 for use in writing mathematical software.
@@ -188,7 +187,6 @@ This package contains the Sundials parallel MPICH libraries.
 %package mpich-devel
 Summary:    Suite of nonlinear solvers
 Requires:   %{name}-mpich%{?_isa} = %{version}-%{release}
-Requires:   %{name}-devel%{?_isa} = %{version}-%{release}
 %description mpich-devel
 SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
 for use in writing mathematical software.
@@ -970,6 +968,9 @@ popd
 %doc sundials-%{version}/doc/arkode/*
 
 %changelog
+* Fri Apr 24 2020 Antonio Trande <sagitter@fedoraproject.org> - 5.2.0-2
+- Fix rhbz#1827675
+
 * Fri Apr 10 2020 Antonio Trande <sagitter@fedoraproject.org> - 5.2.0-1
 - Release 5.2.0
 - Use -fcommon flag workaround for GCC-10
