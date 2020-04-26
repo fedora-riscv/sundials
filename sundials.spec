@@ -42,7 +42,7 @@
 Summary:    Suite of nonlinear solvers
 Name:       sundials
 Version:    4.1.0
-Release:    10%{?dist}
+Release:    11%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -697,24 +697,24 @@ popd
 %{_libdir}/openmpi/lib/libsundials_nvecparallel.so.*
 %{_libdir}/openmpi/lib/libsundials_nvecparhyp.so.*
 %{_libdir}/openmpi/lib/libsundials_nvecpetsc.so.*
-%exclude %{_libdir}/openmpi/lib/libsundials_kinsol.so.*
-%exclude %{_libdir}/openmpi/lib/libsundials_ida*.so.*
-%exclude %{_libdir}/openmpi/lib/libsundials_cvode*.so.*
-%exclude %{_libdir}/openmpi/lib/libsundials_arkode*.so.*
-%exclude %{_libdir}/openmpi/lib/libsundials_nvecserial.so.*
-%exclude %{_libdir}/openmpi/lib/libsundials_nvecopenmp.so.*
-%exclude %{_libdir}/openmpi/lib/libsundials_sunmatrix*.so.*
-%exclude %{_libdir}/openmpi/lib/libsundials_sunlinsol*.so.*
-%exclude %{_libdir}/openmpi/lib/libsundials_sunnonlinsol*.so.*
+%{_libdir}/openmpi/lib/libsundials_kinsol.so.*
+%{_libdir}/openmpi/lib/libsundials_ida*.so.*
+%{_libdir}/openmpi/lib/libsundials_cvode*.so.*
+%{_libdir}/openmpi/lib/libsundials_arkode*.so.*
+%{_libdir}/openmpi/lib/libsundials_nvecserial.so.*
+%{_libdir}/openmpi/lib/libsundials_nvecopenmp.so.*
+%{_libdir}/openmpi/lib/libsundials_sunmatrix*.so.*
+%{_libdir}/openmpi/lib/libsundials_sunlinsol*.so.*
+%{_libdir}/openmpi/lib/libsundials_sunnonlinsol*.so.*
 %if 0%{?with_fortran}
 %{_libdir}/openmpi/lib/libsundials_fnvecparallel.so.*
-%exclude %{_libdir}/openmpi/lib/libsundials_fnvecserial.so.*
-%exclude %{_libdir}/openmpi/lib/libsundials_fnvecserial_mod.so.*
-%exclude %{_libdir}/openmpi/lib/libsundials_fnvecopenmp.so.*
-%exclude %{_libdir}/openmpi/lib/libsundials_fnvecopenmp_mod.so.*
-%exclude %{_libdir}/openmpi/lib/libsundials_fsunmatrix*.so.*
-%exclude %{_libdir}/openmpi/lib/libsundials_fsunlinsol*.so.*
-%exclude %{_libdir}/openmpi/lib/libsundials_fsunnonlinsol*.so.*
+%{_libdir}/openmpi/lib/libsundials_fnvecserial.so.*
+%{_libdir}/openmpi/lib/libsundials_fnvecserial_mod.so.*
+%{_libdir}/openmpi/lib/libsundials_fnvecopenmp.so.*
+%{_libdir}/openmpi/lib/libsundials_fnvecopenmp_mod.so.*
+%{_libdir}/openmpi/lib/libsundials_fsunmatrix*.so.*
+%{_libdir}/openmpi/lib/libsundials_fsunlinsol*.so.*
+%{_libdir}/openmpi/lib/libsundials_fsunnonlinsol*.so.*
 %endif
 
 %files openmpi-devel
@@ -723,27 +723,27 @@ popd
 %if 0%{?with_fortran}
 %{_fmoddir}/openmpi%{?el7:-%_arch}/%{name}/
 %{_libdir}/openmpi/lib/libsundials_fnvecparallel.so
-%exclude %{_libdir}/openmpi/lib/libsundials_fcvode_mod.so
-%exclude %{_libdir}/openmpi/lib/libsundials_fnvecserial.so
-%exclude %{_libdir}/openmpi/lib/libsundials_fnvecserial_mod.so
-%exclude %{_libdir}/openmpi/lib/libsundials_fnvecopenmp.so
-%exclude %{_libdir}/openmpi/lib/libsundials_fnvecopenmp_mod.so
-%exclude %{_libdir}/openmpi/lib/libsundials_fsunmatrix*.so
-%exclude %{_libdir}/openmpi/lib/libsundials_fsunlinsol*.so
-%exclude %{_libdir}/openmpi/lib/libsundials_fsunnonlinsol*.so
+%{_libdir}/openmpi/lib/libsundials_fcvode_mod.so
+%{_libdir}/openmpi/lib/libsundials_fnvecserial.so
+%{_libdir}/openmpi/lib/libsundials_fnvecserial_mod.so
+%{_libdir}/openmpi/lib/libsundials_fnvecopenmp.so
+%{_libdir}/openmpi/lib/libsundials_fnvecopenmp_mod.so
+%{_libdir}/openmpi/lib/libsundials_fsunmatrix*.so
+%{_libdir}/openmpi/lib/libsundials_fsunlinsol*.so
+%{_libdir}/openmpi/lib/libsundials_fsunnonlinsol*.so
 %endif
 %{_libdir}/openmpi/lib/libsundials_nvecparallel.so
 %{_libdir}/openmpi/lib/libsundials_nvecparhyp.so
 %{_libdir}/openmpi/lib/libsundials_nvecpetsc.so
-%exclude %{_libdir}/openmpi/lib/libsundials_kinsol.so
-%exclude %{_libdir}/openmpi/lib/libsundials_ida*.so
-%exclude %{_libdir}/openmpi/lib/libsundials_cvode*.so
-%exclude %{_libdir}/openmpi/lib/libsundials_arkode*.so
-%exclude %{_libdir}/openmpi/lib/libsundials_nvecserial.so
-%exclude %{_libdir}/openmpi/lib/libsundials_nvecopenmp.so
-%exclude %{_libdir}/openmpi/lib/libsundials_sunmatrix*.so
-%exclude %{_libdir}/openmpi/lib/libsundials_sunlinsol*.so
-%exclude %{_libdir}/openmpi/lib/libsundials_sunnonlinsol*.so
+%{_libdir}/openmpi/lib/libsundials_kinsol.so
+%{_libdir}/openmpi/lib/libsundials_ida*.so
+%{_libdir}/openmpi/lib/libsundials_cvode*.so
+%{_libdir}/openmpi/lib/libsundials_arkode*.so
+%{_libdir}/openmpi/lib/libsundials_nvecserial.so
+%{_libdir}/openmpi/lib/libsundials_nvecopenmp.so
+%{_libdir}/openmpi/lib/libsundials_sunmatrix*.so
+%{_libdir}/openmpi/lib/libsundials_sunlinsol*.so
+%{_libdir}/openmpi/lib/libsundials_sunnonlinsol*.so
 %endif
 
 %if 0%{?with_mpich}
@@ -760,24 +760,24 @@ popd
 %{_libdir}/mpich/lib/libsundials_nvecparallel.so.*
 %{_libdir}/mpich/lib/libsundials_nvecparhyp.so.*
 %{_libdir}/mpich/lib/libsundials_nvecpetsc.so.*
-%exclude %{_libdir}/mpich/lib/libsundials_kinsol.so.*
-%exclude %{_libdir}/mpich/lib/libsundials_ida*.so.*
-%exclude %{_libdir}/mpich/lib/libsundials_cvode*.so.*
-%exclude %{_libdir}/mpich/lib/libsundials_arkode*.so.*
-%exclude %{_libdir}/mpich/lib/libsundials_nvecserial.so.*
-%exclude %{_libdir}/mpich/lib/libsundials_nvecopenmp.so.*
-%exclude %{_libdir}/mpich/lib/libsundials_sunmatrix*.so.*
-%exclude %{_libdir}/mpich/lib/libsundials_sunlinsol*.so.*
-%exclude %{_libdir}/mpich/lib/libsundials_sunnonlinsol*.so.*
+%{_libdir}/mpich/lib/libsundials_kinsol.so.*
+%{_libdir}/mpich/lib/libsundials_ida*.so.*
+%{_libdir}/mpich/lib/libsundials_cvode*.so.*
+%{_libdir}/mpich/lib/libsundials_arkode*.so.*
+%{_libdir}/mpich/lib/libsundials_nvecserial.so.*
+%{_libdir}/mpich/lib/libsundials_nvecopenmp.so.*
+%{_libdir}/mpich/lib/libsundials_sunmatrix*.so.*
+%{_libdir}/mpich/lib/libsundials_sunlinsol*.so.*
+%{_libdir}/mpich/lib/libsundials_sunnonlinsol*.so.*
 %if 0%{?with_fortran}
 %{_libdir}/mpich/lib/libsundials_fnvecparallel.so.*
-%exclude %{_libdir}/mpich/lib/libsundials_fnvecserial.so.*
-%exclude %{_libdir}/mpich/lib/libsundials_fnvecserial_mod.so.*
-%exclude %{_libdir}/mpich/lib/libsundials_fnvecopenmp.so.*
-%exclude %{_libdir}/mpich/lib/libsundials_fnvecopenmp_mod.so.*
-%exclude %{_libdir}/mpich/lib/libsundials_fsunmatrix*.so.*
-%exclude %{_libdir}/mpich/lib/libsundials_fsunlinsol*.so.*
-%exclude %{_libdir}/mpich/lib/libsundials_fsunnonlinsol*.so.*
+%{_libdir}/mpich/lib/libsundials_fnvecserial.so.*
+%{_libdir}/mpich/lib/libsundials_fnvecserial_mod.so.*
+%{_libdir}/mpich/lib/libsundials_fnvecopenmp.so.*
+%{_libdir}/mpich/lib/libsundials_fnvecopenmp_mod.so.*
+%{_libdir}/mpich/lib/libsundials_fsunmatrix*.so.*
+%{_libdir}/mpich/lib/libsundials_fsunlinsol*.so.*
+%{_libdir}/mpich/lib/libsundials_fsunnonlinsol*.so.*
 %endif
 
 
@@ -787,27 +787,27 @@ popd
 %if 0%{?with_fortran}
 %{_fmoddir}/mpich%{?el7:-%_arch}/%{name}/
 %{_libdir}/mpich/lib/libsundials_fnvecparallel.so
-%exclude %{_libdir}/mpich/lib/libsundials_fcvode_mod.so
-%exclude %{_libdir}/mpich/lib/libsundials_fnvecserial.so
-%exclude %{_libdir}/mpich/lib/libsundials_fnvecserial_mod.so
-%exclude %{_libdir}/mpich/lib/libsundials_fnvecopenmp.so
-%exclude %{_libdir}/mpich/lib/libsundials_fnvecopenmp_mod.so
-%exclude %{_libdir}/mpich/lib/libsundials_fsunmatrix*.so
-%exclude %{_libdir}/mpich/lib/libsundials_fsunlinsol*.so
-%exclude %{_libdir}/mpich/lib/libsundials_fsunnonlinsol*.so
+%{_libdir}/mpich/lib/libsundials_fcvode_mod.so
+%{_libdir}/mpich/lib/libsundials_fnvecserial.so
+%{_libdir}/mpich/lib/libsundials_fnvecserial_mod.so
+%{_libdir}/mpich/lib/libsundials_fnvecopenmp.so
+%{_libdir}/mpich/lib/libsundials_fnvecopenmp_mod.so
+%{_libdir}/mpich/lib/libsundials_fsunmatrix*.so
+%{_libdir}/mpich/lib/libsundials_fsunlinsol*.so
+%{_libdir}/mpich/lib/libsundials_fsunnonlinsol*.so
 %endif
 %{_libdir}/mpich/lib/libsundials_nvecparallel.so
 %{_libdir}/mpich/lib/libsundials_nvecparhyp.so
 %{_libdir}/mpich/lib/libsundials_nvecpetsc.so
-%exclude %{_libdir}/mpich/lib/libsundials_kinsol.so
-%exclude %{_libdir}/mpich/lib/libsundials_ida*.so
-%exclude %{_libdir}/mpich/lib/libsundials_cvode*.so
-%exclude %{_libdir}/mpich/lib/libsundials_arkode*.so
-%exclude %{_libdir}/mpich/lib/libsundials_nvecserial.so
-%exclude %{_libdir}/mpich/lib/libsundials_nvecopenmp.so
-%exclude %{_libdir}/mpich/lib/libsundials_sunmatrix*.so
-%exclude %{_libdir}/mpich/lib/libsundials_sunlinsol*.so
-%exclude %{_libdir}/mpich/lib/libsundials_sunnonlinsol*.so
+%{_libdir}/mpich/lib/libsundials_kinsol.so
+%{_libdir}/mpich/lib/libsundials_ida*.so
+%{_libdir}/mpich/lib/libsundials_cvode*.so
+%{_libdir}/mpich/lib/libsundials_arkode*.so
+%{_libdir}/mpich/lib/libsundials_nvecserial.so
+%{_libdir}/mpich/lib/libsundials_nvecopenmp.so
+%{_libdir}/mpich/lib/libsundials_sunmatrix*.so
+%{_libdir}/mpich/lib/libsundials_sunlinsol*.so
+%{_libdir}/mpich/lib/libsundials_sunnonlinsol*.so
 %endif
 
 %files doc
@@ -820,6 +820,9 @@ popd
 %doc sundials-%{version}/doc/arkode/*
 
 %changelog
+* Sun Apr 26 2020 Antonio Trande <sagitter@fedoraproject.org> - 4.1.0-11
+- Fix rhbz#1828004
+
 * Fri Jan 31 2020 Fedora Release Engineering <releng@fedoraproject.org> - 4.1.0-10
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_32_Mass_Rebuild
 
