@@ -17,19 +17,26 @@
 %endif
 
 ## Hypre ##
+## Due to rhbz#1744780
+%if 0%{?rhel} && 0%{?rhel} > 7
 %global with_hypre 1
+%global with_openmpicheck 0
+%global with_mpichcheck 0
+%endif
+%if 0%{?fedora} || 0%{?rhel} == 7
+%global with_hypre 1
+%ifnarch s390x
+%global with_openmpicheck 1
+%global with_mpichcheck 1
+%endif
+%endif
 ###########
+%global with_sercheck 1
 
 ## PETSc ##
 %global with_petsc 1
 %global with_petsc 1
 ###########
-
-%ifnarch s390x
-%global with_openmpicheck 1
-%global with_mpichcheck 1
-%endif
-%global with_sercheck 1
 
 ## Fortran ##
 %if %{?__isa_bits:%{__isa_bits}}%{!?__isa_bits:32} == 64
@@ -42,7 +49,7 @@
 Summary:    Suite of nonlinear solvers
 Name:       sundials
 Version:    4.1.0
-Release:    11%{?dist}
+Release:    12%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -568,14 +575,14 @@ pushd buildopenmpi_dir/build
 %{_openmpi_load}
 %if %{with debug}
 export LD_LIBRARY_PATH=%{buildroot}$MPI_LIB:$MPI_LIB
-ctest3 --force-new-ctest-process -VV %{?_smp_mflags} --output-on-failure --debug
+ctest3 --force-new-ctest-process -VV -j1 --output-on-failure --debug
 %else
 export LD_LIBRARY_PATH=%{buildroot}$MPI_LIB:$MPI_LIB
 # Tests excluded fail on ppc64le and aarch64
 %if 0%{?rhel}
-ctest3 --force-new-ctest-process %{?_smp_mflags} -E 'spgmr|spfgmr|spbcgs|sptfqmr'
+ctest3 --force-new-ctest-process -j1 -E 'spgmr|spfgmr|spbcgs|sptfqmr'
 %else
-ctest3 --force-new-ctest-process %{?_smp_mflags}
+ctest3 --force-new-ctest-process -j1
 %endif
 %endif
 %{_openmpi_unload}
@@ -591,13 +598,13 @@ pushd buildmpich_dir/build
 %{_mpich_load}
 %if %{with debug}
 export LD_LIBRARY_PATH=%{buildroot}$MPI_LIB:$MPI_LIB
-ctest3 --force-new-ctest-process -VV %{?_smp_mflags} --output-on-failure --debug
+ctest3 --force-new-ctest-process -VV -j1 --output-on-failure --debug
 %else
 export LD_LIBRARY_PATH=%{buildroot}$MPI_LIB:$MPI_LIB
 %if 0%{?rhel}
-ctest3 --force-new-ctest-process %{?_smp_mflags} -E 'spgmr|spfgmr|spbcgs|sptfqmr'
+ctest3 --force-new-ctest-process -j1 -E 'spgmr|spfgmr|spbcgs|sptfqmr'
 %else
-ctest3 --force-new-ctest-process %{?_smp_mflags}
+ctest3 --force-new-ctest-process -j1
 %endif
 %endif
 %{_mpich_unload}
@@ -611,10 +618,10 @@ popd
 pushd sundials-%{version}/build
 %if %{with debug}
 export LD_LIBRARY_PATH=%{buildroot}%{_libdir}:%{_libdir}
-ctest3 --force-new-ctest-process -VV %{?_smp_mflags} --output-on-failure --debug
+ctest3 --force-new-ctest-process -VV -j1 --output-on-failure --debug
 %else
 export LD_LIBRARY_PATH=%{buildroot}%{_libdir}:%{_libdir}
-ctest3 --force-new-ctest-process %{?_smp_mflags}
+ctest3 --force-new-ctest-process -j1
 %endif
 popd
 %endif
@@ -820,6 +827,10 @@ popd
 %doc sundials-%{version}/doc/arkode/*
 
 %changelog
+* Sun Apr 26 2020 Antonio Trande <sagitter@fedoraproject.org> - 4.1.0-12
+- Use job 1 with ctest
+- Disable MPI tests on EPEL8
+
 * Sun Apr 26 2020 Antonio Trande <sagitter@fedoraproject.org> - 4.1.0-11
 - Fix rhbz#1828004
 
