@@ -865,6 +865,7 @@ popd
 %{_libdir}/openmpi/lib/libsundials_fsunmatrix*.so
 %{_libdir}/openmpi/lib/libsundials_fsunlinsol*.so
 %{_libdir}/openmpi/lib/libsundials_fsunnonlinsol*.so
+%{_includedir}/openmpi-%{_arch}/sundials/sundials_fconfig.h
 %endif
 %{_libdir}/openmpi/lib/libsundials_nvecparallel.so
 %{_libdir}/openmpi/lib/libsundials_nvecparhyp.so
@@ -874,6 +875,7 @@ popd
 %{_libdir}/openmpi/lib/libsundials_nvecmpimanyvector.so
 %if %{with pthread}
 %{_libdir}/openmpi/lib/libsundials_nvecmpipthreads.so
+%{_libdir}/openmpi/lib/libsundials_nvecpthreads.so
 %endif
 %{_libdir}/openmpi/lib/libsundials_nvecmpiplusx.so
 %{_libdir}/openmpi/lib/libsundials_kinsol.so
@@ -886,9 +888,6 @@ popd
 %{_libdir}/openmpi/lib/libsundials_sunlinsol*.so
 %{_libdir}/openmpi/lib/libsundials_sunnonlinsol*.so
 %{_libdir}/openmpi/lib/libsundials_nvecmanyvector.so
-%if %{with pthread}
-%{_libdir}/openmpi/lib/libsundials_nvecpthreads.so
-%endif
 %endif
 
 %if 0%{?with_mpich}
@@ -949,6 +948,7 @@ popd
 %{_libdir}/mpich/lib/libsundials_fsunmatrix*.so
 %{_libdir}/mpich/lib/libsundials_fsunlinsol*.so
 %{_libdir}/mpich/lib/libsundials_fsunnonlinsol*.so
+%{_includedir}/mpich-%{_arch}/sundials/sundials_fconfig.h
 %endif
 %{_libdir}/mpich/lib/libsundials_nvecparallel.so
 %{_libdir}/mpich/lib/libsundials_nvecparhyp.so
@@ -958,6 +958,7 @@ popd
 %{_libdir}/mpich/lib/libsundials_nvecmpimanyvector.so
 %if %{with pthread}
 %{_libdir}/mpich/lib/libsundials_nvecmpipthreads.so
+%{_libdir}/mpich/lib/libsundials_nvecpthreads.so
 %endif
 %{_libdir}/mpich/lib/libsundials_nvecmpiplusx.so
 %{_libdir}/mpich/lib/libsundials_kinsol.so
@@ -970,9 +971,6 @@ popd
 %{_libdir}/mpich/lib/libsundials_sunlinsol*.so
 %{_libdir}/mpich/lib/libsundials_sunnonlinsol*.so
 %{_libdir}/mpich/lib/libsundials_nvecmanyvector.so
-%if %{with pthread}
-%{_libdir}/mpich/lib/libsundials_nvecpthreads.so
-%endif
 %endif
 
 %files doc
