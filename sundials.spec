@@ -37,10 +37,21 @@
 %global with_superludist 0
 ###########
 
+## Hypre ##
+## Due to rhbz#1744780
+%if 0%{?rhel} && 0%{?rhel} > 7
+%global with_hypre 1
+%global with_openmpicheck 0
+%global with_mpichcheck 0
+%endif
+%if 0%{?fedora} || 0%{?rhel} == 7
+%global with_hypre 1
 %ifnarch s390x
 %global with_openmpicheck 1
 %global with_mpichcheck 1
 %endif
+%endif
+###########
 %global with_sercheck 1
 
 ## Fortran ##
@@ -54,7 +65,7 @@
 Summary:    Suite of nonlinear solvers
 Name:       sundials
 Version:    5.2.0
-Release:    3%{?dist}
+Release:    4%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -337,6 +348,7 @@ pushd buildopenmpi_dir
 sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/openmpi-%{_arch}/nvector|g' src/nvector/parallel/CMakeLists.txt
 sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/openmpi-%{_arch}/nvector|g' src/nvector/parhyp/CMakeLists.txt
 sed -i 's|DESTINATION include/sundials|DESTINATION %{_includedir}/openmpi-%{_arch}/sundials|g' src/sundials/CMakeLists.txt
+sed -i 's|DESTINATION include/sundials|DESTINATION %{_includedir}/openmpi-%{_arch}/sundials|g' CMakeLists.txt
 %if 0%{?with_petsc}
 sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/openmpi-%{_arch}/nvector|g' src/nvector/petsc/CMakeLists.txt
 %endif
@@ -479,6 +491,7 @@ pushd buildmpich_dir
 sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/mpich-%{_arch}/nvector|g' src/nvector/parallel/CMakeLists.txt
 sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/mpich-%{_arch}/nvector|g' src/nvector/parhyp/CMakeLists.txt
 sed -i 's|DESTINATION include/sundials|DESTINATION %{_includedir}/mpich-%{_arch}/sundials|g' src/sundials/CMakeLists.txt
+sed -i 's|DESTINATION include/sundials|DESTINATION %{_includedir}/mpich-%{_arch}/sundials|g' CMakeLists.txt
 %if 0%{?with_petsc}
 sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/mpich-%{_arch}/nvector|g' src/nvector/petsc/CMakeLists.txt
 %endif
@@ -619,12 +632,16 @@ popd
 %if 0%{?with_openmpi}
 %{_openmpi_load}
 %make_install -C buildopenmpi_dir/build
+rm -f %{buildroot}$MPI_INCLUDE/sundials/LICENSE
+rm -f %{buildroot}$MPI_INCLUDE/sundials/NOTICE
 %{_openmpi_unload}
 %endif
 
 %if 0%{?with_mpich}
 %{_mpich_load}
 %make_install -C buildmpich_dir/build
+rm -f %{buildroot}$MPI_INCLUDE/sundials/LICENSE
+rm -f %{buildroot}$MPI_INCLUDE/sundials/NOTICE
 %{_mpich_unload}
 %endif
 
@@ -633,6 +650,7 @@ popd
 # Remove files in bad position
 rm -f %{buildroot}%{_prefix}/LICENSE
 rm -f %{buildroot}%{_includedir}/sundials/LICENSE
+rm -f %{buildroot}%{_includedir}/sundials/NOTICE
 
 # Remove static files
 find %{buildroot} -name '*.a' -exec rm -f {} ';'
@@ -968,6 +986,9 @@ popd
 %doc sundials-%{version}/doc/arkode/*
 
 %changelog
+* Fri May 22 2020 Antonio Trande <sagitter@fedoraproject.org> - 5.2.0-4
+- Fix installation of config.h files (rhbz#1839131)
+
 * Fri Apr 24 2020 Antonio Trande <sagitter@fedoraproject.org> - 5.2.0-3
 - Fix packaging of all libraries
 
@@ -978,6 +999,13 @@ popd
 - Release 5.2.0
 - Use -fcommon flag workaround for GCC-10
 - Disable pthread support (do not mix-up openmp and pthread)
+
+* Fri Jan 31 2020 Antonio Trande <sagitter@fedoraproject.org> - 4.1.0-12
+- Use job 1 with ctest
+- Disable MPI tests on EPEL8
+
+* Fri Jan 31 2020 Antonio Trande <sagitter@fedoraproject.org> - 4.1.0-11
+- Fix rhbz#1828004
 
 * Fri Jan 31 2020 Fedora Release Engineering <releng@fedoraproject.org> - 4.1.0-10
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_32_Mass_Rebuild
