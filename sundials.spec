@@ -991,7 +991,7 @@ popd
 
 %changelog
 * Sat May 23 2020 Antonio Trande <sagitter@fedoraproject.org> - 5.2.0-5
-- Add `OMPI_MCA_rmaps_base_oversubscribe=yes` option to prevent `ctest`
+- Add OMPI_MCA_rmaps_base_oversubscribe=yes option to prevent ctest
   failures due to insufficient number of slots
   
 * Fri May 22 2020 Antonio Trande <sagitter@fedoraproject.org> - 5.2.0-4
