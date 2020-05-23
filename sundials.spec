@@ -664,9 +664,11 @@ pushd buildopenmpi_dir/build
 %{_openmpi_load}
 %if %{with debug}
 export LD_LIBRARY_PATH=%{buildroot}$MPI_LIB:$MPI_LIB
+export OMPI_MCA_rmaps_base_oversubscribe=yes
 ctest3 --force-new-ctest-process -VV -j1 --output-on-failure --debug
 %else
 export LD_LIBRARY_PATH=%{buildroot}$MPI_LIB:$MPI_LIB
+export OMPI_MCA_rmaps_base_oversubscribe=yes
 ctest3 --force-new-ctest-process -j1
 %endif
 %{_openmpi_unload}
@@ -682,9 +684,11 @@ pushd buildmpich_dir/build
 %{_mpich_load}
 %if %{with debug}
 export LD_LIBRARY_PATH=%{buildroot}$MPI_LIB:$MPI_LIB
+export OMPI_MCA_rmaps_base_oversubscribe=yes
 ctest3 --force-new-ctest-process -VV -j1 --output-on-failure --debug
 %else
 export LD_LIBRARY_PATH=%{buildroot}$MPI_LIB:$MPI_LIB
+export OMPI_MCA_rmaps_base_oversubscribe=yes
 ctest3 --force-new-ctest-process -j1
 %endif
 %{_mpich_unload}
@@ -698,9 +702,11 @@ popd
 pushd sundials-%{version}/build
 %if %{with debug}
 export LD_LIBRARY_PATH=%{buildroot}%{_libdir}:%{_libdir}
+export OMPI_MCA_rmaps_base_oversubscribe=yes
 ctest3 --force-new-ctest-process -VV -j1 --output-on-failure --debug
 %else
 export LD_LIBRARY_PATH=%{buildroot}%{_libdir}:%{_libdir}
+export OMPI_MCA_rmaps_base_oversubscribe=yes
 ctest3 --force-new-ctest-process -j1
 %endif
 popd
@@ -984,6 +990,10 @@ popd
 %doc sundials-%{version}/doc/arkode/*
 
 %changelog
+* Sat May 23 2020 Antonio Trande <sagitter@fedoraproject.org> - 5.2.0-5
+- Add `OMPI_MCA_rmaps_base_oversubscribe=yes` option to prevent `ctest`
+  failures due to insufficient number of slots
+  
 * Fri May 22 2020 Antonio Trande <sagitter@fedoraproject.org> - 5.2.0-4
 - Fix installation of config.h files (rhbz#1839131)
 
