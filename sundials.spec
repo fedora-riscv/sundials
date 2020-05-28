@@ -37,21 +37,10 @@
 %global with_superludist 0
 ###########
 
-## Hypre ##
-## Due to rhbz#1744780
-%if 0%{?rhel} && 0%{?rhel} > 7
-%global with_hypre 1
-%global with_openmpicheck 0
-%global with_mpichcheck 0
-%endif
-%if 0%{?fedora} || 0%{?rhel} == 7
-%global with_hypre 1
 %ifnarch s390x
 %global with_openmpicheck 1
 %global with_mpichcheck 1
 %endif
-%endif
-###########
 %global with_sercheck 1
 
 ## Fortran ##
@@ -64,8 +53,8 @@
 
 Summary:    Suite of nonlinear solvers
 Name:       sundials
-Version:    5.2.0
-Release:    5%{?dist}
+Version:    5.3.0
+Release:    1%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -334,7 +323,8 @@ export CFLAGS="%{build_fflags}"
 %endif
  -DSUPERLUDIST_ENABLE:BOOL=OFF \
  -DHYPRE_ENABLE:BOOL=OFF \
- -DEXAMPLES_INSTALL:BOOL=OFF -Wno-dev ..
+ -DEXAMPLES_INSTALL:BOOL=OFF \
+ -DSUNDIALS_BUILD_WITH_MONITORING:BOOL=ON -Wno-dev ..
 
 %make_build V=1
 cd ..
@@ -475,7 +465,8 @@ export CFLAGS="%{build_fflags}"
  -DHYPRE_INCLUDE_DIR:PATH=$MPI_INCLUDE/hypre \
  -DHYPRE_LIBRARY_DIR:PATH=$MPI_LIB \
 %endif
- -DEXAMPLES_INSTALL:BOOL=OFF -Wno-dev ..
+ -DEXAMPLES_INSTALL:BOOL=OFF \
+ -DSUNDIALS_BUILD_WITH_MONITORING:BOOL=ON -Wno-dev ..
 
 %make_build V=1
 %{_openmpi_unload}
@@ -618,7 +609,8 @@ export CFLAGS="%{build_fflags}"
  -DHYPRE_INCLUDE_DIR:PATH=$MPI_INCLUDE/hypre \
  -DHYPRE_LIBRARY_DIR:PATH=$MPI_LIB \
 %endif
- -DEXAMPLES_INSTALL:BOOL=OFF -Wno-dev ..
+ -DEXAMPLES_INSTALL:BOOL=OFF \
+ -DSUNDIALS_BUILD_WITH_MONITORING:BOOL=ON -Wno-dev ..
 
 %make_build V=1
 %{_mpich_unload}
@@ -990,6 +982,10 @@ popd
 %doc sundials-%{version}/doc/arkode/*
 
 %changelog
+* Sat May 23 2020 Antonio Trande <sagitter@fedoraproject.org> - 5.3.0-1
+- Release 5.3.0
+- CMake option SUNDIALS_BUILD_WITH_MONITORING activated
+
 * Sat May 23 2020 Antonio Trande <sagitter@fedoraproject.org> - 5.2.0-5
 - Add OMPI_MCA_rmaps_base_oversubscribe=yes option to prevent ctest
   failures due to insufficient number of slots
