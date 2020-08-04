@@ -7,7 +7,6 @@
 #
 
 %global __cmake_in_source_build 1
-%undefine _ld_as_needed
 %define _legacy_common_support 1
 
 %if 0%{?fedora}
