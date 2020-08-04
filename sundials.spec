@@ -6,6 +6,8 @@
 %bcond_with pthread
 #
 
+%global __cmake_in_source_build 1
+
 %define _legacy_common_support 1
 
 %if 0%{?fedora}
