@@ -22,6 +22,16 @@
 %global dts devtoolset-8-
 %endif
 
+## BLAS ##
+%if 0%{?fedora} >= 33 || 0%{?rhel} >= 9
+%global blaslib flexiblas
+%global blasvar %{nil}
+%else
+%global blaslib openblas
+%global blasvar o
+%endif
+###########
+
 ## Hypre ##
 %global with_hypre 1
 ###########
@@ -55,7 +65,7 @@
 Summary:    Suite of nonlinear solvers
 Name:       sundials
 Version:    5.3.0
-Release:    3%{?dist}
+Release:    4%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -79,7 +89,7 @@ BuildRequires: %{?dts}gcc, %{?dts}gcc-c++
 BuildRequires: epel-rpm-macros
 %endif
 BuildRequires: cmake3 >= 3.10
-BuildRequires: openblas-devel, openblas-srpm-macros
+BuildRequires: %{blaslib}-devel
 %if 0%{?with_superlumt}
 %ifarch s390x x86_64 %{power64} aarch64
 BuildRequires: SuperLUMT64-devel
@@ -241,10 +251,9 @@ pushd sundials-%{version}
 
 mkdir -p build && cd build
 
-# Add -lopenblasp if thread support is enabled
-export LIBBLASLINK=-lopenblaso
-export LIBBLAS=libopenblas
-export INCBLAS=%{_includedir}/openblas
+export LIBBLASLINK=-l%{blaslib}%{blasvar}
+export LIBBLAS=lib%{blaslib}
+export INCBLAS=%{_includedir}/%{blaslib}
 
 %if 0%{?with_superlumt}
 %ifarch s390x x86_64 %{power64} aarch64
@@ -348,9 +357,9 @@ mkdir -p build && cd build
 %{_openmpi_load}
 
 ## Blas
-export LIBBLASLINK=-lopenblaso
-export LIBBLAS=libopenblas
-export INCBLAS=%{_includedir}/openblas
+export LIBBLASLINK=-l%{blaslib}%{blasvar}
+export LIBBLAS=lib%{blaslib}
+export INCBLAS=%{_includedir}/%{blaslib}
 ##
 
 ## SuperLUMT
@@ -492,9 +501,9 @@ mkdir -p build && cd build
 %{_mpich_load}
 
 ## Blas
-export LIBBLASLINK=-lopenblaso
-export LIBBLAS=libopenblas
-export INCBLAS=%{_includedir}/openblas
+export LIBBLASLINK=-l%{blaslib}%{blasvar}
+export LIBBLAS=lib%{blaslib}
+export INCBLAS=%{_includedir}/%{blaslib}
 ##
 
 ## SuperLUMT
@@ -983,6 +992,9 @@ popd
 %doc sundials-%{version}/doc/arkode/*
 
 %changelog
+* Thu Aug 20 2020 Iñaki Úcar <iucar@fedoraproject.org> - 5.3.0-4
+- https://fedoraproject.org/wiki/Changes/FlexiBLAS_as_BLAS/LAPACK_manager
+
 * Sat Aug 01 2020 Fedora Release Engineering <releng@fedoraproject.org> - 5.3.0-3
 - Second attempt - Rebuilt for
   https://fedoraproject.org/wiki/Fedora_33_Mass_Rebuild
