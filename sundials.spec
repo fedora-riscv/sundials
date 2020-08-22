@@ -8,6 +8,7 @@
 
 %global __cmake_in_source_build 1
 %define _legacy_common_support 1
+%define _lto_cflags %{nil}
 
 %if 0%{?fedora}
 %global with_mpich 1
