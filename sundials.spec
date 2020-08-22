@@ -78,7 +78,7 @@ Patch0:     %{name}-3.1.1-set_superlumt_name.patch
 # This patch rename superLUMT64 library
 Patch1:     %{name}-3.1.1-set_superlumt64_name.patch
 
-Patch2:     sundials-change_petsc_variable.patch
+Patch2:     %{name}-change_petsc_variable.patch
 
 %if 0%{?with_fortran}
 BuildRequires: gcc-gfortran
@@ -252,7 +252,7 @@ pushd sundials-%{version}
 mkdir -p build && cd build
 
 export LIBBLASLINK=-l%{blaslib}%{blasvar}
-export LIBBLAS=lib%{blaslib}
+#export LIBBLAS=lib%%{blaslib}
 export INCBLAS=%{_includedir}/%{blaslib}
 
 %if 0%{?with_superlumt}
@@ -276,8 +276,8 @@ export FFLAGS=" "
 %_cmake \
  -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
  -DCMAKE_BUILD_TYPE:STRING=Debug \
- -DCMAKE_C_FLAGS_DEBUG:STRING="-O0 -g -Wl,-z,relro -Wl,-z,now -Wl,--as-needed -I$INCBLAS" \
- -DCMAKE_Fortran_FLAGS_DEBUG:STRING="-O0 -g -Wl,-z,relro -Wl,-z,now -Wl,--as-needed -I$INCBLAS" \
+ -DCMAKE_C_FLAGS_DEBUG:STRING="-O0 -g %{__global_ldflags} -I$INCBLAS" \
+ -DCMAKE_Fortran_FLAGS_DEBUG:STRING="-O0 -g %{__global_ldflags} -I$INCBLAS" \
  -DCMAKE_SHARED_LINKER_FLAGS_DEBUG:STRING="%{__global_ldflags} -lklu $LIBBLASLINK $LIBSUPERLUMTLINK" \
 %else
 export CFLAGS="%{build_cflags}"
@@ -358,7 +358,7 @@ mkdir -p build && cd build
 
 ## Blas
 export LIBBLASLINK=-l%{blaslib}%{blasvar}
-export LIBBLAS=lib%{blaslib}
+#export LIBBLAS=lib%%{blaslib}
 export INCBLAS=%{_includedir}/%{blaslib}
 ##
 
@@ -400,8 +400,8 @@ export FFLAGS=" "
 %_cmake \
  -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
  -DCMAKE_BUILD_TYPE:STRING=Debug \
- -DCMAKE_C_FLAGS_DEBUG:STRING="-O0 -g -Wl,-z,relro -Wl,-z,now -Wl,--as-needed -I$INCBLAS" \
- -DCMAKE_Fortran_FLAGS_DEBUG:STRING="-O0 -g -Wl,-z,relro -Wl,-z,now -Wl,--as-needed -I$INCBLAS" \
+ -DCMAKE_C_FLAGS_DEBUG:STRING="-O0 -g %{__global_ldflags} -I$INCBLAS" \
+ -DCMAKE_Fortran_FLAGS_DEBUG:STRING="-O0 -g %{__global_ldflags} -I$INCBLAS" \
  -DCMAKE_SHARED_LINKER_FLAGS_DEBUG:STRING="%{__global_ldflags} -lklu $LIBBLASLINK $LIBSUPERLUMTLINK $LIBHYPRELINK" \
 %else
 export CFLAGS="%{build_cflags}"
@@ -502,7 +502,7 @@ mkdir -p build && cd build
 
 ## Blas
 export LIBBLASLINK=-l%{blaslib}%{blasvar}
-export LIBBLAS=lib%{blaslib}
+#export LIBBLAS=lib%%{blaslib}
 export INCBLAS=%{_includedir}/%{blaslib}
 ##
 
@@ -544,8 +544,8 @@ export FFLAGS=" "
 %_cmake \
  -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
  -DCMAKE_BUILD_TYPE:STRING=Debug \
- -DCMAKE_C_FLAGS_DEBUG:STRING="-O0 -g -Wl,-z,relro -Wl,-z,now -Wl,--as-needed -I$INCBLAS" \
- -DCMAKE_Fortran_FLAGS_DEBUG:STRING="-O0 -g -Wl,-z,relro -Wl,-z,now -Wl,--as-needed -I$INCBLAS" \
+ -DCMAKE_C_FLAGS_DEBUG:STRING="-O0 -g %{__global_ldflags} -I$INCBLAS" \
+ -DCMAKE_Fortran_FLAGS_DEBUG:STRING="-O0 -g %{__global_ldflags} -I$INCBLAS" \
  -DCMAKE_SHARED_LINKER_FLAGS_DEBUG:STRING="%{__global_ldflags} -lklu $LIBBLASLINK $LIBSUPERLUMTLINK $LIBHYPRELINK" \
 %else
 export CFLAGS="%{build_cflags}"
