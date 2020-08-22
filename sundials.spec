@@ -253,7 +253,6 @@ pushd sundials-%{version}
 mkdir -p build && cd build
 
 export LIBBLASLINK=-l%{blaslib}%{blasvar}
-#export LIBBLAS=lib%%{blaslib}
 export INCBLAS=%{_includedir}/%{blaslib}
 
 %if 0%{?with_superlumt}
@@ -359,7 +358,6 @@ mkdir -p build && cd build
 
 ## Blas
 export LIBBLASLINK=-l%{blaslib}%{blasvar}
-#export LIBBLAS=lib%%{blaslib}
 export INCBLAS=%{_includedir}/%{blaslib}
 ##
 
@@ -503,7 +501,6 @@ mkdir -p build && cd build
 
 ## Blas
 export LIBBLASLINK=-l%{blaslib}%{blasvar}
-#export LIBBLAS=lib%%{blaslib}
 export INCBLAS=%{_includedir}/%{blaslib}
 ##
 
@@ -740,7 +737,7 @@ popd
 %{_libdir}/libsundials_sunlinsol*.so.*
 %{_libdir}/libsundials_sunnonlinsol*.so.*
 %if 0%{?with_fortran}
-%{_libdir}/libsundials_*_mod.so.*
+%{_libdir}/libsundials_f*_mod.so.*
 %{_libdir}/libsundials_fnvecserial.so.*
 %{_libdir}/libsundials_fnvecopenmp.so.*
 %if %{with pthread}
@@ -780,7 +777,7 @@ popd
 %{_libdir}/libsundials_sunnonlinsol*.so
 %if 0%{?with_fortran}
 %{_includedir}/sundials/sundials_fconfig.h
-%{_libdir}/libsundials_*_mod.so
+%{_libdir}/libsundials_f*_mod.so
 %{_fmoddir}/%{name}/
 %{_libdir}/libsundials_fcvode_mod.so
 %{_libdir}/libsundials_fnvecserial.so
@@ -853,7 +850,7 @@ popd
 %endif
 %if 0%{?with_fortran}
 %{_libdir}/openmpi/lib/libsundials_fnvecparallel.so.*
-%{_libdir}/openmpi/lib/libsundials_*_mod.so.*
+%{_libdir}/openmpi/lib/libsundials_f*_mod.so.*
 %{_libdir}/openmpi/lib/libsundials_fnvecserial.so.*
 %{_libdir}/openmpi/lib/libsundials_fnvecopenmp.so.*
 %{_libdir}/openmpi/lib/libsundials_fsunmatrix*.so.*
@@ -867,7 +864,7 @@ popd
 %if 0%{?with_fortran}
 %{_fmoddir}/openmpi%{?el7:-%_arch}/%{name}/
 %{_libdir}/openmpi/lib/libsundials_fnvecparallel.so
-%{_libdir}/openmpi/lib/libsundials_*_mod.so
+%{_libdir}/openmpi/lib/libsundials_f*_mod.so
 %{_libdir}/openmpi/lib/libsundials_fcvode_mod.so
 %{_libdir}/openmpi/lib/libsundials_fnvecserial.so
 %{_libdir}/openmpi/lib/libsundials_fnvecopenmp.so
@@ -935,7 +932,7 @@ popd
 %endif
 %if 0%{?with_fortran}
 %{_libdir}/mpich/lib/libsundials_fnvecparallel.so.*
-%{_libdir}/mpich/lib/libsundials_*_mod.so.*
+%{_libdir}/mpich/lib/libsundials_f*_mod.so.*
 %{_libdir}/mpich/lib/libsundials_fnvecserial.so.*
 %{_libdir}/mpich/lib/libsundials_fnvecopenmp.so.*
 %{_libdir}/mpich/lib/libsundials_fsunmatrix*.so.*
@@ -950,7 +947,7 @@ popd
 %if 0%{?with_fortran}
 %{_fmoddir}/mpich%{?el7:-%_arch}/%{name}/
 %{_libdir}/mpich/lib/libsundials_fnvecparallel.so
-%{_libdir}/mpich/lib/libsundials_*_mod.so
+%{_libdir}/mpich/lib/libsundials_f*_mod.so
 %{_libdir}/mpich/lib/libsundials_fcvode_mod.so
 %{_libdir}/mpich/lib/libsundials_fnvecserial.so
 %{_libdir}/mpich/lib/libsundials_fnvecopenmp.so
