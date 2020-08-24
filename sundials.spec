@@ -86,7 +86,7 @@ BuildRequires: gcc-gfortran
 %endif
 BuildRequires: python%{python3_pkgversion}-devel
 BuildRequires: %{?dts}gcc, %{?dts}gcc-c++
-%if 0%{?rhel}
+%if 0%{?epel}
 BuildRequires: epel-rpm-macros
 %endif
 BuildRequires: cmake3 >= 3.10
