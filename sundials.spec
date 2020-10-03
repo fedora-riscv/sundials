@@ -65,8 +65,8 @@
 
 Summary:    Suite of nonlinear solvers
 Name:       sundials
-Version:    5.3.0
-Release:    5%{?dist}
+Version:    5.4.0
+Release:    1%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -849,12 +849,10 @@ popd
 %endif
 %if 0%{?with_fortran}
 %{_libdir}/openmpi/lib/libsundials_fcvode*.so.*
-%{_libdir}/openmpi/lib/libsundials_fcvodes*.so.*
 %{_libdir}/openmpi/lib/libsundials_fnvec*.so.*
 %{_libdir}/openmpi/lib/libsundials_fsun*.so.*
 %{_libdir}/openmpi/lib/libsundials_fark*.so.*
 %{_libdir}/openmpi/lib/libsundials_fida*.so.*
-%{_libdir}/openmpi/lib/libsundials_fidas*.so.*
 %{_libdir}/openmpi/lib/libsundials_fkinsol*.so.*
 %endif
 
@@ -864,12 +862,10 @@ popd
 %if 0%{?with_fortran}
 %{_fmoddir}/openmpi%{?el7:-%_arch}/%{name}/
 %{_libdir}/openmpi/lib/libsundials_fcvode*.so
-%{_libdir}/openmpi/lib/libsundials_fcvodes*.so
 %{_libdir}/openmpi/lib/libsundials_fnvec*.so
 %{_libdir}/openmpi/lib/libsundials_fsun*.so
 %{_libdir}/openmpi/lib/libsundials_fark*.so
 %{_libdir}/openmpi/lib/libsundials_fida*.so
-%{_libdir}/openmpi/lib/libsundials_fidas*.so
 %{_libdir}/openmpi/lib/libsundials_fkinsol*.so
 %{_includedir}/openmpi-%{_arch}/sundials/sundials_fconfig.h
 %endif
@@ -932,12 +928,10 @@ popd
 %endif
 %if 0%{?with_fortran}
 %{_libdir}/mpich/lib/libsundials_fcvode*.so.*
-%{_libdir}/mpich/lib/libsundials_fcvodes*.so.*
 %{_libdir}/mpich/lib/libsundials_fnvec*.so.*
 %{_libdir}/mpich/lib/libsundials_fsun*.so.*
 %{_libdir}/mpich/lib/libsundials_fark*.so.*
 %{_libdir}/mpich/lib/libsundials_fida*.so.*
-%{_libdir}/mpich/lib/libsundials_fidas*.so.*
 %{_libdir}/mpich/lib/libsundials_fkinsol*.so.*
 %endif
 
@@ -948,12 +942,10 @@ popd
 %if 0%{?with_fortran}
 %{_fmoddir}/mpich%{?el7:-%_arch}/%{name}/
 %{_libdir}/mpich/lib/libsundials_fcvode*.so
-%{_libdir}/mpich/lib/libsundials_fcvodes*.so
 %{_libdir}/mpich/lib/libsundials_fnvec*.so
 %{_libdir}/mpich/lib/libsundials_fsun*.so
 %{_libdir}/mpich/lib/libsundials_fark*.so
 %{_libdir}/mpich/lib/libsundials_fida*.so
-%{_libdir}/mpich/lib/libsundials_fidas*.so
 %{_libdir}/mpich/lib/libsundials_fkinsol*.so
 %{_includedir}/mpich-%{_arch}/sundials/sundials_fconfig.h
 %endif
@@ -991,6 +983,9 @@ popd
 %doc sundials-%{version}/doc/arkode/*
 
 %changelog
+* Fri Sep 25 2020 Antonio Trande <sagitter@fedoraproject.org> - 5.4.0-1
+- Release 5.4.0
+
 * Mon Aug 24 2020 Antonio Trande <sagitter@fedoraproject.org> - 5.3.0-5
 - Increase build release number
 
