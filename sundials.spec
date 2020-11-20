@@ -777,7 +777,7 @@ popd
 %{_libdir}/libsundials_sunnonlinsol*.so
 %if 0%{?with_fortran}
 %{_includedir}/sundials/sundials_fconfig.h
-%{_includedir}/sundials_fnvector.h
+%{_includedir}/sundials/sundials_fnvector.h
 %{_libdir}/libsundials_f*_mod.so
 %{_fmoddir}/%{name}/
 %{_libdir}/libsundials_fnvecserial.so
