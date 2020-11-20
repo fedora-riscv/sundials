@@ -1,6 +1,6 @@
---- config/FindSUPERLUMT.orig.cmake	2016-09-27 00:16:47.000000000 +0200
-+++ config/FindSUPERLUMT.cmake	2016-10-04 12:08:58.202988791 +0200
-@@ -60,7 +60,7 @@
+--- cmake/tpl/FindSUPERLUMT.orig.cmake	2020-11-02 17:28:15.000000000 +0100
++++ cmake/tpl/FindSUPERLUMT.cmake	2020-11-08 16:58:46.599284747 +0100
+@@ -62,7 +62,7 @@
  endif()
  
  # Set SuperLU_MT library name with thread type postfix
@@ -9,4 +9,3 @@
  
  if(MSVC)
    set(CMAKE_FIND_LIBRARY_PREFIXES lib ${CMAKE_FIND_LIBRARY_PREFIXES})
-

@@ -6,7 +6,6 @@
 %bcond_with pthread
 #
 
-%global __cmake_in_source_build 1
 %define _legacy_common_support 1
 %define _lto_cflags %{nil}
 
@@ -65,7 +64,7 @@
 
 Summary:    Suite of nonlinear solvers
 Name:       sundials
-Version:    5.4.0
+Version:    5.5.0
 Release:    1%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
@@ -74,10 +73,10 @@ URL:        https://computation.llnl.gov/projects/%{name}/
 Source0:    https://github.com/LLNL/%{name}/archive/v%{version}/%{name}-%{version}.tar.gz
 
 # This patch rename superLUMT library
-Patch0:     %{name}-3.1.1-set_superlumt_name.patch
+Patch0:     %{name}-5.5.0-set_superlumt_name.patch
 
 # This patch rename superLUMT64 library
-Patch1:     %{name}-3.1.1-set_superlumt64_name.patch
+Patch1:     %{name}-5.5.0-set_superlumt64_name.patch
 
 Patch2:     %{name}-change_petsc_variable.patch
 
@@ -129,6 +128,7 @@ preconditioners.
 %package devel
 Summary:    Suite of nonlinear solvers (developer files)
 Requires:   %{name}%{?_isa} = %{version}-%{release}
+Provides:   %{name}-fortran-static = %{version}-%{release}
 %description devel
 SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
 for use in writing mathematical software.
@@ -162,6 +162,7 @@ This package contains the Sundials Fortran parallel OpenMPI libraries.
 %package openmpi-devel
 Summary:    Suite of nonlinear solvers
 Requires:   %{name}-openmpi%{?_isa} = %{version}-%{release}
+Provides:   %{name}-openmpi-fortran-static = %{version}-%{release}
 %description openmpi-devel
 SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
 for use in writing mathematical software.
@@ -198,6 +199,7 @@ This package contains the Sundials parallel MPICH libraries.
 %package mpich-devel
 Summary:    Suite of nonlinear solvers
 Requires:   %{name}-mpich%{?_isa} = %{version}-%{release}
+Provides:   %{name}-mpich-fortran-static = %{version}-%{release}
 %description mpich-devel
 SUNDIALS is a SUite of Non-linear DIfferential/ALgebraic equation Solvers
 for use in writing mathematical software.
@@ -250,7 +252,7 @@ cp -a sundials-%{version} buildmpich_dir
 %build
 pushd sundials-%{version}
 
-mkdir -p build && cd build
+mkdir -p build
 
 export LIBBLASLINK=-l%{blaslib}%{blasvar}
 export INCBLAS=%{_includedir}/%{blaslib}
@@ -273,7 +275,7 @@ export LIBSUPERLUMTLINK=-lsuperlumt_d
 export CFLAGS=" "
 export FFLAGS=" "
 %global _cmake cmake3
-%_cmake \
+%_cmake -B build \
  -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
  -DCMAKE_BUILD_TYPE:STRING=Debug \
  -DCMAKE_C_FLAGS_DEBUG:STRING="-O0 -g %{__global_ldflags} -I$INCBLAS" \
@@ -282,7 +284,7 @@ export FFLAGS=" "
 %else
 export CFLAGS="%{build_cflags}"
 export CFLAGS="%{build_fflags}"
-%cmake3 \
+%cmake3 -B build\
 %endif
 %if %{?__isa_bits:%{__isa_bits}}%{!?__isa_bits:32} == 64
  -DSUNDIALS_INDEX_SIZE:STRING=64 \
@@ -310,7 +312,7 @@ export CFLAGS="%{build_fflags}"
  -DPYTHON_EXECUTABLE:FILEPATH=%{__python3} \
  -DEXAMPLES_ENABLE_CXX:BOOL=ON -DEXAMPLES_ENABLE_C:BOOL=ON \
  -DCMAKE_SKIP_RPATH:BOOL=YES -DCMAKE_SKIP_INSTALL_RPATH:BOOL=YES \
- -DBUILD_SHARED_LIBS:BOOL=ON -DBUILD_STATIC_LIBS:BOOL=OFF \
+ -DBUILD_SHARED_LIBS:BOOL=ON -DBUILD_STATIC_LIBS:BOOL=ON \
  -DMPI_ENABLE:BOOL=OFF \
 %if 0%{?with_fortran}
  -DF77_INTERFACE_ENABLE:BOOL=ON \
@@ -336,7 +338,7 @@ export CFLAGS="%{build_fflags}"
  -DEXAMPLES_INSTALL:BOOL=OFF \
  -DSUNDIALS_BUILD_WITH_MONITORING:BOOL=ON -Wno-dev ..
 
-%make_build V=1
+%make_build V=1 -C build
 cd ..
 popd
 
@@ -353,7 +355,7 @@ sed -i 's|DESTINATION include/sundials|DESTINATION %{_includedir}/openmpi-%{_arc
 sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/openmpi-%{_arch}/nvector|g' src/nvector/petsc/CMakeLists.txt
 %endif
 
-mkdir -p build && cd build
+mkdir -p build
 %{_openmpi_load}
 
 ## Blas
@@ -396,7 +398,7 @@ export FC=$MPI_BIN/mpif77
 export CFLAGS=" "
 export FFLAGS=" "
 %global _cmake cmake3
-%_cmake \
+%_cmake -B build \
  -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
  -DCMAKE_BUILD_TYPE:STRING=Debug \
  -DCMAKE_C_FLAGS_DEBUG:STRING="-O0 -g %{__global_ldflags} -I$INCBLAS" \
@@ -405,7 +407,7 @@ export FFLAGS=" "
 %else
 export CFLAGS="%{build_cflags}"
 export CFLAGS="%{build_fflags}"
-%cmake3 \
+%cmake3 -B build \
 %endif
 %if %{?__isa_bits:%{__isa_bits}}%{!?__isa_bits:32} == 64
  -DSUNDIALS_INDEX_SIZE:STRING=64 \
@@ -437,7 +439,7 @@ export CFLAGS="%{build_fflags}"
  -DCMAKE_INSTALL_PREFIX:PATH=%{_prefix} -DCMAKE_INSTALL_LIBDIR:PATH=%{_lib}/openmpi/lib \
  -DPYTHON_EXECUTABLE:FILEPATH=%{__python3} \
  -DEXAMPLES_ENABLE_CXX:BOOL=ON -DEXAMPLES_ENABLE_C:BOOL=ON \
- -DBUILD_SHARED_LIBS:BOOL=ON -DBUILD_STATIC_LIBS:BOOL=OFF \
+ -DBUILD_SHARED_LIBS:BOOL=ON -DBUILD_STATIC_LIBS:BOOL=ON \
  -DCMAKE_SKIP_RPATH:BOOL=YES -DCMAKE_SKIP_INSTALL_RPATH:BOOL=YES \
  -DMPI_ENABLE:BOOL=ON \
 %if 0%{?with_fortran}
@@ -477,7 +479,7 @@ export CFLAGS="%{build_fflags}"
  -DEXAMPLES_INSTALL:BOOL=OFF \
  -DSUNDIALS_BUILD_WITH_MONITORING:BOOL=ON -Wno-dev ..
 
-%make_build V=1
+%make_build V=1 -C build
 %{_openmpi_unload}
 cd ..
 popd
@@ -496,7 +498,7 @@ sed -i 's|DESTINATION include/sundials|DESTINATION %{_includedir}/mpich-%{_arch}
 sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/mpich-%{_arch}/nvector|g' src/nvector/petsc/CMakeLists.txt
 %endif
 
-mkdir -p build && cd build
+mkdir -p build
 %{_mpich_load}
 
 ## Blas
@@ -539,7 +541,7 @@ export FC=$MPI_BIN/mpif77
 export CFLAGS=" "
 export FFLAGS=" "
 %global _cmake cmake3
-%_cmake \
+%_cmake -B build \
  -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
  -DCMAKE_BUILD_TYPE:STRING=Debug \
  -DCMAKE_C_FLAGS_DEBUG:STRING="-O0 -g %{__global_ldflags} -I$INCBLAS" \
@@ -548,7 +550,7 @@ export FFLAGS=" "
 %else
 export CFLAGS="%{build_cflags}"
 export CFLAGS="%{build_fflags}"
-%cmake3 \
+%cmake3 -B build \
 %endif
 %if %{?__isa_bits:%{__isa_bits}}%{!?__isa_bits:32} == 64
  -DSUNDIALS_INDEX_SIZE:STRING=64 \
@@ -580,7 +582,7 @@ export CFLAGS="%{build_fflags}"
  -DCMAKE_INSTALL_PREFIX:PATH=%{_prefix} -DCMAKE_INSTALL_LIBDIR:PATH=%{_lib}/mpich/lib \
  -DPYTHON_EXECUTABLE:FILEPATH=%{__python3} \
  -DEXAMPLES_ENABLE_CXX:BOOL=ON -DEXAMPLES_ENABLE_C:BOOL=ON \
- -DBUILD_SHARED_LIBS:BOOL=ON -DBUILD_STATIC_LIBS:BOOL=OFF \
+ -DBUILD_SHARED_LIBS:BOOL=ON -DBUILD_STATIC_LIBS:BOOL=ON \
  -DCMAKE_SKIP_RPATH:BOOL=YES -DCMAKE_SKIP_INSTALL_RPATH:BOOL=YES \
  -DMPI_ENABLE:BOOL=ON \
 %if 0%{?with_fortran}
@@ -620,7 +622,7 @@ export CFLAGS="%{build_fflags}"
  -DEXAMPLES_INSTALL:BOOL=OFF \
  -DSUNDIALS_BUILD_WITH_MONITORING:BOOL=ON -Wno-dev ..
 
-%make_build V=1
+%make_build V=1 -C build
 %{_mpich_unload}
 cd ..
 popd
@@ -651,11 +653,6 @@ rm -f %{buildroot}$MPI_INCLUDE/sundials/NOTICE
 rm -f %{buildroot}%{_prefix}/LICENSE
 rm -f %{buildroot}%{_includedir}/sundials/LICENSE
 rm -f %{buildroot}%{_includedir}/sundials/NOTICE
-
-# Remove static files
-find %{buildroot} -name '*.a' -exec rm -f {} ';'
-
-%ldconfig_scriptlets
 
 %check
 %if 0%{?with_openmpi}
@@ -723,6 +720,7 @@ popd
 %doc sundials-%{version}/src/README.idas.md
 %doc sundials-%{version}/src/README-kinsol.md
 %doc sundials-%{version}/NOTICE
+%{_libdir}/libsundials_generic.so.*
 %{_libdir}/libsundials_ida*.so.*
 %{_libdir}/libsundials_cvode*.so.*
 %{_libdir}/libsundials_arkode*.so.*
@@ -751,17 +749,18 @@ popd
 %{_libdir}/libsundials_fsunlinsolspfgmr.so.*
 %{_libdir}/libsundials_fsunlinsolspgmr.so.*
 %{_libdir}/libsundials_fsunlinsolsptfqmr.so.*
+%{_libdir}/libsundials_fsunnonlinsol*.so.*
 %if 0%{?with_superlumt}
 %{_libdir}/libsundials_fsunlinsolsuperlumt.so.*
 %endif
 %{_libdir}/libsundials_fsunmatrixband.so.*
 %{_libdir}/libsundials_fsunmatrixdense.so.*
 %{_libdir}/libsundials_fsunmatrixsparse.so.*
-%{_libdir}/libsundials_fsunnonlinsolfixedpoint.so.*
-%{_libdir}/libsundials_fsunnonlinsolnewton.so.*
 %endif
 
 %files devel
+%{_libdir}/*.a
+%{_libdir}/libsundials_generic.so
 %{_libdir}/libsundials_ida*.so
 %{_libdir}/libsundials_cvode*.so
 %{_libdir}/libsundials_arkode*.so
@@ -769,6 +768,7 @@ popd
 %{_libdir}/libsundials_nvecserial.so
 %{_libdir}/libsundials_nvecopenmp.so
 %{_libdir}/libsundials_nvecmanyvector.so
+%{_libdir}/cmake/sundials/
 %if %{with pthread}
 %{_libdir}/libsundials_nvecpthreads.so
 %endif
@@ -777,6 +777,7 @@ popd
 %{_libdir}/libsundials_sunnonlinsol*.so
 %if 0%{?with_fortran}
 %{_includedir}/sundials/sundials_fconfig.h
+%{_includedir}/sundials_fnvector.h
 %{_libdir}/libsundials_f*_mod.so
 %{_fmoddir}/%{name}/
 %{_libdir}/libsundials_fnvecserial.so
@@ -792,14 +793,13 @@ popd
 %{_libdir}/libsundials_fsunlinsolspfgmr.so
 %{_libdir}/libsundials_fsunlinsolspgmr.so
 %{_libdir}/libsundials_fsunlinsolsptfqmr.so
+%{_libdir}/libsundials_fsunnonlinsol*.so
 %if 0%{?with_superlumt}
 %{_libdir}/libsundials_fsunlinsolsuperlumt.so
 %endif
 %{_libdir}/libsundials_fsunmatrixband.so
 %{_libdir}/libsundials_fsunmatrixdense.so
 %{_libdir}/libsundials_fsunmatrixsparse.so
-%{_libdir}/libsundials_fsunnonlinsolfixedpoint.so
-%{_libdir}/libsundials_fsunnonlinsolnewton.so
 %endif
 %{_includedir}/nvector/
 %{_includedir}/sunmatrix/
@@ -811,7 +811,23 @@ popd
 %{_includedir}/ida/
 %{_includedir}/idas/
 %{_includedir}/kinsol/
-%{_includedir}/sundials/
+%dir %{_includedir}/sundials
+%{_includedir}/sundials/sundials_export.h
+%{_includedir}/sundials/sundials_band.h
+%{_includedir}/sundials/sundials_dense.h
+%{_includedir}/sundials/sundials_direct.h
+%{_includedir}/sundials/sundials_futils.h
+%{_includedir}/sundials/sundials_iterative.h
+%{_includedir}/sundials/sundials_linearsolver.h
+%{_includedir}/sundials/sundials_math.h
+%{_includedir}/sundials/sundials_matrix.h
+%{_includedir}/sundials/sundials_memory.h
+%{_includedir}/sundials/sundials_nonlinearsolver.h
+%{_includedir}/sundials/sundials_mpi_types.h
+%{_includedir}/sundials/sundials_nvector.h
+%{_includedir}/sundials/sundials_types.h
+%{_includedir}/sundials/sundials_version.h
+%{_includedir}/sundials/sundials_config.h
 
 %if 0%{?with_openmpi}
 %files openmpi
@@ -824,6 +840,7 @@ popd
 %doc sundials-%{version}/src/README.idas.md
 %doc sundials-%{version}/src/README-kinsol.md
 %doc sundials-%{version}/NOTICE
+%{_libdir}/openmpi/lib/libsundials_generic.so.*
 %{_libdir}/openmpi/lib/libsundials_nvecparallel.so.*
 %{_libdir}/openmpi/lib/libsundials_nvecparhyp.so.*
 %if 0%{?with_petsc}
@@ -854,11 +871,29 @@ popd
 %{_libdir}/openmpi/lib/libsundials_fark*.so.*
 %{_libdir}/openmpi/lib/libsundials_fida*.so.*
 %{_libdir}/openmpi/lib/libsundials_fkinsol*.so.*
+%{_libdir}/openmpi/lib/libsundials_fsunnonlinsol*.so.*
 %endif
 
 %files openmpi-devel
+%{_libdir}/openmpi/lib/*.a
 %{_includedir}/openmpi-%{_arch}/nvector/
-%{_includedir}/openmpi-%{_arch}/sundials/
+%dir %{_includedir}/openmpi-%{_arch}/sundials
+%{_includedir}/openmpi-%{_arch}/sundials/sundials_export.h
+%{_includedir}/openmpi-%{_arch}/sundials/sundials_band.h
+%{_includedir}/openmpi-%{_arch}/sundials/sundials_dense.h
+%{_includedir}/openmpi-%{_arch}/sundials/sundials_direct.h
+%{_includedir}/openmpi-%{_arch}/sundials/sundials_futils.h
+%{_includedir}/openmpi-%{_arch}/sundials/sundials_iterative.h
+%{_includedir}/openmpi-%{_arch}/sundials/sundials_linearsolver.h
+%{_includedir}/openmpi-%{_arch}/sundials/sundials_math.h
+%{_includedir}/openmpi-%{_arch}/sundials/sundials_matrix.h
+%{_includedir}/openmpi-%{_arch}/sundials/sundials_memory.h
+%{_includedir}/openmpi-%{_arch}/sundials/sundials_nonlinearsolver.h
+%{_includedir}/openmpi-%{_arch}/sundials/sundials_mpi_types.h
+%{_includedir}/openmpi-%{_arch}/sundials/sundials_nvector.h
+%{_includedir}/openmpi-%{_arch}/sundials/sundials_types.h
+%{_includedir}/openmpi-%{_arch}/sundials/sundials_version.h
+%{_includedir}/openmpi-%{_arch}/sundials/sundials_config.h
 %if 0%{?with_fortran}
 %{_fmoddir}/openmpi%{?el7:-%_arch}/%{name}/
 %{_libdir}/openmpi/lib/libsundials_fcvode*.so
@@ -867,8 +902,11 @@ popd
 %{_libdir}/openmpi/lib/libsundials_fark*.so
 %{_libdir}/openmpi/lib/libsundials_fida*.so
 %{_libdir}/openmpi/lib/libsundials_fkinsol*.so
+%{_libdir}/openmpi/lib/libsundials_fsunnonlinsol*.so
 %{_includedir}/openmpi-%{_arch}/sundials/sundials_fconfig.h
+%{_includedir}/openmpi-%{_arch}/sundials/sundials_fnvector.h
 %endif
+%{_libdir}/openmpi/lib/libsundials_generic.so
 %{_libdir}/openmpi/lib/libsundials_nvecparallel.so
 %{_libdir}/openmpi/lib/libsundials_nvecparhyp.so
 %if 0%{?with_petsc}
@@ -890,6 +928,7 @@ popd
 %{_libdir}/openmpi/lib/libsundials_sunlinsol*.so
 %{_libdir}/openmpi/lib/libsundials_sunnonlinsol*.so
 %{_libdir}/openmpi/lib/libsundials_nvecmanyvector.so
+%{_libdir}/openmpi/lib/cmake/sundials/
 %endif
 
 %if 0%{?with_mpich}
@@ -903,6 +942,7 @@ popd
 %doc sundials-%{version}/src/README.idas.md
 %doc sundials-%{version}/src/README-kinsol.md
 %doc sundials-%{version}/NOTICE
+%{_libdir}/mpich/lib/libsundials_generic.so.*
 %{_libdir}/mpich/lib/libsundials_nvecparallel.so.*
 %{_libdir}/mpich/lib/libsundials_nvecparhyp.so.*
 %if 0%{?with_petsc}
@@ -933,12 +973,29 @@ popd
 %{_libdir}/mpich/lib/libsundials_fark*.so.*
 %{_libdir}/mpich/lib/libsundials_fida*.so.*
 %{_libdir}/mpich/lib/libsundials_fkinsol*.so.*
+%{_libdir}/mpich/lib/libsundials_fsunnonlinsol*.so.*
 %endif
 
 
 %files mpich-devel
 %{_includedir}/mpich-%{_arch}/nvector/
-%{_includedir}/mpich-%{_arch}/sundials/
+%dir %{_includedir}/mpich-%{_arch}/sundials
+%{_includedir}/mpich-%{_arch}/sundials/sundials_export.h
+%{_includedir}/mpich-%{_arch}/sundials/sundials_band.h
+%{_includedir}/mpich-%{_arch}/sundials/sundials_dense.h
+%{_includedir}/mpich-%{_arch}/sundials/sundials_direct.h
+%{_includedir}/mpich-%{_arch}/sundials/sundials_futils.h
+%{_includedir}/mpich-%{_arch}/sundials/sundials_iterative.h
+%{_includedir}/mpich-%{_arch}/sundials/sundials_linearsolver.h
+%{_includedir}/mpich-%{_arch}/sundials/sundials_math.h
+%{_includedir}/mpich-%{_arch}/sundials/sundials_matrix.h
+%{_includedir}/mpich-%{_arch}/sundials/sundials_memory.h
+%{_includedir}/mpich-%{_arch}/sundials/sundials_nonlinearsolver.h
+%{_includedir}/mpich-%{_arch}/sundials/sundials_mpi_types.h
+%{_includedir}/mpich-%{_arch}/sundials/sundials_nvector.h
+%{_includedir}/mpich-%{_arch}/sundials/sundials_types.h
+%{_includedir}/mpich-%{_arch}/sundials/sundials_version.h
+%{_includedir}/mpich-%{_arch}/sundials/sundials_config.h
 %if 0%{?with_fortran}
 %{_fmoddir}/mpich%{?el7:-%_arch}/%{name}/
 %{_libdir}/mpich/lib/libsundials_fcvode*.so
@@ -947,8 +1004,12 @@ popd
 %{_libdir}/mpich/lib/libsundials_fark*.so
 %{_libdir}/mpich/lib/libsundials_fida*.so
 %{_libdir}/mpich/lib/libsundials_fkinsol*.so
+%{_libdir}/mpich/lib/libsundials_fsunnonlinsol*.so
 %{_includedir}/mpich-%{_arch}/sundials/sundials_fconfig.h
+%{_includedir}/mpich-%{_arch}/sundials/sundials_fnvector.h
 %endif
+%{_libdir}/mpich/lib/*.a
+%{_libdir}/mpich/lib/libsundials_generic.so
 %{_libdir}/mpich/lib/libsundials_nvecparallel.so
 %{_libdir}/mpich/lib/libsundials_nvecparhyp.so
 %if 0%{?with_petsc}
@@ -970,6 +1031,7 @@ popd
 %{_libdir}/mpich/lib/libsundials_sunlinsol*.so
 %{_libdir}/mpich/lib/libsundials_sunnonlinsol*.so
 %{_libdir}/mpich/lib/libsundials_nvecmanyvector.so
+%{_libdir}/mpich/lib/cmake/sundials/
 %endif
 
 %files doc
@@ -983,6 +1045,9 @@ popd
 %doc sundials-%{version}/doc/arkode/*
 
 %changelog
+* Sun Nov 08 2020 Antonio Trande <sagitter@fedoraproject.org> - 5.5.0-1
+- Release 5.5.0
+
 * Fri Sep 25 2020 Antonio Trande <sagitter@fedoraproject.org> - 5.4.0-1
 - Release 5.4.0
 
