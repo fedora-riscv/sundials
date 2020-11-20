@@ -776,8 +776,6 @@ popd
 %{_libdir}/libsundials_sunlinsol*.so
 %{_libdir}/libsundials_sunnonlinsol*.so
 %if 0%{?with_fortran}
-%{_includedir}/sundials/sundials_fconfig.h
-%{_includedir}/sundials/sundials_fnvector.h
 %{_libdir}/libsundials_f*_mod.so
 %{_fmoddir}/%{name}/
 %{_libdir}/libsundials_fnvecserial.so
@@ -828,6 +826,8 @@ popd
 %{_includedir}/sundials/sundials_types.h
 %{_includedir}/sundials/sundials_version.h
 %{_includedir}/sundials/sundials_config.h
+%{_includedir}/sundials/sundials_fconfig.h
+%{_includedir}/sundials/sundials_fnvector.h
 
 %if 0%{?with_openmpi}
 %files openmpi
@@ -894,6 +894,8 @@ popd
 %{_includedir}/openmpi-%{_arch}/sundials/sundials_types.h
 %{_includedir}/openmpi-%{_arch}/sundials/sundials_version.h
 %{_includedir}/openmpi-%{_arch}/sundials/sundials_config.h
+%{_includedir}/openmpi-%{_arch}/sundials/sundials_fconfig.h
+%{_includedir}/openmpi-%{_arch}/sundials/sundials_fnvector.h
 %if 0%{?with_fortran}
 %{_fmoddir}/openmpi%{?el7:-%_arch}/%{name}/
 %{_libdir}/openmpi/lib/libsundials_fcvode*.so
@@ -903,8 +905,6 @@ popd
 %{_libdir}/openmpi/lib/libsundials_fida*.so
 %{_libdir}/openmpi/lib/libsundials_fkinsol*.so
 %{_libdir}/openmpi/lib/libsundials_fsunnonlinsol*.so
-%{_includedir}/openmpi-%{_arch}/sundials/sundials_fconfig.h
-%{_includedir}/openmpi-%{_arch}/sundials/sundials_fnvector.h
 %endif
 %{_libdir}/openmpi/lib/libsundials_generic.so
 %{_libdir}/openmpi/lib/libsundials_nvecparallel.so
@@ -996,6 +996,8 @@ popd
 %{_includedir}/mpich-%{_arch}/sundials/sundials_types.h
 %{_includedir}/mpich-%{_arch}/sundials/sundials_version.h
 %{_includedir}/mpich-%{_arch}/sundials/sundials_config.h
+%{_includedir}/mpich-%{_arch}/sundials/sundials_fconfig.h
+%{_includedir}/mpich-%{_arch}/sundials/sundials_fnvector.h
 %if 0%{?with_fortran}
 %{_fmoddir}/mpich%{?el7:-%_arch}/%{name}/
 %{_libdir}/mpich/lib/libsundials_fcvode*.so
@@ -1005,8 +1007,6 @@ popd
 %{_libdir}/mpich/lib/libsundials_fida*.so
 %{_libdir}/mpich/lib/libsundials_fkinsol*.so
 %{_libdir}/mpich/lib/libsundials_fsunnonlinsol*.so
-%{_includedir}/mpich-%{_arch}/sundials/sundials_fconfig.h
-%{_includedir}/mpich-%{_arch}/sundials/sundials_fnvector.h
 %endif
 %{_libdir}/mpich/lib/*.a
 %{_libdir}/mpich/lib/libsundials_generic.so
