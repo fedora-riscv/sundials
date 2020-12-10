@@ -18,8 +18,8 @@
 %global with_openmpi 1
 %global with_mpich 1
 
-# Use devtoolset 8
-%global dts devtoolset-8-
+# Use devtoolset 6
+%global dts devtoolset-6-
 %endif
 
 ## BLAS ##
@@ -65,7 +65,7 @@
 Summary:    Suite of nonlinear solvers
 Name:       sundials
 Version:    5.5.0
-Release:    1%{?dist}
+Release:    2%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -250,9 +250,7 @@ cp -a sundials-%{version} buildmpich_dir
 %endif
 
 %build
-pushd sundials-%{version}
-
-mkdir -p build
+mkdir -p sundials-%{version}/build
 
 export LIBBLASLINK=-l%{blaslib}%{blasvar}
 export INCBLAS=%{_includedir}/%{blaslib}
@@ -267,7 +265,7 @@ export LIBSUPERLUMTLINK=-lsuperlumt_d
 %endif
 
 %if 0%{?el7}
-%{?dts:source /opt/rh/devtoolset-8/enable}
+%{?dts:source /opt/rh/devtoolset-6/enable}
 %endif
 
 %if %{with debug}
@@ -275,7 +273,7 @@ export LIBSUPERLUMTLINK=-lsuperlumt_d
 export CFLAGS=" "
 export FFLAGS=" "
 %global _cmake cmake3
-%_cmake -B build \
+%_cmake -B sundials-%{version}/build -S sundials-%{version} \
  -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
  -DCMAKE_BUILD_TYPE:STRING=Debug \
  -DCMAKE_C_FLAGS_DEBUG:STRING="-O0 -g %{__global_ldflags} -I$INCBLAS" \
@@ -284,7 +282,7 @@ export FFLAGS=" "
 %else
 export CFLAGS="%{build_cflags}"
 export CFLAGS="%{build_fflags}"
-%cmake3 -B build\
+%cmake3 -B sundials-%{version}/build -S sundials-%{version} \
 %endif
 %if %{?__isa_bits:%{__isa_bits}}%{!?__isa_bits:32} == 64
  -DSUNDIALS_INDEX_SIZE:STRING=64 \
@@ -336,16 +334,13 @@ export CFLAGS="%{build_fflags}"
  -DSUPERLUDIST_ENABLE:BOOL=OFF \
  -DHYPRE_ENABLE:BOOL=OFF \
  -DEXAMPLES_INSTALL:BOOL=OFF \
- -DSUNDIALS_BUILD_WITH_MONITORING:BOOL=ON -Wno-dev ..
+ -DSUNDIALS_BUILD_WITH_MONITORING:BOOL=ON -Wno-dev
 
-%make_build V=1 -C build
-cd ..
-popd
+%make_build V=1 -C sundials-%{version}/build
 
 #############################################################################
 #######
 %if 0%{?with_openmpi}
-pushd buildopenmpi_dir
 ##Set openmpi library's paths
 sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/openmpi-%{_arch}/nvector|g' src/nvector/parallel/CMakeLists.txt
 sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/openmpi-%{_arch}/nvector|g' src/nvector/parhyp/CMakeLists.txt
@@ -355,7 +350,7 @@ sed -i 's|DESTINATION include/sundials|DESTINATION %{_includedir}/openmpi-%{_arc
 sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/openmpi-%{_arch}/nvector|g' src/nvector/petsc/CMakeLists.txt
 %endif
 
-mkdir -p build
+mkdir -p buildopenmpi_dir/build
 %{_openmpi_load}
 
 ## Blas
@@ -390,7 +385,7 @@ export FC=$MPI_BIN/mpif77
 ##
 
 %if 0%{?el7}
-%{?dts:source /opt/rh/devtoolset-8/enable}
+%{?dts:source /opt/rh/devtoolset-6/enable}
 %endif
 
 %if %{with debug}
@@ -398,7 +393,7 @@ export FC=$MPI_BIN/mpif77
 export CFLAGS=" "
 export FFLAGS=" "
 %global _cmake cmake3
-%_cmake -B build \
+%_cmake -B buildopenmpi_dir/build -S buildopenmpi_dir \
  -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
  -DCMAKE_BUILD_TYPE:STRING=Debug \
  -DCMAKE_C_FLAGS_DEBUG:STRING="-O0 -g %{__global_ldflags} -I$INCBLAS" \
@@ -407,7 +402,7 @@ export FFLAGS=" "
 %else
 export CFLAGS="%{build_cflags}"
 export CFLAGS="%{build_fflags}"
-%cmake3 -B build \
+%cmake3 -B buildopenmpi_dir/build -S buildopenmpi_dir \
 %endif
 %if %{?__isa_bits:%{__isa_bits}}%{!?__isa_bits:32} == 64
  -DSUNDIALS_INDEX_SIZE:STRING=64 \
@@ -477,18 +472,15 @@ export CFLAGS="%{build_fflags}"
  -DHYPRE_LIBRARY_DIR:PATH=$MPI_LIB \
 %endif
  -DEXAMPLES_INSTALL:BOOL=OFF \
- -DSUNDIALS_BUILD_WITH_MONITORING:BOOL=ON -Wno-dev ..
+ -DSUNDIALS_BUILD_WITH_MONITORING:BOOL=ON -Wno-dev
 
-%make_build V=1 -C build
+%make_build V=1 -C buildopenmpi_dir/build
 %{_openmpi_unload}
-cd ..
-popd
 %endif
 ######
 ###########################################################################
 
 %if 0%{?with_mpich}
-pushd buildmpich_dir
 ##Set mpich library's paths
 sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/mpich-%{_arch}/nvector|g' src/nvector/parallel/CMakeLists.txt
 sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/mpich-%{_arch}/nvector|g' src/nvector/parhyp/CMakeLists.txt
@@ -498,7 +490,7 @@ sed -i 's|DESTINATION include/sundials|DESTINATION %{_includedir}/mpich-%{_arch}
 sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/mpich-%{_arch}/nvector|g' src/nvector/petsc/CMakeLists.txt
 %endif
 
-mkdir -p build
+mkdir -p buildmpich_dir/build
 %{_mpich_load}
 
 ## Blas
@@ -533,7 +525,7 @@ export FC=$MPI_BIN/mpif77
 ##
 
 %if 0%{?el7}
-%{?dts:source /opt/rh/devtoolset-8/enable}
+%{?dts:source /opt/rh/devtoolset-6/enable}
 %endif
 
 %if %{with debug}
@@ -541,7 +533,7 @@ export FC=$MPI_BIN/mpif77
 export CFLAGS=" "
 export FFLAGS=" "
 %global _cmake cmake3
-%_cmake -B build \
+%_cmake -B buildmpich_dir/build -S buildmpich_dir \
  -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
  -DCMAKE_BUILD_TYPE:STRING=Debug \
  -DCMAKE_C_FLAGS_DEBUG:STRING="-O0 -g %{__global_ldflags} -I$INCBLAS" \
@@ -550,7 +542,7 @@ export FFLAGS=" "
 %else
 export CFLAGS="%{build_cflags}"
 export CFLAGS="%{build_fflags}"
-%cmake3 -B build \
+%cmake3 -B buildmpich_dir/build -S buildmpich_dir \
 %endif
 %if %{?__isa_bits:%{__isa_bits}}%{!?__isa_bits:32} == 64
  -DSUNDIALS_INDEX_SIZE:STRING=64 \
@@ -620,12 +612,10 @@ export CFLAGS="%{build_fflags}"
  -DHYPRE_LIBRARY_DIR:PATH=$MPI_LIB \
 %endif
  -DEXAMPLES_INSTALL:BOOL=OFF \
- -DSUNDIALS_BUILD_WITH_MONITORING:BOOL=ON -Wno-dev ..
+ -DSUNDIALS_BUILD_WITH_MONITORING:BOOL=ON -Wno-dev
 
-%make_build V=1 -C build
+%make_build V=1 -C buildmpich_dir/build
 %{_mpich_unload}
-cd ..
-popd
 %endif
 ######
 #############################################################################
@@ -1045,6 +1035,9 @@ popd
 %doc sundials-%{version}/doc/arkode/*
 
 %changelog
+* Thu Dec 10 2020 Antonio Trande <sagitter@fedoraproject.org> - 5.5.0-2
+- Modify CMake options
+
 * Sun Nov 08 2020 Antonio Trande <sagitter@fedoraproject.org> - 5.5.0-1
 - Release 5.5.0
 
