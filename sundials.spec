@@ -13,7 +13,7 @@
 %endif
 
 %if 0%{?rhel} == 7
-%global dts devtoolset-8-
+%global dts devtoolset-6-
 %endif
 
 ## Hypre ##
@@ -42,7 +42,7 @@
 Summary:    Suite of nonlinear solvers
 Name:       sundials
 Version:    4.1.0
-Release:    11%{?dist}
+Release:    12%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -226,7 +226,7 @@ export LIBSUPERLUMTLINK=-lsuperlumt_d
 %endif
 
 %if 0%{?el7}
-%{?dts:source /opt/rh/devtoolset-8/enable}
+%{?dts:source /opt/rh/devtoolset-6/enable}
 %endif
 
 %if %{with debug}
@@ -304,7 +304,7 @@ sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/openmpi-%{_arch
 mkdir -p build && cd build
 
 %if 0%{?el7}
-%{?dts:source /opt/rh/devtoolset-8/enable}
+%{?dts:source /opt/rh/devtoolset-6/enable}
 %endif
 
 %{_openmpi_load}
@@ -418,7 +418,7 @@ popd
 pushd buildmpich_dir
 
 %if 0%{?el7}
-%{?dts:source /opt/rh/devtoolset-8/enable}
+%{?dts:source /opt/rh/devtoolset-6/enable}
 %endif
 
 ##Set mpich library's paths
@@ -820,6 +820,9 @@ popd
 %doc sundials-%{version}/doc/arkode/*
 
 %changelog
+* Thu Dec 10 2020 Antonio Trande <sagitter@fedoraproject.org> - 4.1.0-12
+- Rebuild for PETSc-3.14.1 on EPEL7
+
 * Sun Apr 26 2020 Antonio Trande <sagitter@fedoraproject.org> - 4.1.0-11
 - Fix rhbz#1828004
 
