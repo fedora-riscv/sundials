@@ -342,12 +342,12 @@ export CFLAGS="%{build_fflags}"
 #######
 %if 0%{?with_openmpi}
 ##Set openmpi library's paths
-sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/openmpi-%{_arch}/nvector|g' src/nvector/parallel/CMakeLists.txt
-sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/openmpi-%{_arch}/nvector|g' src/nvector/parhyp/CMakeLists.txt
-sed -i 's|DESTINATION include/sundials|DESTINATION %{_includedir}/openmpi-%{_arch}/sundials|g' src/sundials/CMakeLists.txt
-sed -i 's|DESTINATION include/sundials|DESTINATION %{_includedir}/openmpi-%{_arch}/sundials|g' CMakeLists.txt
+sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/openmpi-%{_arch}/nvector|g' buildopenmpi_dir/src/nvector/parallel/CMakeLists.txt
+sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/openmpi-%{_arch}/nvector|g' buildopenmpi_dir/src/nvector/parhyp/CMakeLists.txt
+sed -i 's|DESTINATION include/sundials|DESTINATION %{_includedir}/openmpi-%{_arch}/sundials|g' buildopenmpi_dir/src/sundials/CMakeLists.txt
+sed -i 's|DESTINATION include/sundials|DESTINATION %{_includedir}/openmpi-%{_arch}/sundials|g' buildopenmpi_dir/CMakeLists.txt
 %if 0%{?with_petsc}
-sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/openmpi-%{_arch}/nvector|g' src/nvector/petsc/CMakeLists.txt
+sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/openmpi-%{_arch}/nvector|g' buildopenmpi_dir/src/nvector/petsc/CMakeLists.txt
 %endif
 
 mkdir -p buildopenmpi_dir/build
@@ -482,12 +482,12 @@ export CFLAGS="%{build_fflags}"
 
 %if 0%{?with_mpich}
 ##Set mpich library's paths
-sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/mpich-%{_arch}/nvector|g' src/nvector/parallel/CMakeLists.txt
-sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/mpich-%{_arch}/nvector|g' src/nvector/parhyp/CMakeLists.txt
-sed -i 's|DESTINATION include/sundials|DESTINATION %{_includedir}/mpich-%{_arch}/sundials|g' src/sundials/CMakeLists.txt
-sed -i 's|DESTINATION include/sundials|DESTINATION %{_includedir}/mpich-%{_arch}/sundials|g' CMakeLists.txt
+sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/mpich-%{_arch}/nvector|g' buildmpich_dir/src/nvector/parallel/CMakeLists.txt
+sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/mpich-%{_arch}/nvector|g' buildmpich_dir/src/nvector/parhyp/CMakeLists.txt
+sed -i 's|DESTINATION include/sundials|DESTINATION %{_includedir}/mpich-%{_arch}/sundials|g' buildmpich_dir/src/sundials/CMakeLists.txt
+sed -i 's|DESTINATION include/sundials|DESTINATION %{_includedir}/mpich-%{_arch}/sundials|g' buildmpich_dir/CMakeLists.txt
 %if 0%{?with_petsc}
-sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/mpich-%{_arch}/nvector|g' src/nvector/petsc/CMakeLists.txt
+sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/mpich-%{_arch}/nvector|g' buildmpich_dir/src/nvector/petsc/CMakeLists.txt
 %endif
 
 mkdir -p buildmpich_dir/build
