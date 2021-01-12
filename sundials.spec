@@ -80,6 +80,7 @@ Patch1:     %{name}-5.5.0-set_superlumt64_name.patch
 
 Patch2:     %{name}-change_petsc_variable.patch
 
+BuildRequires: make
 %if 0%{?with_fortran}
 BuildRequires: gcc-gfortran
 %endif
