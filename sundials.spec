@@ -65,7 +65,7 @@
 Summary:    Suite of nonlinear solvers
 Name:       sundials
 Version:    5.6.1
-Release:    2%{?dist}
+Release:    3%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -726,27 +726,8 @@ popd
 %{_libdir}/libsundials_sunlinsol*.so.*
 %{_libdir}/libsundials_sunnonlinsol*.so.*
 %if 0%{?with_fortran}
-%{_libdir}/libsundials_f*_mod.so.*
-%{_libdir}/libsundials_fnvecserial.so.*
-%{_libdir}/libsundials_fnvecopenmp.so.*
-%if %{with pthread}
-%{_libdir}/libsundials_fnvecpthreads.so.*
-%endif
-%{_libdir}/libsundials_fsunlinsolband.so.*
-%{_libdir}/libsundials_fsunlinsoldense.so.*
-%{_libdir}/libsundials_fsunlinsolklu.so.*
-%{_libdir}/libsundials_fsunlinsolpcg.so.*
-%{_libdir}/libsundials_fsunlinsolspbcgs.so.*
-%{_libdir}/libsundials_fsunlinsolspfgmr.so.*
-%{_libdir}/libsundials_fsunlinsolspgmr.so.*
-%{_libdir}/libsundials_fsunlinsolsptfqmr.so.*
-%{_libdir}/libsundials_fsunnonlinsol*.so.*
-%if 0%{?with_superlumt}
-%{_libdir}/libsundials_fsunlinsolsuperlumt.so.*
-%endif
-%{_libdir}/libsundials_fsunmatrixband.so.*
-%{_libdir}/libsundials_fsunmatrixdense.so.*
-%{_libdir}/libsundials_fsunmatrixsparse.so.*
+%{_libdir}/libsundials_f*[_mod].so.*
+%{_libdir}/libsundials_f*[!_mod].so.*
 %endif
 
 %files devel
@@ -769,26 +750,8 @@ popd
 %if 0%{?with_fortran}
 %{_libdir}/libsundials_f*_mod.so
 %{_fmoddir}/%{name}/
-%{_libdir}/libsundials_fnvecserial.so
-%{_libdir}/libsundials_fnvecopenmp.so
-%if %{with pthread}
-%{_libdir}/libsundials_fnvecpthreads.so
-%endif
-%{_libdir}/libsundials_fsunlinsolband.so
-%{_libdir}/libsundials_fsunlinsoldense.so
-%{_libdir}/libsundials_fsunlinsolklu.so
-%{_libdir}/libsundials_fsunlinsolpcg.so
-%{_libdir}/libsundials_fsunlinsolspbcgs.so
-%{_libdir}/libsundials_fsunlinsolspfgmr.so
-%{_libdir}/libsundials_fsunlinsolspgmr.so
-%{_libdir}/libsundials_fsunlinsolsptfqmr.so
-%{_libdir}/libsundials_fsunnonlinsol*.so
-%if 0%{?with_superlumt}
-%{_libdir}/libsundials_fsunlinsolsuperlumt.so
-%endif
-%{_libdir}/libsundials_fsunmatrixband.so
-%{_libdir}/libsundials_fsunmatrixdense.so
-%{_libdir}/libsundials_fsunmatrixsparse.so
+%{_libdir}/libsundials_f*[_mod].so
+%{_libdir}/libsundials_f*[!_mod].so
 %endif
 %{_includedir}/nvector/
 %{_includedir}/sunmatrix/
@@ -856,13 +819,8 @@ popd
 %{_libdir}/openmpi/lib/libsundials_nvecpthreads.so.*
 %endif
 %if 0%{?with_fortran}
-%{_libdir}/openmpi/lib/libsundials_fcvode*.so.*
-%{_libdir}/openmpi/lib/libsundials_fnvec*.so.*
-%{_libdir}/openmpi/lib/libsundials_fsun*.so.*
-%{_libdir}/openmpi/lib/libsundials_fark*.so.*
-%{_libdir}/openmpi/lib/libsundials_fida*.so.*
-%{_libdir}/openmpi/lib/libsundials_fkinsol*.so.*
-%{_libdir}/openmpi/lib/libsundials_fsunnonlinsol*.so.*
+%{_libdir}/openmpi/lib/libsundials_f*[_mod].so.*
+%{_libdir}/openmpi/lib/libsundials_f*[!_mod].so.*
 %endif
 
 %files openmpi-devel
@@ -889,13 +847,8 @@ popd
 %{_includedir}/openmpi-%{_arch}/sundials/sundials_fnvector.h
 %if 0%{?with_fortran}
 %{_fmoddir}/openmpi%{?el7:-%_arch}/%{name}/
-%{_libdir}/openmpi/lib/libsundials_fcvode*.so
-%{_libdir}/openmpi/lib/libsundials_fnvec*.so
-%{_libdir}/openmpi/lib/libsundials_fsun*.so
-%{_libdir}/openmpi/lib/libsundials_fark*.so
-%{_libdir}/openmpi/lib/libsundials_fida*.so
-%{_libdir}/openmpi/lib/libsundials_fkinsol*.so
-%{_libdir}/openmpi/lib/libsundials_fsunnonlinsol*.so
+%{_libdir}/openmpi/lib/libsundials_f*[_mod].so
+%{_libdir}/openmpi/lib/libsundials_f*[!_mod].so
 %endif
 %{_libdir}/openmpi/lib/libsundials_generic.so
 %{_libdir}/openmpi/lib/libsundials_nvecparallel.so
@@ -958,13 +911,8 @@ popd
 %{_libdir}/mpich/lib/libsundials_nvecpthreads.so.*
 %endif
 %if 0%{?with_fortran}
-%{_libdir}/mpich/lib/libsundials_fcvode*.so.*
-%{_libdir}/mpich/lib/libsundials_fnvec*.so.*
-%{_libdir}/mpich/lib/libsundials_fsun*.so.*
-%{_libdir}/mpich/lib/libsundials_fark*.so.*
-%{_libdir}/mpich/lib/libsundials_fida*.so.*
-%{_libdir}/mpich/lib/libsundials_fkinsol*.so.*
-%{_libdir}/mpich/lib/libsundials_fsunnonlinsol*.so.*
+%{_libdir}/mpich/lib/libsundials_f*[_mod].so.*
+%{_libdir}/mpich/lib/libsundials_f*[!_mod].so.*
 %endif
 
 
@@ -991,13 +939,8 @@ popd
 %{_includedir}/mpich-%{_arch}/sundials/sundials_fnvector.h
 %if 0%{?with_fortran}
 %{_fmoddir}/mpich%{?el7:-%_arch}/%{name}/
-%{_libdir}/mpich/lib/libsundials_fcvode*.so
-%{_libdir}/mpich/lib/libsundials_fnvec*.so
-%{_libdir}/mpich/lib/libsundials_fsun*.so
-%{_libdir}/mpich/lib/libsundials_fark*.so
-%{_libdir}/mpich/lib/libsundials_fida*.so
-%{_libdir}/mpich/lib/libsundials_fkinsol*.so
-%{_libdir}/mpich/lib/libsundials_fsunnonlinsol*.so
+%{_libdir}/mpich/lib/libsundials_f*[_mod].so
+%{_libdir}/mpich/lib/libsundials_f*[!_mod].so
 %endif
 %{_libdir}/mpich/lib/*.a
 %{_libdir}/mpich/lib/libsundials_generic.so
@@ -1036,6 +979,9 @@ popd
 %doc sundials-%{version}/doc/arkode/*
 
 %changelog
+* Sun Feb 21 2021 Antonio Trande <sagitter@fedoraproject.org> - 5.6.1-3
+- Fix the lists of installed files
+
 * Wed Jan 27 2021 Fedora Release Engineering <releng@fedoraproject.org> - 5.6.1-2
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_34_Mass_Rebuild
 
