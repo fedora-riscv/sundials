@@ -64,8 +64,8 @@
 
 Summary:    Suite of nonlinear solvers
 Name:       sundials
-Version:    5.6.1
-Release:    3%{?dist}
+Version:    5.7.0
+Release:    1%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -230,11 +230,6 @@ pushd %{name}-%{version}
 %patch0 -p0 -b .set_superlumt_name
 %endif
 
-##Set serial library's paths
-sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/nvector|g' src/nvector/serial/CMakeLists.txt
-sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/nvector|g' src/nvector/openmp/CMakeLists.txt
-sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/nvector|g' src/nvector/pthreads/CMakeLists.txt
-
 mv src/arkode/README.md src/README-arkode.md
 mv src/cvode/README.md src/README-cvode.md
 mv src/cvodes/README.md src/README-cvodes.md
@@ -305,6 +300,7 @@ export CFLAGS="%{build_fflags}"
  -DCMAKE_C_FLAGS_RELEASE:STRING="%{optflags} -I$INCBLAS" \
  -DCMAKE_Fortran_FLAGS_RELEASE:STRING="%{optflags} -I$INCBLAS" \
  -DCMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING="%{__global_ldflags} -lklu $LIBBLASLINK $LIBSUPERLUMTLINK" \
+ -DCMAKE_INSTALL_INCLUDEDIR:PATH=%{_includedir} \
  -DLAPACK_ENABLE:BOOL=OFF \
  -DCMAKE_MODULE_LINKER_FLAGS:STRING="%{__global_ldflags}" \
  -DCMAKE_INSTALL_PREFIX:PATH=%{_prefix} -DCMAKE_INSTALL_LIBDIR:PATH=%{_lib} \
@@ -342,14 +338,6 @@ export CFLAGS="%{build_fflags}"
 #############################################################################
 #######
 %if 0%{?with_openmpi}
-##Set openmpi library's paths
-sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/openmpi-%{_arch}/nvector|g' buildopenmpi_dir/src/nvector/parallel/CMakeLists.txt
-sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/openmpi-%{_arch}/nvector|g' buildopenmpi_dir/src/nvector/parhyp/CMakeLists.txt
-sed -i 's|DESTINATION include/sundials|DESTINATION %{_includedir}/openmpi-%{_arch}/sundials|g' buildopenmpi_dir/src/sundials/CMakeLists.txt
-sed -i 's|DESTINATION include/sundials|DESTINATION %{_includedir}/openmpi-%{_arch}/sundials|g' buildopenmpi_dir/CMakeLists.txt
-%if 0%{?with_petsc}
-sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/openmpi-%{_arch}/nvector|g' buildopenmpi_dir/src/nvector/petsc/CMakeLists.txt
-%endif
 
 mkdir -p buildopenmpi_dir/build
 %{_openmpi_load}
@@ -425,6 +413,8 @@ export CFLAGS="%{build_fflags}"
  -DCMAKE_C_FLAGS_RELEASE:STRING="%{optflags} -I$INCBLAS" \
  -DCMAKE_Fortran_FLAGS_RELEASE:STRING="%{optflags} -I$INCBLAS" \
  -DCMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING="%{__global_ldflags} -lklu $LIBBLASLINK $LIBSUPERLUMTLINK $LIBHYPRELINK" \
+ -DMPI_INCLUDE_PATH:PATH=$MPI_INCLUDE \
+ -DCMAKE_INSTALL_INCLUDEDIR:PATH=$MPI_INCLUDE \
  -DLAPACK_ENABLE:BOOL=OFF \
 %if 0%{?with_petsc}
  -DPETSC_ENABLE:BOOL=ON \
@@ -482,14 +472,6 @@ export CFLAGS="%{build_fflags}"
 ###########################################################################
 
 %if 0%{?with_mpich}
-##Set mpich library's paths
-sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/mpich-%{_arch}/nvector|g' buildmpich_dir/src/nvector/parallel/CMakeLists.txt
-sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/mpich-%{_arch}/nvector|g' buildmpich_dir/src/nvector/parhyp/CMakeLists.txt
-sed -i 's|DESTINATION include/sundials|DESTINATION %{_includedir}/mpich-%{_arch}/sundials|g' buildmpich_dir/src/sundials/CMakeLists.txt
-sed -i 's|DESTINATION include/sundials|DESTINATION %{_includedir}/mpich-%{_arch}/sundials|g' buildmpich_dir/CMakeLists.txt
-%if 0%{?with_petsc}
-sed -i 's|DESTINATION include/nvector|DESTINATION %{_includedir}/mpich-%{_arch}/nvector|g' buildmpich_dir/src/nvector/petsc/CMakeLists.txt
-%endif
 
 mkdir -p buildmpich_dir/build
 %{_mpich_load}
@@ -566,6 +548,8 @@ export CFLAGS="%{build_fflags}"
  -DCMAKE_Fortran_FLAGS_RELEASE:STRING="%{optflags} -I$INCBLAS" \
  -DCMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING="%{__global_ldflags} -lklu $LIBBLASLINK $LIBSUPERLUMTLINK $LIBHYPRELINK" \
  -DLAPACK_ENABLE:BOOL=OFF \
+ -DMPI_INCLUDE_PATH:PATH=$MPI_INCLUDE \
+ -DCMAKE_INSTALL_INCLUDEDIR:PATH=$MPI_INCLUDE \
 %if 0%{?with_petsc}
  -DPETSC_ENABLE:BOOL=ON \
  -DPETSC_INCLUDES:PATH=$MPI_INCLUDE/petsc \
@@ -748,10 +732,15 @@ popd
 %{_libdir}/libsundials_sunlinsol*.so
 %{_libdir}/libsundials_sunnonlinsol*.so
 %if 0%{?with_fortran}
-%{_libdir}/libsundials_f*_mod.so
-%{_fmoddir}/%{name}/
 %{_libdir}/libsundials_f*[_mod].so
 %{_libdir}/libsundials_f*[!_mod].so
+%{_fmoddir}/%{name}/
+%if %{with pthread}
+%{_libdir}/libsundials_fnvecpthreads.so
+%endif
+%if 0%{?with_superlumt}
+%{_libdir}/libsundials_fsunlinsolsuperlumt.so
+%endif
 %endif
 %{_includedir}/nvector/
 %{_includedir}/sunmatrix/
@@ -826,25 +815,16 @@ popd
 %files openmpi-devel
 %{_libdir}/openmpi/lib/*.a
 %{_includedir}/openmpi-%{_arch}/nvector/
-%dir %{_includedir}/openmpi-%{_arch}/sundials
-%{_includedir}/openmpi-%{_arch}/sundials/sundials_export.h
-%{_includedir}/openmpi-%{_arch}/sundials/sundials_band.h
-%{_includedir}/openmpi-%{_arch}/sundials/sundials_dense.h
-%{_includedir}/openmpi-%{_arch}/sundials/sundials_direct.h
-%{_includedir}/openmpi-%{_arch}/sundials/sundials_futils.h
-%{_includedir}/openmpi-%{_arch}/sundials/sundials_iterative.h
-%{_includedir}/openmpi-%{_arch}/sundials/sundials_linearsolver.h
-%{_includedir}/openmpi-%{_arch}/sundials/sundials_math.h
-%{_includedir}/openmpi-%{_arch}/sundials/sundials_matrix.h
-%{_includedir}/openmpi-%{_arch}/sundials/sundials_memory.h
-%{_includedir}/openmpi-%{_arch}/sundials/sundials_nonlinearsolver.h
-%{_includedir}/openmpi-%{_arch}/sundials/sundials_mpi_types.h
-%{_includedir}/openmpi-%{_arch}/sundials/sundials_nvector.h
-%{_includedir}/openmpi-%{_arch}/sundials/sundials_types.h
-%{_includedir}/openmpi-%{_arch}/sundials/sundials_version.h
-%{_includedir}/openmpi-%{_arch}/sundials/sundials_config.h
-%{_includedir}/openmpi-%{_arch}/sundials/sundials_fconfig.h
-%{_includedir}/openmpi-%{_arch}/sundials/sundials_fnvector.h
+%{_includedir}/openmpi-%{_arch}/sundials/
+%{_includedir}/openmpi-%{_arch}/arkode/
+%{_includedir}/openmpi-%{_arch}/cvode/
+%{_includedir}/openmpi-%{_arch}/cvodes/
+%{_includedir}/openmpi-%{_arch}/ida/
+%{_includedir}/openmpi-%{_arch}/idas/
+%{_includedir}/openmpi-%{_arch}/kinsol/
+%{_includedir}/openmpi-%{_arch}/sunlinsol/
+%{_includedir}/openmpi-%{_arch}/sunmatrix/
+%{_includedir}/openmpi-%{_arch}/sunnonlinsol/
 %if 0%{?with_fortran}
 %{_fmoddir}/openmpi%{?el7:-%_arch}/%{name}/
 %{_libdir}/openmpi/lib/libsundials_f*[_mod].so
@@ -918,25 +898,16 @@ popd
 
 %files mpich-devel
 %{_includedir}/mpich-%{_arch}/nvector/
-%dir %{_includedir}/mpich-%{_arch}/sundials
-%{_includedir}/mpich-%{_arch}/sundials/sundials_export.h
-%{_includedir}/mpich-%{_arch}/sundials/sundials_band.h
-%{_includedir}/mpich-%{_arch}/sundials/sundials_dense.h
-%{_includedir}/mpich-%{_arch}/sundials/sundials_direct.h
-%{_includedir}/mpich-%{_arch}/sundials/sundials_futils.h
-%{_includedir}/mpich-%{_arch}/sundials/sundials_iterative.h
-%{_includedir}/mpich-%{_arch}/sundials/sundials_linearsolver.h
-%{_includedir}/mpich-%{_arch}/sundials/sundials_math.h
-%{_includedir}/mpich-%{_arch}/sundials/sundials_matrix.h
-%{_includedir}/mpich-%{_arch}/sundials/sundials_memory.h
-%{_includedir}/mpich-%{_arch}/sundials/sundials_nonlinearsolver.h
-%{_includedir}/mpich-%{_arch}/sundials/sundials_mpi_types.h
-%{_includedir}/mpich-%{_arch}/sundials/sundials_nvector.h
-%{_includedir}/mpich-%{_arch}/sundials/sundials_types.h
-%{_includedir}/mpich-%{_arch}/sundials/sundials_version.h
-%{_includedir}/mpich-%{_arch}/sundials/sundials_config.h
-%{_includedir}/mpich-%{_arch}/sundials/sundials_fconfig.h
-%{_includedir}/mpich-%{_arch}/sundials/sundials_fnvector.h
+%{_includedir}/mpich-%{_arch}/sundials/
+%{_includedir}/mpich-%{_arch}/arkode/
+%{_includedir}/mpich-%{_arch}/cvode/
+%{_includedir}/mpich-%{_arch}/cvodes/
+%{_includedir}/mpich-%{_arch}/ida/
+%{_includedir}/mpich-%{_arch}/idas/
+%{_includedir}/mpich-%{_arch}/kinsol/
+%{_includedir}/mpich-%{_arch}/sunlinsol/
+%{_includedir}/mpich-%{_arch}/sunmatrix/
+%{_includedir}/mpich-%{_arch}/sunnonlinsol/
 %if 0%{?with_fortran}
 %{_fmoddir}/mpich%{?el7:-%_arch}/%{name}/
 %{_libdir}/mpich/lib/libsundials_f*[_mod].so
@@ -979,6 +950,9 @@ popd
 %doc sundials-%{version}/doc/arkode/*
 
 %changelog
+* Sun Feb 21 2021 Antonio Trande <sagitter@fedoraproject.org> - 5.7.0-1
+- Release 5.7.0
+
 * Sun Feb 21 2021 Antonio Trande <sagitter@fedoraproject.org> - 5.6.1-3
 - Fix the lists of installed files
 
