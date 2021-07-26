@@ -1,5 +1,5 @@
 ## Debug builds?
-%bcond_without debug
+%bcond_with debug
 #
 
 # Enable pthread support
@@ -65,7 +65,7 @@
 Summary:    Suite of nonlinear solvers
 Name:       sundials
 Version:    5.7.0
-Release:    2%{?dist}
+Release:    3%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -641,7 +641,7 @@ ctest3 --force-new-ctest-process -VV -j1 --output-on-failure --debug
 %else
 export LD_LIBRARY_PATH=%{buildroot}$MPI_LIB:$MPI_LIB
 export OMPI_MCA_rmaps_base_oversubscribe=yes
-ctest3 --force-new-ctest-process -j1
+ctest3 --force-new-ctest-process -j1 --rerun-failed --output-on-failure
 %endif
 %{_openmpi_unload}
 popd
@@ -661,7 +661,7 @@ ctest3 --force-new-ctest-process -VV -j1 --output-on-failure --debug
 %else
 export LD_LIBRARY_PATH=%{buildroot}$MPI_LIB:$MPI_LIB
 export OMPI_MCA_rmaps_base_oversubscribe=yes
-ctest3 --force-new-ctest-process -j1
+ctest3 --force-new-ctest-process -j1 --rerun-failed --output-on-failure
 %endif
 %{_mpich_unload}
 popd
@@ -679,7 +679,7 @@ ctest3 --force-new-ctest-process -VV -j1 --output-on-failure --debug
 %else
 export LD_LIBRARY_PATH=%{buildroot}%{_libdir}:%{_libdir}
 export OMPI_MCA_rmaps_base_oversubscribe=yes
-ctest3 --force-new-ctest-process -j1
+ctest3 --force-new-ctest-process -j1 --rerun-failed --output-on-failure
 %endif
 popd
 %endif
@@ -950,6 +950,9 @@ popd
 %doc sundials-%{version}/doc/arkode/*
 
 %changelog
+* Mon Jul 26 2021 Antonio Trande <sagitter@fedoraproject.org> - 5.7.0-3
+- Disable debug mode
+
 * Fri Jul 23 2021 Fedora Release Engineering <releng@fedoraproject.org> - 5.7.0-2
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_35_Mass_Rebuild
 
