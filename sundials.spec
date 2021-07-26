@@ -1,5 +1,5 @@
 ## Debug builds?
-%bcond_with debug
+%bcond_without debug
 #
 
 # Enable pthread support
