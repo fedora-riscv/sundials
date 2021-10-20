@@ -64,8 +64,8 @@
 
 Summary:    Suite of nonlinear solvers
 Name:       sundials
-Version:    5.7.0
-Release:    3%{?dist}
+Version:    5.8.0
+Release:    1%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -641,7 +641,11 @@ ctest3 --force-new-ctest-process -VV -j1 --output-on-failure --debug
 %else
 export LD_LIBRARY_PATH=%{buildroot}$MPI_LIB:$MPI_LIB
 export OMPI_MCA_rmaps_base_oversubscribe=yes
+%ifarch aarch64 %{power64}
+ctest3 --force-new-ctest-process -j1 --rerun-failed --output-on-failure -E 'test_fsunlinsol_dense_mod'
+%else
 ctest3 --force-new-ctest-process -j1 --rerun-failed --output-on-failure
+%endif
 %endif
 %{_openmpi_unload}
 popd
@@ -661,7 +665,11 @@ ctest3 --force-new-ctest-process -VV -j1 --output-on-failure --debug
 %else
 export LD_LIBRARY_PATH=%{buildroot}$MPI_LIB:$MPI_LIB
 export OMPI_MCA_rmaps_base_oversubscribe=yes
+%ifarch aarch64 %{power64}
+ctest3 --force-new-ctest-process -j1 --rerun-failed --output-on-failure -E 'test_fsunlinsol_dense_mod'
+%else
 ctest3 --force-new-ctest-process -j1 --rerun-failed --output-on-failure
+%endif
 %endif
 %{_mpich_unload}
 popd
@@ -679,7 +687,11 @@ ctest3 --force-new-ctest-process -VV -j1 --output-on-failure --debug
 %else
 export LD_LIBRARY_PATH=%{buildroot}%{_libdir}:%{_libdir}
 export OMPI_MCA_rmaps_base_oversubscribe=yes
+%ifarch aarch64 %{power64}
+ctest3 --force-new-ctest-process -j1 --rerun-failed --output-on-failure -E 'test_fsunlinsol_dense_mod'
+%else
 ctest3 --force-new-ctest-process -j1 --rerun-failed --output-on-failure
+%endif
 %endif
 popd
 %endif
@@ -950,6 +962,9 @@ popd
 %doc sundials-%{version}/doc/arkode/*
 
 %changelog
+* Wed Oct 20 2021 Antonio Trande <sagitter@fedoraproject.org> - 5.8.0-1
+- Release 5.8.0
+
 * Mon Jul 26 2021 Antonio Trande <sagitter@fedoraproject.org> - 5.7.0-3
 - Disable debug mode
 
