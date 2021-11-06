@@ -50,7 +50,7 @@
 %global with_sercheck 1
 
 ## PETSc ##
-%global with_petsc 0
+%global with_petsc 1
 ###########
 
 ## SuperLUMT ##
@@ -283,7 +283,7 @@ export FFLAGS=" "
  -DCMAKE_BUILD_TYPE:STRING=Debug \
  -DCMAKE_C_FLAGS_DEBUG:STRING="-O0 -g %{__global_ldflags} -I$INCBLAS" \
  -DCMAKE_Fortran_FLAGS_DEBUG:STRING="-O0 -g %{__global_ldflags} -I$INCBLAS" \
- -DCMAKE_SHARED_LINKER_FLAGS_DEBUG:STRING="%{__global_ldflags} %{!el8:-lklu} $LIBBLASLINK $LIBSUPERLUMTLINK" \
+ -DCMAKE_SHARED_LINKER_FLAGS_DEBUG:STRING="%{__global_ldflags} %{!?el8:-lklu} $LIBBLASLINK $LIBSUPERLUMTLINK" \
 %else
 export CFLAGS="%{build_cflags}"
 export CFLAGS="%{build_fflags}"
@@ -312,7 +312,7 @@ export CFLAGS="%{build_fflags}"
  -DCMAKE_BUILD_TYPE:STRING=Release \
  -DCMAKE_C_FLAGS_RELEASE:STRING="%{optflags} -I$INCBLAS" \
  -DCMAKE_Fortran_FLAGS_RELEASE:STRING="%{optflags} -I$INCBLAS" \
- -DCMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING="%{__global_ldflags} %{!el8:-lklu} $LIBBLASLINK $LIBSUPERLUMTLINK" \
+ -DCMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING="%{__global_ldflags} %{!?el8:-lklu} $LIBBLASLINK $LIBSUPERLUMTLINK" \
  -DCMAKE_INSTALL_INCLUDEDIR:PATH=%{_includedir} \
  -DLAPACK_ENABLE:BOOL=OFF \
  -DCMAKE_MODULE_LINKER_FLAGS:STRING="%{__global_ldflags}" \
@@ -400,7 +400,7 @@ export FFLAGS=" "
  -DCMAKE_BUILD_TYPE:STRING=Debug \
  -DCMAKE_C_FLAGS_DEBUG:STRING="-O0 -g %{__global_ldflags} -I$INCBLAS" \
  -DCMAKE_Fortran_FLAGS_DEBUG:STRING="-O0 -g %{__global_ldflags} -I$INCBLAS" \
- -DCMAKE_SHARED_LINKER_FLAGS_DEBUG:STRING="%{__global_ldflags} %{!el8:-lklu} $LIBBLASLINK $LIBSUPERLUMTLINK $LIBHYPRELINK" \
+ -DCMAKE_SHARED_LINKER_FLAGS_DEBUG:STRING="%{__global_ldflags} %{!?el8:-lklu} $LIBBLASLINK $LIBSUPERLUMTLINK $LIBHYPRELINK" \
 %else
 export CFLAGS="%{build_cflags}"
 export CFLAGS="%{build_fflags}"
@@ -429,7 +429,7 @@ export CFLAGS="%{build_fflags}"
  -DCMAKE_BUILD_TYPE:STRING=Release \
  -DCMAKE_C_FLAGS_RELEASE:STRING="%{optflags} -I$INCBLAS" \
  -DCMAKE_Fortran_FLAGS_RELEASE:STRING="%{optflags} -I$INCBLAS" \
- -DCMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING="%{__global_ldflags} %{!el8:-lklu} $LIBBLASLINK $LIBSUPERLUMTLINK $LIBHYPRELINK" \
+ -DCMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING="%{__global_ldflags} %{!?el8:-lklu} $LIBBLASLINK $LIBSUPERLUMTLINK $LIBHYPRELINK" \
  -DMPI_INCLUDE_PATH:PATH=$MPI_INCLUDE \
  -DCMAKE_INSTALL_INCLUDEDIR:PATH=$MPI_INCLUDE \
  -DLAPACK_ENABLE:BOOL=OFF \
@@ -538,7 +538,7 @@ export FFLAGS=" "
  -DCMAKE_BUILD_TYPE:STRING=Debug \
  -DCMAKE_C_FLAGS_DEBUG:STRING="-O0 -g %{__global_ldflags} -I$INCBLAS" \
  -DCMAKE_Fortran_FLAGS_DEBUG:STRING="-O0 -g %{__global_ldflags} -I$INCBLAS" \
- -DCMAKE_SHARED_LINKER_FLAGS_DEBUG:STRING="%{__global_ldflags} %{!el8:-lklu} $LIBBLASLINK $LIBSUPERLUMTLINK $LIBHYPRELINK" \
+ -DCMAKE_SHARED_LINKER_FLAGS_DEBUG:STRING="%{__global_ldflags} %{!?el8:-lklu} $LIBBLASLINK $LIBSUPERLUMTLINK $LIBHYPRELINK" \
 %else
 export CFLAGS="%{build_cflags}"
 export CFLAGS="%{build_fflags}"
@@ -567,7 +567,7 @@ export CFLAGS="%{build_fflags}"
  -DCMAKE_BUILD_TYPE:STRING=Release \
  -DCMAKE_C_FLAGS_RELEASE:STRING="%{optflags} -I$INCBLAS" \
  -DCMAKE_Fortran_FLAGS_RELEASE:STRING="%{optflags} -I$INCBLAS" \
- -DCMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING="%{__global_ldflags} %{!el8:-lklu} $LIBBLASLINK $LIBSUPERLUMTLINK $LIBHYPRELINK" \
+ -DCMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING="%{__global_ldflags} %{!?el8:-lklu} $LIBBLASLINK $LIBSUPERLUMTLINK $LIBHYPRELINK" \
  -DLAPACK_ENABLE:BOOL=OFF \
  -DMPI_INCLUDE_PATH:PATH=$MPI_INCLUDE \
  -DCMAKE_INSTALL_INCLUDEDIR:PATH=$MPI_INCLUDE \
