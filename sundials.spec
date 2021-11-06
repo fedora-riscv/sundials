@@ -645,16 +645,6 @@ pushd buildopenmpi_dir/build
 %{_openmpi_load}
 %if %{with debug}
 export LD_LIBRARY_PATH=%{buildroot}$MPI_LIB:$MPI_LIB
-<<<<<<< HEAD
-ctest3 --force-new-ctest-process -VV -j1 --output-on-failure --debug
-%else
-export LD_LIBRARY_PATH=%{buildroot}$MPI_LIB:$MPI_LIB
-# Tests excluded fail on ppc64le and aarch64
-%if 0%{?rhel}
-ctest3 --force-new-ctest-process -j1 -E 'spgmr|spfgmr|spbcgs|sptfqmr'
-%else
-ctest3 --force-new-ctest-process -j1
-=======
 export OMPI_MCA_rmaps_base_oversubscribe=yes
 ctest3 --force-new-ctest-process -VV -j1 --output-on-failure --debug
 %else
@@ -664,7 +654,6 @@ export OMPI_MCA_rmaps_base_oversubscribe=yes
 ctest3 --force-new-ctest-process -j1 --rerun-failed --output-on-failure -E 'test_fsunlinsol_dense_mod'
 %else
 ctest3 --force-new-ctest-process -j1 --rerun-failed --output-on-failure
->>>>>>> main
 %endif
 %endif
 %{_openmpi_unload}
@@ -680,15 +669,6 @@ pushd buildmpich_dir/build
 %{_mpich_load}
 %if %{with debug}
 export LD_LIBRARY_PATH=%{buildroot}$MPI_LIB:$MPI_LIB
-<<<<<<< HEAD
-ctest3 --force-new-ctest-process -VV -j1 --output-on-failure --debug
-%else
-export LD_LIBRARY_PATH=%{buildroot}$MPI_LIB:$MPI_LIB
-%if 0%{?rhel}
-ctest3 --force-new-ctest-process -j1 -E 'spgmr|spfgmr|spbcgs|sptfqmr'
-%else
-ctest3 --force-new-ctest-process -j1
-=======
 export OMPI_MCA_rmaps_base_oversubscribe=yes
 ctest3 --force-new-ctest-process -VV -j1 --output-on-failure --debug
 %else
@@ -698,7 +678,6 @@ export OMPI_MCA_rmaps_base_oversubscribe=yes
 ctest3 --force-new-ctest-process -j1 --rerun-failed --output-on-failure -E 'test_fsunlinsol_dense_mod'
 %else
 ctest3 --force-new-ctest-process -j1 --rerun-failed --output-on-failure
->>>>>>> main
 %endif
 %endif
 %{_mpich_unload}
