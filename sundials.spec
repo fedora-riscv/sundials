@@ -65,7 +65,7 @@
 Summary:    Suite of nonlinear solvers
 Name:       sundials
 Version:    5.8.0
-Release:    1%{?dist}
+Release:    2%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -101,8 +101,10 @@ BuildRequires: SuperLUMT-devel
 %endif
 
 # KLU support
+%if 0%{?fedora} >= 33 || 0%{?rhel} >= 9
 %ifarch s390x x86_64 %{power64} aarch64
 BuildRequires: suitesparse64-devel
+%endif
 %endif
 %ifarch %{arm} %{ix86}
 BuildRequires: suitesparse-devel
@@ -962,6 +964,9 @@ popd
 %doc sundials-%{version}/doc/arkode/*
 
 %changelog
+* Sat Nov 06 2021 Antonio Trande <sagitter@fedoraproject.org> - 5.8.0-2
+- Build on epel8
+
 * Wed Oct 20 2021 Antonio Trande <sagitter@fedoraproject.org> - 5.8.0-1
 - Release 5.8.0
 
