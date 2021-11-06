@@ -1,5 +1,5 @@
 ## Debug builds?
-%bcond_with debug
+%bcond_without debug
 #
 
 # Enable pthread support
@@ -819,6 +819,7 @@ popd
 %{_libdir}/openmpi/lib/libsundials_nvecparhyp.so.*
 %if 0%{?with_petsc}
 %{_libdir}/openmpi/lib/libsundials_nvecpetsc.so.*
+%{_libdir}/openmpi/lib/libsundials_sunnonlinsolpetscsnes.so.*
 %endif
 %{_libdir}/openmpi/lib/libsundials_nvecmpimanyvector.so.*
 %if %{with pthread}
@@ -866,6 +867,7 @@ popd
 %{_libdir}/openmpi/lib/libsundials_nvecparhyp.so
 %if 0%{?with_petsc}
 %{_libdir}/openmpi/lib/libsundials_nvecpetsc.so
+%{_libdir}/openmpi/lib/libsundials_sunnonlinsolpetscsnes.so
 %endif
 %{_libdir}/openmpi/lib/libsundials_nvecmpimanyvector.so
 %if %{with pthread}
@@ -902,6 +904,7 @@ popd
 %{_libdir}/mpich/lib/libsundials_nvecparhyp.so.*
 %if 0%{?with_petsc}
 %{_libdir}/mpich/lib/libsundials_nvecpetsc.so.*
+%{_libdir}/mpich/lib/libsundials_sunnonlinsolpetscsnes.so.*
 %endif
 %{_libdir}/mpich/lib/libsundials_nvecmpimanyvector.so.*
 %if %{with pthread}
@@ -950,6 +953,7 @@ popd
 %{_libdir}/mpich/lib/libsundials_nvecparhyp.so
 %if 0%{?with_petsc}
 %{_libdir}/mpich/lib/libsundials_nvecpetsc.so
+%{_libdir}/mpich/lib/libsundials_sunnonlinsolpetscsnes.so
 %endif
 %{_libdir}/mpich/lib/libsundials_nvecmpimanyvector.so
 %if %{with pthread}
