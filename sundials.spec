@@ -1,5 +1,5 @@
 ## Debug builds?
-%bcond_without debug
+%bcond_with debug
 #
 
 # Enable pthread support
@@ -661,9 +661,9 @@ ctest3 --force-new-ctest-process -VV -j1 --output-on-failure --debug
 export LD_LIBRARY_PATH=%{buildroot}$MPI_LIB:$MPI_LIB
 export OMPI_MCA_rmaps_base_oversubscribe=yes
 %ifarch aarch64 %{power64}
-ctest3 --force-new-ctest-process -j1 --rerun-failed --output-on-failure -E 'test_fsunlinsol_dense_mod'
+ctest3 --force-new-ctest-process -j1 --rerun-failed --output-on-failure -E 'test_fsunlinsol_dense_mod|test_sunnonlinsol_petscsnes'
 %else
-ctest3 --force-new-ctest-process -j1 --rerun-failed --output-on-failure
+ctest3 --force-new-ctest-process -j1 --rerun-failed --output-on-failure -E 'test_sunnonlinsol_petscsnes'
 %endif
 %endif
 %{_openmpi_unload}
@@ -685,9 +685,9 @@ ctest3 --force-new-ctest-process -VV -j1 --output-on-failure --debug
 export LD_LIBRARY_PATH=%{buildroot}$MPI_LIB:$MPI_LIB
 export OMPI_MCA_rmaps_base_oversubscribe=yes
 %ifarch aarch64 %{power64}
-ctest3 --force-new-ctest-process -j1 --rerun-failed --output-on-failure -E 'test_fsunlinsol_dense_mod'
+ctest3 --force-new-ctest-process -j1 --rerun-failed --output-on-failure -E 'test_fsunlinsol_dense_mod|test_sunnonlinsol_petscsnes'
 %else
-ctest3 --force-new-ctest-process -j1 --rerun-failed --output-on-failure
+ctest3 --force-new-ctest-process -j1 --rerun-failed --output-on-failure -E 'test_sunnonlinsol_petscsnes'
 %endif
 %endif
 %{_mpich_unload}
