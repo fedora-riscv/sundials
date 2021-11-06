@@ -9,10 +9,8 @@
 %define _legacy_common_support 1
 %define _lto_cflags %{nil}
 
-%if 0%{?fedora}
 %global with_mpich 1
 %global with_openmpi 1
-%endif
 
 %if 0%{?rhel} && 0%{?rhel} == 7
 %global with_openmpi 1
@@ -39,7 +37,7 @@
 %global with_openmpicheck 0
 %global with_mpichcheck 0
 %endif
-%if 0%{?fedora} || 0%{?rhel} == 7
+%if 0%{?fedora} || 0%{?rhel} >= 7
 %global with_hypre 1
 %ifnarch s390x
 %global with_openmpicheck 1
