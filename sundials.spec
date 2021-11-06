@@ -112,9 +112,9 @@ BuildRequires: SuperLUMT-devel
 %ifarch s390x x86_64 %{power64} aarch64
 BuildRequires: suitesparse64-devel
 %endif
-%endif
 %ifarch %{arm} %{ix86}
 BuildRequires: suitesparse-devel
+%endif
 %endif
 
 %if 0%{?rhel}
@@ -283,7 +283,7 @@ export FFLAGS=" "
  -DCMAKE_BUILD_TYPE:STRING=Debug \
  -DCMAKE_C_FLAGS_DEBUG:STRING="-O0 -g %{__global_ldflags} -I$INCBLAS" \
  -DCMAKE_Fortran_FLAGS_DEBUG:STRING="-O0 -g %{__global_ldflags} -I$INCBLAS" \
- -DCMAKE_SHARED_LINKER_FLAGS_DEBUG:STRING="%{__global_ldflags} -lklu $LIBBLASLINK $LIBSUPERLUMTLINK" \
+ -DCMAKE_SHARED_LINKER_FLAGS_DEBUG:STRING="%{__global_ldflags} %{!el8:-lklu} $LIBBLASLINK $LIBSUPERLUMTLINK" \
 %else
 export CFLAGS="%{build_cflags}"
 export CFLAGS="%{build_fflags}"
@@ -291,24 +291,28 @@ export CFLAGS="%{build_fflags}"
 %endif
 %if %{?__isa_bits:%{__isa_bits}}%{!?__isa_bits:32} == 64
  -DSUNDIALS_INDEX_SIZE:STRING=64 \
+%if 0%{?fedora} >= 33 || 0%{?rhel} >= 9
  -DKLU_ENABLE=ON -DKLU_LIBRARY_DIR:PATH=%{_libdir} -DKLU_LIBRARY=%{_libdir}/libklu64.so \
+ -DKLU_INCLUDE_DIR:PATH=%{_includedir}/suitesparse \
+%endif
  -DAMD_LIBRARY=%{_libdir}/libamd64.so -DAMD_LIBRARY_DIR:PATH=%{_libdir} \
  -DBTF_LIBRARY=%{_libdir}/libbtf64.so -DBTF_LIBRARY_DIR:PATH=%{_libdir} \
  -DCOLAMD_LIBRARY=%{_libdir}/libcolamd64.so -DCOLAMD_LIBRARY_DIR:PATH=%{_libdir} \
- -DKLU_INCLUDE_DIR:PATH=%{_includedir}/suitesparse \
 %else
  -DSUNDIALS_INDEX_SIZE:STRING=32 \
+%if 0%{?fedora} >= 33 || 0%{?rhel} >= 9
  -DKLU_ENABLE=ON -DKLU_LIBRARY_DIR:PATH=%{_libdir} -DKLU_LIBRARY=%{_libdir}/libklu.so \
+ -DKLU_INCLUDE_DIR:PATH=%{_includedir}/suitesparse \
+%endif
  -DAMD_LIBRARY=%{_libdir}/libamd.so -DAMD_LIBRARY_DIR:PATH=%{_libdir} \
  -DBTF_LIBRARY=%{_libdir}/libbtf.so -DBTF_LIBRARY_DIR:PATH=%{_libdir} \
  -DCOLAMD_LIBRARY=%{_libdir}/libcolamd.so -DCOLAMD_LIBRARY_DIR:PATH=%{_libdir} \
- -DKLU_INCLUDE_DIR:PATH=%{_includedir}/suitesparse \
 %endif
  -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
  -DCMAKE_BUILD_TYPE:STRING=Release \
  -DCMAKE_C_FLAGS_RELEASE:STRING="%{optflags} -I$INCBLAS" \
  -DCMAKE_Fortran_FLAGS_RELEASE:STRING="%{optflags} -I$INCBLAS" \
- -DCMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING="%{__global_ldflags} -lklu $LIBBLASLINK $LIBSUPERLUMTLINK" \
+ -DCMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING="%{__global_ldflags} %{!el8:-lklu} $LIBBLASLINK $LIBSUPERLUMTLINK" \
  -DCMAKE_INSTALL_INCLUDEDIR:PATH=%{_includedir} \
  -DLAPACK_ENABLE:BOOL=OFF \
  -DCMAKE_MODULE_LINKER_FLAGS:STRING="%{__global_ldflags}" \
@@ -396,7 +400,7 @@ export FFLAGS=" "
  -DCMAKE_BUILD_TYPE:STRING=Debug \
  -DCMAKE_C_FLAGS_DEBUG:STRING="-O0 -g %{__global_ldflags} -I$INCBLAS" \
  -DCMAKE_Fortran_FLAGS_DEBUG:STRING="-O0 -g %{__global_ldflags} -I$INCBLAS" \
- -DCMAKE_SHARED_LINKER_FLAGS_DEBUG:STRING="%{__global_ldflags} -lklu $LIBBLASLINK $LIBSUPERLUMTLINK $LIBHYPRELINK" \
+ -DCMAKE_SHARED_LINKER_FLAGS_DEBUG:STRING="%{__global_ldflags} %{!el8:-lklu} $LIBBLASLINK $LIBSUPERLUMTLINK $LIBHYPRELINK" \
 %else
 export CFLAGS="%{build_cflags}"
 export CFLAGS="%{build_fflags}"
@@ -404,24 +408,28 @@ export CFLAGS="%{build_fflags}"
 %endif
 %if %{?__isa_bits:%{__isa_bits}}%{!?__isa_bits:32} == 64
  -DSUNDIALS_INDEX_SIZE:STRING=64 \
+%if 0%{?fedora} >= 33 || 0%{?rhel} >= 9
  -DKLU_ENABLE=ON -DKLU_LIBRARY_DIR:PATH=%{_libdir} -DKLU_LIBRARY=%{_libdir}/libklu64.so \
+ -DKLU_INCLUDE_DIR:PATH=%{_includedir}/suitesparse \
+%endif
  -DAMD_LIBRARY=%{_libdir}/libamd64.so -DAMD_LIBRARY_DIR:PATH=%{_libdir} \
  -DBTF_LIBRARY=%{_libdir}/libbtf64.so -DBTF_LIBRARY_DIR:PATH=%{_libdir} \
  -DCOLAMD_LIBRARY=%{_libdir}/libcolamd64.so -DCOLAMD_LIBRARY_DIR:PATH=%{_libdir} \
- -DKLU_INCLUDE_DIR:PATH=%{_includedir}/suitesparse \
 %else
  -DSUNDIALS_INDEX_SIZE:STRING=32 \
+%if 0%{?fedora} >= 33 || 0%{?rhel} >= 9
  -DKLU_ENABLE=ON -DKLU_LIBRARY_DIR:PATH=%{_libdir} -DKLU_LIBRARY=%{_libdir}/libklu.so \
+ -DKLU_INCLUDE_DIR:PATH=%{_includedir}/suitesparse \
+%endif
  -DAMD_LIBRARY=%{_libdir}/libamd.so -DAMD_LIBRARY_DIR:PATH=%{_libdir} \
  -DBTF_LIBRARY=%{_libdir}/libbtf.so -DBTF_LIBRARY_DIR:PATH=%{_libdir} \
  -DCOLAMD_LIBRARY=%{_libdir}/libcolamd.so -DCOLAMD_LIBRARY_DIR:PATH=%{_libdir} \
- -DKLU_INCLUDE_DIR:PATH=%{_includedir}/suitesparse \
 %endif
  -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
  -DCMAKE_BUILD_TYPE:STRING=Release \
  -DCMAKE_C_FLAGS_RELEASE:STRING="%{optflags} -I$INCBLAS" \
  -DCMAKE_Fortran_FLAGS_RELEASE:STRING="%{optflags} -I$INCBLAS" \
- -DCMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING="%{__global_ldflags} -lklu $LIBBLASLINK $LIBSUPERLUMTLINK $LIBHYPRELINK" \
+ -DCMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING="%{__global_ldflags} %{!el8:-lklu} $LIBBLASLINK $LIBSUPERLUMTLINK $LIBHYPRELINK" \
  -DMPI_INCLUDE_PATH:PATH=$MPI_INCLUDE \
  -DCMAKE_INSTALL_INCLUDEDIR:PATH=$MPI_INCLUDE \
  -DLAPACK_ENABLE:BOOL=OFF \
@@ -530,7 +538,7 @@ export FFLAGS=" "
  -DCMAKE_BUILD_TYPE:STRING=Debug \
  -DCMAKE_C_FLAGS_DEBUG:STRING="-O0 -g %{__global_ldflags} -I$INCBLAS" \
  -DCMAKE_Fortran_FLAGS_DEBUG:STRING="-O0 -g %{__global_ldflags} -I$INCBLAS" \
- -DCMAKE_SHARED_LINKER_FLAGS_DEBUG:STRING="%{__global_ldflags} -lklu $LIBBLASLINK $LIBSUPERLUMTLINK $LIBHYPRELINK" \
+ -DCMAKE_SHARED_LINKER_FLAGS_DEBUG:STRING="%{__global_ldflags} %{!el8:-lklu} $LIBBLASLINK $LIBSUPERLUMTLINK $LIBHYPRELINK" \
 %else
 export CFLAGS="%{build_cflags}"
 export CFLAGS="%{build_fflags}"
@@ -538,24 +546,28 @@ export CFLAGS="%{build_fflags}"
 %endif
 %if %{?__isa_bits:%{__isa_bits}}%{!?__isa_bits:32} == 64
  -DSUNDIALS_INDEX_SIZE:STRING=64 \
+%if 0%{?fedora} >= 33 || 0%{?rhel} >= 9
  -DKLU_ENABLE=ON -DKLU_LIBRARY_DIR:PATH=%{_libdir} -DKLU_LIBRARY=%{_libdir}/libklu64.so \
+ -DKLU_INCLUDE_DIR:PATH=%{_includedir}/suitesparse \
+%endif
  -DAMD_LIBRARY=%{_libdir}/libamd64.so -DAMD_LIBRARY_DIR:PATH=%{_libdir} \
  -DBTF_LIBRARY=%{_libdir}/libbtf64.so -DBTF_LIBRARY_DIR:PATH=%{_libdir} \
  -DCOLAMD_LIBRARY=%{_libdir}/libcolamd64.so -DCOLAMD_LIBRARY_DIR:PATH=%{_libdir} \
- -DKLU_INCLUDE_DIR:PATH=%{_includedir}/suitesparse \
 %else
  -DSUNDIALS_INDEX_SIZE:STRING=32 \
+%if 0%{?fedora} >= 33 || 0%{?rhel} >= 9
  -DKLU_ENABLE=ON -DKLU_LIBRARY_DIR:PATH=%{_libdir} -DKLU_LIBRARY=%{_libdir}/libklu.so \
+ -DKLU_INCLUDE_DIR:PATH=%{_includedir}/suitesparse \
+%endif
  -DAMD_LIBRARY=%{_libdir}/libamd.so -DAMD_LIBRARY_DIR:PATH=%{_libdir} \
  -DBTF_LIBRARY=%{_libdir}/libbtf.so -DBTF_LIBRARY_DIR:PATH=%{_libdir} \
  -DCOLAMD_LIBRARY=%{_libdir}/libcolamd.so -DCOLAMD_LIBRARY_DIR:PATH=%{_libdir} \
- -DKLU_INCLUDE_DIR:PATH=%{_includedir}/suitesparse \
 %endif
  -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
  -DCMAKE_BUILD_TYPE:STRING=Release \
  -DCMAKE_C_FLAGS_RELEASE:STRING="%{optflags} -I$INCBLAS" \
  -DCMAKE_Fortran_FLAGS_RELEASE:STRING="%{optflags} -I$INCBLAS" \
- -DCMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING="%{__global_ldflags} -lklu $LIBBLASLINK $LIBSUPERLUMTLINK $LIBHYPRELINK" \
+ -DCMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING="%{__global_ldflags} %{!el8:-lklu} $LIBBLASLINK $LIBSUPERLUMTLINK $LIBHYPRELINK" \
  -DLAPACK_ENABLE:BOOL=OFF \
  -DMPI_INCLUDE_PATH:PATH=$MPI_INCLUDE \
  -DCMAKE_INSTALL_INCLUDEDIR:PATH=$MPI_INCLUDE \
