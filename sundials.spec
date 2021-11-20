@@ -291,9 +291,9 @@ export CFLAGS="%{build_cflags}"
 export CFLAGS="%{build_fflags}"
 %cmake3 -B sundials-%{version}/build -S sundials-%{version} \
 %endif
+%if 0%{?fedora} >= 33 || 0%{?rhel} >= 9
 %if %{?__isa_bits:%{__isa_bits}}%{!?__isa_bits:32} == 64
  -DSUNDIALS_INDEX_SIZE:STRING=64 \
-%if 0%{?fedora} >= 33 || 0%{?rhel} >= 9
  -DKLU_ENABLE=ON -DKLU_LIBRARY_DIR:PATH=%{_libdir} -DKLU_LIBRARY=%{_libdir}/libklu64.so \
 %endif
  -DAMD_LIBRARY=%{_libdir}/libamd64.so -DAMD_LIBRARY_DIR:PATH=%{_libdir} \
@@ -301,15 +301,16 @@ export CFLAGS="%{build_fflags}"
  -DCOLAMD_LIBRARY=%{_libdir}/libcolamd64.so -DCOLAMD_LIBRARY_DIR:PATH=%{_libdir} \
 %else
  -DSUNDIALS_INDEX_SIZE:STRING=32 \
-%if 0%{?fedora} >= 33 || 0%{?rhel} >= 9
  -DKLU_ENABLE=ON -DKLU_LIBRARY_DIR:PATH=%{_libdir} -DKLU_LIBRARY=%{_libdir}/libklu.so \
-%endif
  -DAMD_LIBRARY=%{_libdir}/libamd.so -DAMD_LIBRARY_DIR:PATH=%{_libdir} \
  -DBTF_LIBRARY=%{_libdir}/libbtf.so -DBTF_LIBRARY_DIR:PATH=%{_libdir} \
  -DCOLAMD_LIBRARY=%{_libdir}/libcolamd.so -DCOLAMD_LIBRARY_DIR:PATH=%{_libdir} \
 %endif
 %if 0%{?rhel} == 8
  -DKLU_ENABLE=ON -DKLU_LIBRARY_DIR:PATH=%{_libdir} -DKLU_LIBRARY=%{_libdir}/libklu.so \
+ -DAMD_LIBRARY=%{_libdir}/libamd.so -DAMD_LIBRARY_DIR:PATH=%{_libdir} \
+ -DBTF_LIBRARY=%{_libdir}/libbtf.so -DBTF_LIBRARY_DIR:PATH=%{_libdir} \
+ -DCOLAMD_LIBRARY=%{_libdir}/libcolamd.so -DCOLAMD_LIBRARY_DIR:PATH=%{_libdir} \
 %endif
  -DKLU_INCLUDE_DIR:PATH=%{_includedir}/suitesparse \
  -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
@@ -410,25 +411,25 @@ export CFLAGS="%{build_cflags}"
 export CFLAGS="%{build_fflags}"
 %cmake3 -B buildopenmpi_dir/build -S buildopenmpi_dir \
 %endif
+%if 0%{?fedora} >= 33 || 0%{?rhel} >= 9
 %if %{?__isa_bits:%{__isa_bits}}%{!?__isa_bits:32} == 64
  -DSUNDIALS_INDEX_SIZE:STRING=64 \
-%if 0%{?fedora} >= 33 || 0%{?rhel} >= 9
  -DKLU_ENABLE=ON -DKLU_LIBRARY_DIR:PATH=%{_libdir} -DKLU_LIBRARY=%{_libdir}/libklu64.so \
-%endif
  -DAMD_LIBRARY=%{_libdir}/libamd64.so -DAMD_LIBRARY_DIR:PATH=%{_libdir} \
  -DBTF_LIBRARY=%{_libdir}/libbtf64.so -DBTF_LIBRARY_DIR:PATH=%{_libdir} \
  -DCOLAMD_LIBRARY=%{_libdir}/libcolamd64.so -DCOLAMD_LIBRARY_DIR:PATH=%{_libdir} \
 %else
  -DSUNDIALS_INDEX_SIZE:STRING=32 \
-%if 0%{?fedora} >= 33 || 0%{?rhel} >= 9
  -DKLU_ENABLE=ON -DKLU_LIBRARY_DIR:PATH=%{_libdir} -DKLU_LIBRARY=%{_libdir}/libklu.so \
-%endif
  -DAMD_LIBRARY=%{_libdir}/libamd.so -DAMD_LIBRARY_DIR:PATH=%{_libdir} \
  -DBTF_LIBRARY=%{_libdir}/libbtf.so -DBTF_LIBRARY_DIR:PATH=%{_libdir} \
  -DCOLAMD_LIBRARY=%{_libdir}/libcolamd.so -DCOLAMD_LIBRARY_DIR:PATH=%{_libdir} \
 %endif
 %if 0%{?rhel} == 8
  -DKLU_ENABLE=ON -DKLU_LIBRARY_DIR:PATH=%{_libdir} -DKLU_LIBRARY=%{_libdir}/libklu.so \
+ -DAMD_LIBRARY=%{_libdir}/libamd.so -DAMD_LIBRARY_DIR:PATH=%{_libdir} \
+ -DBTF_LIBRARY=%{_libdir}/libbtf.so -DBTF_LIBRARY_DIR:PATH=%{_libdir} \
+ -DCOLAMD_LIBRARY=%{_libdir}/libcolamd.so -DCOLAMD_LIBRARY_DIR:PATH=%{_libdir} \
 %endif
  -DKLU_INCLUDE_DIR:PATH=%{_includedir}/suitesparse \
  -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
@@ -550,25 +551,25 @@ export CFLAGS="%{build_cflags}"
 export CFLAGS="%{build_fflags}"
 %cmake3 -B buildmpich_dir/build -S buildmpich_dir \
 %endif
+%if 0%{?fedora} >= 33 || 0%{?rhel} >= 9
 %if %{?__isa_bits:%{__isa_bits}}%{!?__isa_bits:32} == 64
  -DSUNDIALS_INDEX_SIZE:STRING=64 \
-%if 0%{?fedora} >= 33 || 0%{?rhel} >= 9
  -DKLU_ENABLE=ON -DKLU_LIBRARY_DIR:PATH=%{_libdir} -DKLU_LIBRARY=%{_libdir}/libklu64.so \
-%endif
  -DAMD_LIBRARY=%{_libdir}/libamd64.so -DAMD_LIBRARY_DIR:PATH=%{_libdir} \
  -DBTF_LIBRARY=%{_libdir}/libbtf64.so -DBTF_LIBRARY_DIR:PATH=%{_libdir} \
  -DCOLAMD_LIBRARY=%{_libdir}/libcolamd64.so -DCOLAMD_LIBRARY_DIR:PATH=%{_libdir} \
 %else
  -DSUNDIALS_INDEX_SIZE:STRING=32 \
-%if 0%{?fedora} >= 33 || 0%{?rhel} >= 9
  -DKLU_ENABLE=ON -DKLU_LIBRARY_DIR:PATH=%{_libdir} -DKLU_LIBRARY=%{_libdir}/libklu.so \
-%endif
  -DAMD_LIBRARY=%{_libdir}/libamd.so -DAMD_LIBRARY_DIR:PATH=%{_libdir} \
  -DBTF_LIBRARY=%{_libdir}/libbtf.so -DBTF_LIBRARY_DIR:PATH=%{_libdir} \
  -DCOLAMD_LIBRARY=%{_libdir}/libcolamd.so -DCOLAMD_LIBRARY_DIR:PATH=%{_libdir} \
 %endif
 %if 0%{?rhel} == 8
  -DKLU_ENABLE=ON -DKLU_LIBRARY_DIR:PATH=%{_libdir} -DKLU_LIBRARY=%{_libdir}/libklu.so \
+ -DAMD_LIBRARY=%{_libdir}/libamd.so -DAMD_LIBRARY_DIR:PATH=%{_libdir} \
+ -DBTF_LIBRARY=%{_libdir}/libbtf.so -DBTF_LIBRARY_DIR:PATH=%{_libdir} \
+ -DCOLAMD_LIBRARY=%{_libdir}/libcolamd.so -DCOLAMD_LIBRARY_DIR:PATH=%{_libdir} \
 %endif
  -DKLU_INCLUDE_DIR:PATH=%{_includedir}/suitesparse \
  -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
