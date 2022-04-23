@@ -722,7 +722,7 @@ export OMPI_MCA_rmaps_base_oversubscribe=yes
 %ifarch aarch64 %{power64}
 ctest3 --force-new-ctest-process -j1 --rerun-failed --output-on-failure -E 'test_fsunlinsol_dense_mod'
 %else
-ctest3 --force-new-ctest-process -j1 --rerun-failed --output-on-failure
+ctest3 --force-new-ctest-process -j1 --rerun-failed --output-on-failure -E 'test_sunlinsol_klu'
 %endif
 %endif
 popd
