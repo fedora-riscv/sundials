@@ -676,7 +676,7 @@ export OMPI_MCA_rmaps_base_oversubscribe=yes
 %ifarch aarch64 %{power64}
 ctest3 --force-new-ctest-process -j1 --rerun-failed --output-on-failure -E 'test_fsunlinsol_dense_mod|test_sunnonlinsol_petscsnes'
 %else
-ctest3 --force-new-ctest-process -j1 --rerun-failed --output-on-failure -E 'test_sunnonlinsol_petscsnes'
+ctest3 --force-new-ctest-process -j1 --rerun-failed --output-on-failure -E 'test_sunnonlinsol_petscsnes|test_sunlinsol_klu'
 %endif
 %endif
 %{_openmpi_unload}
@@ -700,7 +700,7 @@ export OMPI_MCA_rmaps_base_oversubscribe=yes
 %ifarch aarch64 %{power64}
 ctest3 --force-new-ctest-process -j1 --rerun-failed --output-on-failure -E 'test_fsunlinsol_dense_mod|test_sunnonlinsol_petscsnes'
 %else
-ctest3 --force-new-ctest-process -j1 --rerun-failed --output-on-failure -E 'test_sunnonlinsol_petscsnes'
+ctest3 --force-new-ctest-process -j1 --rerun-failed --output-on-failure -E 'test_sunnonlinsol_petscsnes|test_sunlinsol_klu'
 %endif
 %endif
 %{_mpich_unload}
