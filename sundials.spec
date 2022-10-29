@@ -70,7 +70,7 @@
 Summary:    Suite of nonlinear solvers
 Name:       sundials
 Version:    5.8.0
-Release:    6%{?dist}
+Release:    7%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -664,7 +664,7 @@ rm -f %{buildroot}%{_includedir}/sundials/NOTICE
 %check
 %if 0%{?with_openmpi}
 %if 0%{?with_openmpicheck}
-pushd buildopenmpi_dir/build
+%define _vpath_builddir buildopenmpi_dir/build
 %{_openmpi_load}
 %if %{with debug}
 export LD_LIBRARY_PATH=%{buildroot}$MPI_LIB:$MPI_LIB
@@ -674,13 +674,12 @@ ctest3 --force-new-ctest-process -VV -j1 --output-on-failure --debug
 export LD_LIBRARY_PATH=%{buildroot}$MPI_LIB:$MPI_LIB
 export OMPI_MCA_rmaps_base_oversubscribe=yes
 %ifarch aarch64 %{power64}
-ctest3 --force-new-ctest-process -j1 --rerun-failed --output-on-failure -E 'test_fsunlinsol_dense_mod|test_sunnonlinsol_petscsnes'
+%ctest -- -E 'test_fsunlinsol_dense_mod|test_sunnonlinsol_petscsnes'
 %else
-ctest3 --force-new-ctest-process -j1 --rerun-failed --output-on-failure -E 'test_sunnonlinsol_petscsnes|test_sunlinsol_klu'
+%ctest -- -E 'test_sunnonlinsol_petscsnes|test_sunlinsol_klu'
 %endif
 %endif
 %{_openmpi_unload}
-popd
 %endif
 ## if with_openmpicheck
 %endif
@@ -998,6 +997,9 @@ popd
 %doc sundials-%{version}/doc/arkode/*
 
 %changelog
+* Sat Oct 29 2022 Antonio Trande <sagitter@fedoraproject.org> - 5.8.0-7
+- Use multiple jobs for testing
+
 * Sat Jul 23 2022 Fedora Release Engineering <releng@fedoraproject.org> - 5.8.0-6
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_37_Mass_Rebuild
 
