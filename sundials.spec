@@ -40,7 +40,7 @@
 %if 0%{?fedora} || 0%{?rhel} >= 7
 %global with_hypre 1
 %ifnarch s390x
-%global with_openmpicheck 0
+%global with_openmpicheck 1
 %global with_mpichcheck 1
 %endif
 %endif
@@ -70,7 +70,7 @@
 Summary:    Suite of nonlinear solvers
 Name:       sundials
 Version:    5.8.0
-Release:    7%{?dist}
+Release:    8%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -991,6 +991,9 @@ export LD_LIBRARY_PATH=%{buildroot}%{_libdir}:%{_libdir}
 %doc sundials-%{version}/doc/arkode/*
 
 %changelog
+* Sun Nov 13 2022 Antonio Trande <sagitter@fedoraproject.org> - 5.8.0-8
+- Enable OpenMPI tests
+
 * Sat Oct 29 2022 Antonio Trande <sagitter@fedoraproject.org> - 5.8.0-7
 - Use multiple jobs for testing
 - Disable OpenMPI tests
