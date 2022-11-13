@@ -674,9 +674,9 @@ ctest3 --force-new-ctest-process -VV -j1 --output-on-failure --debug
 export LD_LIBRARY_PATH=%{buildroot}$MPI_LIB:$MPI_LIB
 export OMPI_MCA_rmaps_base_oversubscribe=yes
 %ifarch aarch64 %{power64}
-%ctest -- -j1 -E 'test_fsunlinsol_dense_mod|test_sunnonlinsol_petscsnes'
+/usr/bin/ctest --output-on-failure --force-new-ctest-process -j1 -E 'test_fsunlinsol_dense_mod|test_sunnonlinsol_petscsnes'
 %else
-%ctest -- -j1 -E 'test_sunnonlinsol_petscsnes|test_sunlinsol_klu'
+/usr/bin/ctest --output-on-failure --force-new-ctest-process -j1 -E 'test_sunnonlinsol_petscsnes|test_sunlinsol_klu'
 %endif
 %endif
 %{_openmpi_unload}
@@ -695,9 +695,9 @@ ctest3 --force-new-ctest-process -VV -j1 --output-on-failure --debug
 %else
 export LD_LIBRARY_PATH=%{buildroot}$MPI_LIB:$MPI_LIB
 %ifarch aarch64 %{power64}
-%ctest -- -j1 -E 'test_fsunlinsol_dense_mod|test_sunnonlinsol_petscsnes'
+/usr/bin/ctest --output-on-failure --force-new-ctest-process -j1 -E 'test_fsunlinsol_dense_mod|test_sunnonlinsol_petscsnes'
 %else
-%ctest -- -j1 -E 'test_sunnonlinsol_petscsnes|test_sunlinsol_klu'
+/usr/bin/ctest --output-on-failure --force-new-ctest-process -j1 -E 'test_sunnonlinsol_petscsnes|test_sunlinsol_klu'
 %endif
 %endif
 %{_mpich_unload}
@@ -714,9 +714,9 @@ ctest3 --force-new-ctest-process -VV -j1 --output-on-failure --debug
 %else
 export LD_LIBRARY_PATH=%{buildroot}%{_libdir}:%{_libdir}
 %ifarch aarch64 %{power64}
-%ctest -- -j1 -E 'test_fsunlinsol_dense_mod'
+/usr/bin/ctest --output-on-failure --force-new-ctest-process -j1 -E 'test_fsunlinsol_dense_mod'
 %else
-%ctest -- -j1 -E 'test_sunlinsol_klu'
+/usr/bin/ctest --output-on-failure --force-new-ctest-process -j1 -E 'test_sunlinsol_klu'
 %endif
 %endif
 %endif
