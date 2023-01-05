@@ -39,7 +39,7 @@
 %endif
 %if 0%{?fedora} || 0%{?rhel} >= 7
 %global with_hypre 1
-%ifnarch s390x
+%ifnarch s390x riscv64
 %global with_openmpicheck 1
 %global with_mpichcheck 1
 %endif
@@ -70,7 +70,7 @@
 Summary:    Suite of nonlinear solvers
 Name:       sundials
 Version:    5.8.0
-Release:    6%{?dist}
+Release:    6.rv64%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -107,7 +107,7 @@ BuildRequires: SuperLUMT-devel
 
 # KLU support
 %if 0%{?fedora} >= 33 || 0%{?rhel} >= 9
-%ifarch s390x x86_64 %{power64} aarch64
+%ifarch s390x x86_64 %{power64} aarch64 riscv64
 BuildRequires: suitesparse64-devel
 %endif
 %ifarch %{arm} %{ix86}
@@ -998,6 +998,9 @@ popd
 %doc sundials-%{version}/doc/arkode/*
 
 %changelog
+* Thu Jan 05 2023 Liu Yang <Yang.Liu.sn@gmail.com> - 5.8.0-6.rv64
+- Fix build on riscv64.
+
 * Sat Jul 23 2022 Fedora Release Engineering <releng@fedoraproject.org> - 5.8.0-6
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_37_Mass_Rebuild
 
