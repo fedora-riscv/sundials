@@ -39,7 +39,7 @@
 ###########
 
 ## superlu_dist ##
-%global with_superludist 1
+%global with_superludist 0
 ###########
 
 %if 0%{?rhel} && 0%{?rhel} >= 9
