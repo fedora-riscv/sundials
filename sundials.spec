@@ -815,12 +815,6 @@ export LD_LIBRARY_PATH=%{buildroot}%{_libdir}:%{_libdir}
 %endif
 %endif
 %endif
-%if 0%{?rhel} && 0%{?rhel} >= 9
-%if 0%{?with_petsc}
-%{_libdir}/openmpi/lib/libsundials_nvecpetsc.so.*
-%{_libdir}/openmpi/lib/libsundials_sunnonlinsolpetscsnes.so.*
-%endif
-%endif
 %if %{with pthread}
 %{_libdir}/openmpi/lib/libsundials_nvecmpipthreads.so.*
 %endif
@@ -873,12 +867,6 @@ export LD_LIBRARY_PATH=%{buildroot}%{_libdir}:%{_libdir}
 %endif
 %endif
 %endif
-%if 0%{?rhel} && 0%{?rhel} >= 9
-%if 0%{?with_petsc}
-%{_libdir}/openmpi/lib/libsundials_nvecpetsc.so
-%{_libdir}/openmpi/lib/libsundials_sunnonlinsolpetscsnes.so
-%endif
-%endif
 %if %{with pthread}
 %{_libdir}/openmpi/lib/libsundials_nvecmpipthreads.so
 %{_libdir}/openmpi/lib/libsundials_nvecpthreads.so
@@ -918,12 +906,6 @@ export LD_LIBRARY_PATH=%{buildroot}%{_libdir}:%{_libdir}
 %{_libdir}/mpich/lib/libsundials_nvecpetsc.so.*
 %{_libdir}/mpich/lib/libsundials_sunnonlinsolpetscsnes.so.*
 %endif
-%endif
-%endif
-%if 0%{?rhel} && 0%{?rhel} >= 9
-%if 0%{?with_petsc}
-%{_libdir}/mpich/lib/libsundials_nvecpetsc.so.*
-%{_libdir}/mpich/lib/libsundials_sunnonlinsolpetscsnes.so.*
 %endif
 %endif
 %if %{with pthread}
@@ -977,12 +959,6 @@ export LD_LIBRARY_PATH=%{buildroot}%{_libdir}:%{_libdir}
 %{_libdir}/mpich/lib/libsundials_nvecpetsc.so
 %{_libdir}/mpich/lib/libsundials_sunnonlinsolpetscsnes.so
 %endif
-%endif
-%endif
-%if 0%{?rhel} && 0%{?rhel} >= 9
-%if 0%{?with_petsc}
-%{_libdir}/mpich/lib/libsundials_nvecpetsc.so
-%{_libdir}/mpich/lib/libsundials_sunnonlinsolpetscsnes.so
 %endif
 %endif
 %if %{with pthread}
