@@ -30,10 +30,6 @@
 ###########
 %global with_sercheck 1
 
-## PETSc ##
-%global with_petsc 1
-###########
-
 ## SuperLUMT ##
 %global with_superlumt 1
 ###########
@@ -46,6 +42,9 @@
 # KLU support
 %global with_klu   0
 %global with_klu64 1
+## PETSc ##
+%global with_petsc 0
+###########
 ##########
 # Fortran
 %if 0%{?with_klu64}
@@ -66,9 +65,15 @@
 %global with_fortran 0
 %endif
 %endif
+## PETSc ##
+%global with_petsc 1
+###########
 %if 0%{?rhel} && 0%{?rhel} == 8
 %global with_klu 1
 %global with_fortran 0
+## PETSc ##
+%global with_petsc 1
+###########
 %endif
 ##########
 
