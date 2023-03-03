@@ -89,6 +89,7 @@ Patch0:     %{name}-5.5.0-set_superlumt_name.patch
 Patch1:     %{name}-5.5.0-set_superlumt64_name.patch
 
 Patch2:     %{name}-change_petsc_variable.patch
+Patch3:     %{name}-klu64.patch
 
 BuildRequires: make
 %if 0%{?with_fortran}
@@ -236,6 +237,10 @@ pushd %{name}-%{version}
 %patch0 -p0 -b .set_superlumt_name
 %endif
 
+%if 0%{?with_klu64}
+%patch3 -p1 -b .klu64
+%endif
+
 mv src/arkode/README.md src/README-arkode.md
 mv src/cvode/README.md src/README-cvode.md
 mv src/cvodes/README.md src/README-cvodes.md
@@ -265,6 +270,7 @@ export LIBSUPERLUMTLINK=-lsuperlumt64_d
 export LIBSUPERLUMTLINK=-lsuperlumt_d
 %endif
 %endif
+
 
 %if %{with debug}
 %undefine _hardened_build
