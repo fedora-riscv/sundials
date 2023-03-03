@@ -80,7 +80,7 @@
 Summary:    Suite of nonlinear solvers
 Name:       sundials
 Version:    5.8.0
-Release:    14%{?dist}
+Release:    15%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -991,6 +991,9 @@ export LD_LIBRARY_PATH=%{buildroot}%{_libdir}:%{_libdir}
 %doc sundials-%{version}/doc/arkode/*
 
 %changelog
+* Fri Mar 03 2023 Antonio Trande <sagitter@fedoraproject.org> - 5.8.0-15
+- Fix installed files in EPEL9
+
 * Fri Mar 03 2023 Antonio Trande <sagitter@fedoraproject.org> - 5.8.0-14
 - Enable only KLU64 in EPEL9
 
