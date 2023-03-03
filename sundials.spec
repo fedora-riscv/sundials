@@ -44,7 +44,7 @@
 
 %if 0%{?rhel} && 0%{?rhel} >= 9
 # KLU support
-%global with_klu   1
+%global with_klu   0
 %global with_klu64 1
 ##########
 # Fortran
@@ -75,7 +75,7 @@
 Summary:    Suite of nonlinear solvers
 Name:       sundials
 Version:    5.8.0
-Release:    13%{?dist}
+Release:    14%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -1010,6 +1010,9 @@ export LD_LIBRARY_PATH=%{buildroot}%{_libdir}:%{_libdir}
 %doc sundials-%{version}/doc/arkode/*
 
 %changelog
+* Fri Mar 03 2023 Antonio Trande <sagitter@fedoraproject.org> - 5.8.0-14
+- Enable only KLU64 in EPEL9
+
 * Fri Mar 03 2023 Antonio Trande <sagitter@fedoraproject.org> - 5.8.0-13
 - Fix PETSc support in EPEL9
 
