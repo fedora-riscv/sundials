@@ -75,7 +75,7 @@
 Summary:    Suite of nonlinear solvers
 Name:       sundials
 Version:    6.5.1
-Release:    1%{?dist}
+Release:    2%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -643,19 +643,19 @@ rm -f %{buildroot}%{_includedir}/sundials/NOTICE
 %check
 %if 0%{?with_openmpi}
 %if 0%{?with_openmpicheck}
-%define _vpath_builddir buildopenmpi_dir/build
 %{_openmpi_load}
+%define _vpath_builddir buildopenmpi_dir/build
 %if %{with debug}
 export LD_LIBRARY_PATH=%{buildroot}$MPI_LIB:$MPI_LIB
 export OMPI_MCA_rmaps_base_oversubscribe=yes
-ctest3 --force-new-ctest-process -VV -j1 --output-on-failure --debug
+%ctest -- -VV --output-on-failure --debug
 %else
 export LD_LIBRARY_PATH=%{buildroot}$MPI_LIB:$MPI_LIB
 export OMPI_MCA_rmaps_base_oversubscribe=yes
 %ifarch aarch64 %{power64}
-/usr/bin/ctest --output-on-failure --force-new-ctest-process -j1 -E 'test_fsunlinsol_dense_mod|test_sunnonlinsol_petscsnes'
+%ctest -- --output-on-failure -E 'test_sunlinsol_superlumt'
 %else
-/usr/bin/ctest --output-on-failure --force-new-ctest-process -j1 -E 'test_sunnonlinsol_petscsnes|test_sunlinsol_klu'
+%ctest -- --output-on-failure -E 'test_sunlinsol_superlumt|test_fsunlinsol_dense_mod'
 %endif
 %endif
 %{_openmpi_unload}
@@ -666,17 +666,17 @@ export OMPI_MCA_rmaps_base_oversubscribe=yes
 
 %if 0%{?with_mpich}
 %if 0%{?with_mpichcheck}
-%define _vpath_builddir buildmpich_dir/build
 %{_mpich_load}
+%define _vpath_builddir buildmpich_dir/build
 %if %{with debug}
 export LD_LIBRARY_PATH=%{buildroot}$MPI_LIB:$MPI_LIB
-ctest3 --force-new-ctest-process -VV -j1 --output-on-failure --debug
+%ctest -- -VV --output-on-failure --debug
 %else
 export LD_LIBRARY_PATH=%{buildroot}$MPI_LIB:$MPI_LIB
 %ifarch aarch64 %{power64}
-/usr/bin/ctest --output-on-failure --force-new-ctest-process -j1 -E 'test_fsunlinsol_dense_mod|test_sunnonlinsol_petscsnes'
+%ctest -- --output-on-failure -E 'test_sunlinsol_superlumt'
 %else
-/usr/bin/ctest --output-on-failure --force-new-ctest-process -j1 -E 'test_sunnonlinsol_petscsnes|test_sunlinsol_klu'
+%ctest -- --output-on-failure -E 'test_sunlinsol_superlumt|test_fsunlinsol_dense_mod'
 %endif
 %endif
 %{_mpich_unload}
@@ -689,13 +689,13 @@ export LD_LIBRARY_PATH=%{buildroot}$MPI_LIB:$MPI_LIB
 %define _vpath_builddir sundials-%{version}/build
 %if %{with debug}
 export LD_LIBRARY_PATH=%{buildroot}%{_libdir}:%{_libdir}
-ctest3 --force-new-ctest-process -VV -j1 --output-on-failure --debug
+%ctest -- -VV --output-on-failure --debug
 %else
 export LD_LIBRARY_PATH=%{buildroot}%{_libdir}:%{_libdir}
 %ifarch aarch64 %{power64}
-/usr/bin/ctest --output-on-failure --force-new-ctest-process -j1 -E 'test_fsunlinsol_dense_mod'
+%ctest -- --output-on-failure -E 'test_sunlinsol_superlumt'
 %else
-/usr/bin/ctest --output-on-failure --force-new-ctest-process -j1 -E 'test_sunlinsol_klu'
+%ctest -- --output-on-failure -E 'test_sunlinsol_superlumt|test_fsunlinsol_dense_mod'
 %endif
 %endif
 %endif
@@ -991,6 +991,9 @@ export LD_LIBRARY_PATH=%{buildroot}%{_libdir}:%{_libdir}
 %doc sundials-%{version}/doc/arkode/*
 
 %changelog
+* Wed Apr 19 2023 Antonio Trande <sagitter@fedoraproject.org> - 6.5.1-2
+- Fix ctest commands
+
 * Wed Apr 19 2023 Antonio Trande <sagitter@fedoraproject.org> - 6.5.1-1
 - Release 6.5.1
 
