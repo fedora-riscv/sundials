@@ -258,7 +258,7 @@ cp -a sundials-%{version} buildmpich_dir
 
 %build
 
-%global _smp_ncpus_max 2
+%global _smp_ncpus_max 1
 
 mkdir -p sundials-%{version}/build
 
