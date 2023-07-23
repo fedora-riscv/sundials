@@ -257,6 +257,9 @@ cp -a sundials-%{version} buildmpich_dir
 %endif
 
 %build
+
+%global _smp_ncpus_max 2
+
 mkdir -p sundials-%{version}/build
 
 export LIBBLASLINK=-l%{blaslib}%{blasvar}
