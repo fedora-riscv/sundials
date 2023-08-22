@@ -12,16 +12,8 @@
 %global with_mpich 1
 %global with_openmpi 1
 
-%if 0%{?rhel} && 0%{?rhel} == 7
-%global with_openmpi 1
-%global with_mpich 1
-
-# Use devtoolset 6
-%global dts devtoolset-6-
-%endif
-
 ## BLAS ##
-%if 0%{?fedora} >= 33 || 0%{?rhel} >= 9
+%if 0%{?fedora} || 0%{?rhel} >= 9
 %global blaslib flexiblas
 %global blasvar %{nil}
 %else
@@ -30,19 +22,10 @@
 %endif
 ###########
 
-## Hypre ##
-## Due to rhbz#1744780
-%if 0%{?rhel} && 0%{?rhel} > 7
-%global with_hypre 1
-%global with_openmpicheck 0
-%global with_mpichcheck 0
-%endif
-%if 0%{?fedora} || 0%{?rhel} >= 7
 %global with_hypre 1
 %ifnarch s390x riscv64
 %global with_openmpicheck 1
 %global with_mpichcheck 1
-%endif
 %endif
 ###########
 %global with_sercheck 1
@@ -59,18 +42,40 @@
 %global with_superludist 0
 ###########
 
-## Fortran ##
-%if %{?__isa_bits:%{__isa_bits}}%{!?__isa_bits:32} == 64
+%if 0%{?rhel} && 0%{?rhel} >= 9
+# KLU support
+%global with_klu   1
+%global with_klu64 0
+##########
+# Fortran
+%if 0%{?with_klu64}
 %global with_fortran 1
-%else
+%endif
+%if 0%{?with_klu}
 %global with_fortran 0
 %endif
-#############
+##########
+%endif
+%if 0%{?fedora}
+%ifarch s390x x86_64 %{power64} aarch64
+%global with_klu64 1
+%global with_fortran 1
+%endif
+%ifarch %{arm} %{ix86}
+%global with_klu 1
+%global with_fortran 0
+%endif
+%endif
+%if 0%{?rhel} && 0%{?rhel} == 8
+%global with_klu 1
+%global with_fortran 0
+%endif
+##########
 
 Summary:    Suite of nonlinear solvers
 Name:       sundials
 Version:    5.8.0
-Release:    6.rv64%{?dist}
+Release:    11.rv64%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -90,7 +95,7 @@ BuildRequires: make
 BuildRequires: gcc-gfortran
 %endif
 BuildRequires: python%{python3_pkgversion}-devel
-BuildRequires: %{?dts}gcc, %{?dts}gcc-c++
+BuildRequires: gcc, gcc-c++
 %if 0%{?epel}
 BuildRequires: epel-rpm-macros
 %endif
@@ -106,20 +111,15 @@ BuildRequires: SuperLUMT-devel
 %endif
 
 # KLU support
-%if 0%{?fedora} >= 33 || 0%{?rhel} >= 9
-%ifarch s390x x86_64 %{power64} aarch64 riscv64
+%if 0%{?with_klu64}
 BuildRequires: suitesparse64-devel
 %endif
-%ifarch %{arm} %{ix86}
+%if 0%{?with_klu}
 BuildRequires: suitesparse-devel
 %endif
-%endif
+##########
 
-%if 0%{?rhel} == 8
-BuildRequires: suitesparse-devel
-%endif
-
-%if 0%{?rhel}
+%if 0%{?rhel} && 0%{?rhel} == 8
 BuildRequires: rsh
 %endif
 %if 0%{?with_fortran}
@@ -161,7 +161,6 @@ BuildRequires: hdf5-openmpi-devel
 BuildRequires: superlu_dist-openmpi-devel
 %endif
 
-Requires: openmpi%{?_isa}
 %if 0%{?with_fortran}
 Requires: gcc-gfortran%{?_isa}
 %endif
@@ -198,7 +197,6 @@ BuildRequires: hdf5-mpich-devel
 BuildRequires: superlu_dist-mpich-devel
 %endif
 
-Requires: mpich%{?_isa}
 %if 0%{?with_fortran}
 Requires: gcc-gfortran%{?_isa}
 %endif
@@ -271,10 +269,6 @@ export LIBSUPERLUMTLINK=-lsuperlumt_d
 %endif
 %endif
 
-%if 0%{?el7}
-%{?dts:source /opt/rh/devtoolset-6/enable}
-%endif
-
 %if %{with debug}
 %undefine _hardened_build
 export CFLAGS=" "
@@ -291,28 +285,22 @@ export CFLAGS="%{build_cflags}"
 export CFLAGS="%{build_fflags}"
 %cmake3 -B sundials-%{version}/build -S sundials-%{version} \
 %endif
-%if 0%{?fedora} >= 33 || 0%{?rhel} >= 9
-%if %{?__isa_bits:%{__isa_bits}}%{!?__isa_bits:32} == 64
+%if 0%{?with_klu64}
  -DSUNDIALS_INDEX_SIZE:STRING=64 \
  -DKLU_ENABLE=ON -DKLU_LIBRARY_DIR:PATH=%{_libdir} -DKLU_LIBRARY=%{_libdir}/libklu64.so \
  -DAMD_LIBRARY=%{_libdir}/libamd64.so -DAMD_LIBRARY_DIR:PATH=%{_libdir} \
  -DBTF_LIBRARY=%{_libdir}/libbtf64.so -DBTF_LIBRARY_DIR:PATH=%{_libdir} \
  -DCOLAMD_LIBRARY=%{_libdir}/libcolamd64.so -DCOLAMD_LIBRARY_DIR:PATH=%{_libdir} \
-%else
+ -DKLU_INCLUDE_DIR:PATH=%{_includedir}/suitesparse \
+%endif
+%if 0%{?with_klu}
  -DSUNDIALS_INDEX_SIZE:STRING=32 \
  -DKLU_ENABLE=ON -DKLU_LIBRARY_DIR:PATH=%{_libdir} -DKLU_LIBRARY=%{_libdir}/libklu.so \
  -DAMD_LIBRARY=%{_libdir}/libamd.so -DAMD_LIBRARY_DIR:PATH=%{_libdir} \
  -DBTF_LIBRARY=%{_libdir}/libbtf.so -DBTF_LIBRARY_DIR:PATH=%{_libdir} \
  -DCOLAMD_LIBRARY=%{_libdir}/libcolamd.so -DCOLAMD_LIBRARY_DIR:PATH=%{_libdir} \
-%endif
-%endif
-%if 0%{?rhel} == 8
- -DKLU_ENABLE=ON -DKLU_LIBRARY_DIR:PATH=%{_libdir} -DKLU_LIBRARY=%{_libdir}/libklu.so \
- -DAMD_LIBRARY=%{_libdir}/libamd.so -DAMD_LIBRARY_DIR:PATH=%{_libdir} \
- -DBTF_LIBRARY=%{_libdir}/libbtf.so -DBTF_LIBRARY_DIR:PATH=%{_libdir} \
- -DCOLAMD_LIBRARY=%{_libdir}/libcolamd.so -DCOLAMD_LIBRARY_DIR:PATH=%{_libdir} \
-%endif
  -DKLU_INCLUDE_DIR:PATH=%{_includedir}/suitesparse \
+%endif
  -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
  -DCMAKE_BUILD_TYPE:STRING=Release \
  -DCMAKE_C_FLAGS_RELEASE:STRING="%{optflags} -I$INCBLAS" \
@@ -330,7 +318,9 @@ export CFLAGS="%{build_fflags}"
 %if 0%{?with_fortran}
  -DF77_INTERFACE_ENABLE:BOOL=ON \
  -DEXAMPLES_ENABLE_F77:BOOL=ON \
+%if %{?__isa_bits:%{__isa_bits}}%{!?__isa_bits:32} == 64
  -DF2003_INTERFACE_ENABLE:BOOL=ON \
+%endif
  -DEXAMPLES_ENABLE_F90:BOOL=ON \
  -DFortran_INSTALL_MODDIR:PATH=%{_fmoddir}/%{name} \
 %endif
@@ -391,10 +381,6 @@ export FC=$MPI_BIN/mpif77
 %endif
 ##
 
-%if 0%{?el7}
-%{?dts:source /opt/rh/devtoolset-6/enable}
-%endif
-
 %if %{with debug}
 %undefine _hardened_build
 export CFLAGS=" "
@@ -411,28 +397,26 @@ export CFLAGS="%{build_cflags}"
 export CFLAGS="%{build_fflags}"
 %cmake3 -B buildopenmpi_dir/build -S buildopenmpi_dir \
 %endif
-%if 0%{?fedora} >= 33 || 0%{?rhel} >= 9
 %if %{?__isa_bits:%{__isa_bits}}%{!?__isa_bits:32} == 64
  -DSUNDIALS_INDEX_SIZE:STRING=64 \
+%if 0%{?with_klu64}
  -DKLU_ENABLE=ON -DKLU_LIBRARY_DIR:PATH=%{_libdir} -DKLU_LIBRARY=%{_libdir}/libklu64.so \
  -DAMD_LIBRARY=%{_libdir}/libamd64.so -DAMD_LIBRARY_DIR:PATH=%{_libdir} \
  -DBTF_LIBRARY=%{_libdir}/libbtf64.so -DBTF_LIBRARY_DIR:PATH=%{_libdir} \
  -DCOLAMD_LIBRARY=%{_libdir}/libcolamd64.so -DCOLAMD_LIBRARY_DIR:PATH=%{_libdir} \
-%else
- -DSUNDIALS_INDEX_SIZE:STRING=32 \
- -DKLU_ENABLE=ON -DKLU_LIBRARY_DIR:PATH=%{_libdir} -DKLU_LIBRARY=%{_libdir}/libklu.so \
- -DAMD_LIBRARY=%{_libdir}/libamd.so -DAMD_LIBRARY_DIR:PATH=%{_libdir} \
- -DBTF_LIBRARY=%{_libdir}/libbtf.so -DBTF_LIBRARY_DIR:PATH=%{_libdir} \
- -DCOLAMD_LIBRARY=%{_libdir}/libcolamd.so -DCOLAMD_LIBRARY_DIR:PATH=%{_libdir} \
-%endif
-%endif
-%if 0%{?rhel} == 8
- -DKLU_ENABLE=ON -DKLU_LIBRARY_DIR:PATH=%{_libdir} -DKLU_LIBRARY=%{_libdir}/libklu.so \
- -DAMD_LIBRARY=%{_libdir}/libamd.so -DAMD_LIBRARY_DIR:PATH=%{_libdir} \
- -DBTF_LIBRARY=%{_libdir}/libbtf.so -DBTF_LIBRARY_DIR:PATH=%{_libdir} \
- -DCOLAMD_LIBRARY=%{_libdir}/libcolamd.so -DCOLAMD_LIBRARY_DIR:PATH=%{_libdir} \
-%endif
  -DKLU_INCLUDE_DIR:PATH=%{_includedir}/suitesparse \
+%endif
+%endif
+%if %{?__isa_bits:%{__isa_bits}}%{!?__isa_bits:32} == 32
+ -DSUNDIALS_INDEX_SIZE:STRING=32 \
+%if 0%{?with_klu}
+ -DKLU_ENABLE=ON -DKLU_LIBRARY_DIR:PATH=%{_libdir} -DKLU_LIBRARY=%{_libdir}/libklu.so \
+ -DAMD_LIBRARY=%{_libdir}/libamd.so -DAMD_LIBRARY_DIR:PATH=%{_libdir} \
+ -DBTF_LIBRARY=%{_libdir}/libbtf.so -DBTF_LIBRARY_DIR:PATH=%{_libdir} \
+ -DCOLAMD_LIBRARY=%{_libdir}/libcolamd.so -DCOLAMD_LIBRARY_DIR:PATH=%{_libdir} \
+ -DKLU_INCLUDE_DIR:PATH=%{_includedir}/suitesparse \
+%endif
+%endif
  -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
  -DCMAKE_BUILD_TYPE:STRING=Release \
  -DCMAKE_C_FLAGS_RELEASE:STRING="%{optflags} -I$INCBLAS" \
@@ -461,7 +445,9 @@ export CFLAGS="%{build_fflags}"
 %endif
  -DF77_INTERFACE_ENABLE:BOOL=ON \
  -DEXAMPLES_ENABLE_F77:BOOL=ON \
+%if %{?__isa_bits:%{__isa_bits}}%{!?__isa_bits:32} == 64
  -DF2003_INTERFACE_ENABLE:BOOL=ON \
+%endif
  -DEXAMPLES_ENABLE_F90:BOOL=ON \
  -DFortran_INSTALL_MODDIR:PATH=$MPI_FORTRAN_MOD_DIR/%{name} \
 %endif
@@ -532,10 +518,6 @@ export FC=$MPI_BIN/mpif77
 %endif
 ##
 
-%if 0%{?el7}
-%{?dts:source /opt/rh/devtoolset-6/enable}
-%endif
-
 %if %{with debug}
 %undefine _hardened_build
 export CFLAGS=" "
@@ -552,28 +534,26 @@ export CFLAGS="%{build_cflags}"
 export CFLAGS="%{build_fflags}"
 %cmake3 -B buildmpich_dir/build -S buildmpich_dir \
 %endif
-%if 0%{?fedora} >= 33 || 0%{?rhel} >= 9
 %if %{?__isa_bits:%{__isa_bits}}%{!?__isa_bits:32} == 64
  -DSUNDIALS_INDEX_SIZE:STRING=64 \
+%if 0%{?with_klu64}
  -DKLU_ENABLE=ON -DKLU_LIBRARY_DIR:PATH=%{_libdir} -DKLU_LIBRARY=%{_libdir}/libklu64.so \
  -DAMD_LIBRARY=%{_libdir}/libamd64.so -DAMD_LIBRARY_DIR:PATH=%{_libdir} \
  -DBTF_LIBRARY=%{_libdir}/libbtf64.so -DBTF_LIBRARY_DIR:PATH=%{_libdir} \
  -DCOLAMD_LIBRARY=%{_libdir}/libcolamd64.so -DCOLAMD_LIBRARY_DIR:PATH=%{_libdir} \
-%else
- -DSUNDIALS_INDEX_SIZE:STRING=32 \
- -DKLU_ENABLE=ON -DKLU_LIBRARY_DIR:PATH=%{_libdir} -DKLU_LIBRARY=%{_libdir}/libklu.so \
- -DAMD_LIBRARY=%{_libdir}/libamd.so -DAMD_LIBRARY_DIR:PATH=%{_libdir} \
- -DBTF_LIBRARY=%{_libdir}/libbtf.so -DBTF_LIBRARY_DIR:PATH=%{_libdir} \
- -DCOLAMD_LIBRARY=%{_libdir}/libcolamd.so -DCOLAMD_LIBRARY_DIR:PATH=%{_libdir} \
-%endif
-%endif
-%if 0%{?rhel} == 8
- -DKLU_ENABLE=ON -DKLU_LIBRARY_DIR:PATH=%{_libdir} -DKLU_LIBRARY=%{_libdir}/libklu.so \
- -DAMD_LIBRARY=%{_libdir}/libamd.so -DAMD_LIBRARY_DIR:PATH=%{_libdir} \
- -DBTF_LIBRARY=%{_libdir}/libbtf.so -DBTF_LIBRARY_DIR:PATH=%{_libdir} \
- -DCOLAMD_LIBRARY=%{_libdir}/libcolamd.so -DCOLAMD_LIBRARY_DIR:PATH=%{_libdir} \
-%endif
  -DKLU_INCLUDE_DIR:PATH=%{_includedir}/suitesparse \
+%endif
+%endif
+%if %{?__isa_bits:%{__isa_bits}}%{!?__isa_bits:32} == 32
+ -DSUNDIALS_INDEX_SIZE:STRING=32 \
+%if 0%{?with_klu}
+ -DKLU_ENABLE=ON -DKLU_LIBRARY_DIR:PATH=%{_libdir} -DKLU_LIBRARY=%{_libdir}/libklu.so \
+ -DAMD_LIBRARY=%{_libdir}/libamd.so -DAMD_LIBRARY_DIR:PATH=%{_libdir} \
+ -DBTF_LIBRARY=%{_libdir}/libbtf.so -DBTF_LIBRARY_DIR:PATH=%{_libdir} \
+ -DCOLAMD_LIBRARY=%{_libdir}/libcolamd.so -DCOLAMD_LIBRARY_DIR:PATH=%{_libdir} \
+ -DKLU_INCLUDE_DIR:PATH=%{_includedir}/suitesparse \
+%endif
+%endif
  -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
  -DCMAKE_BUILD_TYPE:STRING=Release \
  -DCMAKE_C_FLAGS_RELEASE:STRING="%{optflags} -I$INCBLAS" \
@@ -602,7 +582,9 @@ export CFLAGS="%{build_fflags}"
 %endif
  -DF77_INTERFACE_ENABLE:BOOL=ON \
  -DEXAMPLES_ENABLE_F77:BOOL=ON \
+%if %{?__isa_bits:%{__isa_bits}}%{!?__isa_bits:32} == 64
  -DF2003_INTERFACE_ENABLE:BOOL=ON \
+%endif
  -DEXAMPLES_ENABLE_F90:BOOL=ON \
  -DFortran_INSTALL_MODDIR:PATH=$MPI_FORTRAN_MOD_DIR/%{name} \
 %endif
@@ -664,7 +646,7 @@ rm -f %{buildroot}%{_includedir}/sundials/NOTICE
 %check
 %if 0%{?with_openmpi}
 %if 0%{?with_openmpicheck}
-pushd buildopenmpi_dir/build
+%define _vpath_builddir buildopenmpi_dir/build
 %{_openmpi_load}
 %if %{with debug}
 export LD_LIBRARY_PATH=%{buildroot}$MPI_LIB:$MPI_LIB
@@ -674,13 +656,12 @@ ctest3 --force-new-ctest-process -VV -j1 --output-on-failure --debug
 export LD_LIBRARY_PATH=%{buildroot}$MPI_LIB:$MPI_LIB
 export OMPI_MCA_rmaps_base_oversubscribe=yes
 %ifarch aarch64 %{power64}
-ctest3 --force-new-ctest-process -j1 --rerun-failed --output-on-failure -E 'test_fsunlinsol_dense_mod|test_sunnonlinsol_petscsnes'
+/usr/bin/ctest --output-on-failure --force-new-ctest-process -j1 -E 'test_fsunlinsol_dense_mod|test_sunnonlinsol_petscsnes'
 %else
-ctest3 --force-new-ctest-process -j1 --rerun-failed --output-on-failure -E 'test_sunnonlinsol_petscsnes|test_sunlinsol_klu'
+/usr/bin/ctest --output-on-failure --force-new-ctest-process -j1 -E 'test_sunnonlinsol_petscsnes|test_sunlinsol_klu'
 %endif
 %endif
 %{_openmpi_unload}
-popd
 %endif
 ## if with_openmpicheck
 %endif
@@ -688,44 +669,38 @@ popd
 
 %if 0%{?with_mpich}
 %if 0%{?with_mpichcheck}
-pushd buildmpich_dir/build
+%define _vpath_builddir buildmpich_dir/build
 %{_mpich_load}
 %if %{with debug}
 export LD_LIBRARY_PATH=%{buildroot}$MPI_LIB:$MPI_LIB
-export OMPI_MCA_rmaps_base_oversubscribe=yes
 ctest3 --force-new-ctest-process -VV -j1 --output-on-failure --debug
 %else
 export LD_LIBRARY_PATH=%{buildroot}$MPI_LIB:$MPI_LIB
-export OMPI_MCA_rmaps_base_oversubscribe=yes
 %ifarch aarch64 %{power64}
-ctest3 --force-new-ctest-process -j1 --rerun-failed --output-on-failure -E 'test_fsunlinsol_dense_mod|test_sunnonlinsol_petscsnes'
+/usr/bin/ctest --output-on-failure --force-new-ctest-process -j1 -E 'test_fsunlinsol_dense_mod|test_sunnonlinsol_petscsnes'
 %else
-ctest3 --force-new-ctest-process -j1 --rerun-failed --output-on-failure -E 'test_sunnonlinsol_petscsnes|test_sunlinsol_klu'
+/usr/bin/ctest --output-on-failure --force-new-ctest-process -j1 -E 'test_sunnonlinsol_petscsnes|test_sunlinsol_klu'
 %endif
 %endif
 %{_mpich_unload}
-popd
 %endif
 ## if with_mpichcheck
 %endif
 ## if with_mpich
 
 %if 0%{?with_sercheck}
-pushd sundials-%{version}/build
+%define _vpath_builddir sundials-%{version}/build
 %if %{with debug}
 export LD_LIBRARY_PATH=%{buildroot}%{_libdir}:%{_libdir}
-export OMPI_MCA_rmaps_base_oversubscribe=yes
 ctest3 --force-new-ctest-process -VV -j1 --output-on-failure --debug
 %else
 export LD_LIBRARY_PATH=%{buildroot}%{_libdir}:%{_libdir}
-export OMPI_MCA_rmaps_base_oversubscribe=yes
 %ifarch aarch64 %{power64}
-ctest3 --force-new-ctest-process -j1 --rerun-failed --output-on-failure -E 'test_fsunlinsol_dense_mod'
+/usr/bin/ctest --output-on-failure --force-new-ctest-process -j1 -E 'test_fsunlinsol_dense_mod'
 %else
-ctest3 --force-new-ctest-process -j1 --rerun-failed --output-on-failure -E 'test_sunlinsol_klu'
+/usr/bin/ctest --output-on-failure --force-new-ctest-process -j1 -E 'test_sunlinsol_klu'
 %endif
 %endif
-popd
 %endif
 ## if with_sercheck
 
@@ -871,7 +846,7 @@ popd
 %{_includedir}/openmpi-%{_arch}/sunmatrix/
 %{_includedir}/openmpi-%{_arch}/sunnonlinsol/
 %if 0%{?with_fortran}
-%{_fmoddir}/openmpi%{?el7:-%_arch}/%{name}/
+%{_fmoddir}/openmpi/%{name}/
 %{_libdir}/openmpi/lib/libsundials_f*[_mod].so
 %{_libdir}/openmpi/lib/libsundials_f*[!_mod].so
 %endif
@@ -956,7 +931,7 @@ popd
 %{_includedir}/mpich-%{_arch}/sunmatrix/
 %{_includedir}/mpich-%{_arch}/sunnonlinsol/
 %if 0%{?with_fortran}
-%{_fmoddir}/mpich%{?el7:-%_arch}/%{name}/
+%{_fmoddir}/mpich/%{name}/
 %{_libdir}/mpich/lib/libsundials_f*[_mod].so
 %{_libdir}/mpich/lib/libsundials_f*[!_mod].so
 %endif
@@ -998,8 +973,25 @@ popd
 %doc sundials-%{version}/doc/arkode/*
 
 %changelog
-* Thu Jan 05 2023 Liu Yang <Yang.Liu.sn@gmail.com> - 5.8.0-6.rv64
-- Fix build on riscv64.
+* Tue Aug 22 2023 Songsong Zhang <U2FsdGVkX1@gmail.com> - 5.8.0-11.rv64
+- Add riscv64 support
+
+* Sat Jan 21 2023 Fedora Release Engineering <releng@fedoraproject.org> - 5.8.0-11
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_38_Mass_Rebuild
+
+* Sat Jan 14 2023 Antonio Trande <sagitter@fedoraproject.org> - 5.8.0-10
+- Enable KLU support in EPEL9
+
+* Wed Jan 04 2023 Antonio Trande <sagitter@fedoraproject.org> - 5.8.0-9
+- Build in EPEL9
+- Disable KLU support in EPEL9
+
+* Sun Nov 13 2022 Antonio Trande <sagitter@fedoraproject.org> - 5.8.0-8
+- Enable OpenMPI tests
+
+* Sat Oct 29 2022 Antonio Trande <sagitter@fedoraproject.org> - 5.8.0-7
+- Use multiple jobs for testing
+- Disable OpenMPI tests
 
 * Sat Jul 23 2022 Fedora Release Engineering <releng@fedoraproject.org> - 5.8.0-6
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_37_Mass_Rebuild
@@ -1410,4 +1402,3 @@ popd
 
 * Thu Jul 27 2006 John Pye <john.pye@student.unsw.edu.au> 2.3.0-0
 - First RPM spec created.
-
