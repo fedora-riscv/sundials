@@ -75,7 +75,7 @@
 Summary:    Suite of nonlinear solvers
 Name:       sundials
 Version:    6.5.1
-Release:    5%{?dist}
+Release:    5.rv64%{?dist}
 # SUNDIALS is licensed under BSD with some additional (but unrestrictive) clauses.
 # Check the file 'LICENSE' for details.
 License:    BSD
@@ -103,7 +103,7 @@ BuildRequires: epel-rpm-macros
 BuildRequires: cmake >= 3.10
 BuildRequires: %{blaslib}-devel
 %if 0%{?with_superlumt}
-%ifarch s390x x86_64 %{power64} aarch64
+%ifarch s390x x86_64 %{power64} aarch64 riscv64
 BuildRequires: SuperLUMT64-devel
 %endif
 %ifarch %{arm} %{ix86}
@@ -988,6 +988,9 @@ export LD_LIBRARY_PATH=%{buildroot}%{_libdir}:%{_libdir}
 %doc sundials-%{version}/doc/arkode/*
 
 %changelog
+* Wed Feb 07 2024 Songsong Zhang <U2FsdGVkX1@gmail.com> - 6.5.1-5.rv64
+- Add riscv64 support
+
 * Sun Aug 13 2023 Antonio Trande <sagitter@fedoraproject.org> - 6.5.1-5
 - Rebuild for petsc-3.19.4
 - Disable MPICH tests
